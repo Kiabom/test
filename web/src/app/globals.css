@@ -1,0 +1,207 @@
+@import "tailwindcss";
+@import "@fontsource-variable/vazirmatn";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #eef2f7;
+  --border: #dfe6ec;
+  --text: #172b3a;
+  --muted: #64748b;
+  --shell: #102a43;
+  --shell-2: #16354f;
+  --primary: #1273a6;
+  --primary-fg: #ffffff;
+  --success: #168567;
+  --warning: #b7791f;
+  --danger: #b42335;
+  --info: #2563eb;
+  --offline: #94a3b8;
+  --led-bg: #050505;
+  --led-amber: #ffb000;
+  --led-green: #22ff88;
+  --led-red: #ff3b3b;
+  --w1: #2563eb;
+  --w2: #7c3aed;
+  --wn: #102a43;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --surface: #162236;
+  --surface-2: #1c2b42;
+  --border: #26364f;
+  --text: #f4f7fa;
+  --muted: #94a3b8;
+  --shell: #070d18;
+  --shell-2: #0e1a2c;
+  --primary: #2d91b8;
+  --success: #30b58c;
+  --warning: #f1b54b;
+  --danger: #ea6065;
+  --info: #60a5fa;
+  --offline: #475569;
+  --w1: #60a5fa;
+  --w2: #a78bfa;
+  --wn: #e2e8f0;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Vazirmatn Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-shell: var(--shell);
+  --color-shell-2: var(--shell-2);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-offline: var(--offline);
+  --color-w1: var(--w1);
+  --color-w2: var(--w2);
+  --color-wn: var(--wn);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* seven-segment / LED look without external fonts */
+.led {
+  font-family: "Courier New", ui-monospace, monospace;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  text-shadow: 0 0 12px currentColor, 0 0 2px currentColor;
+}
+
+.dotmatrix {
+  font-family: "Courier New", ui-monospace, monospace;
+  font-weight: 800;
+  text-shadow: 0 0 18px currentColor;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.55) 1px, transparent 1.4px);
+  background-size: 4px 4px;
+  -webkit-background-clip: text;
+}
+
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+.animate-blink {
+  animation: blink 1.2s steps(2, start) infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+.marquee > span {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 22s linear infinite;
+}
+
+@keyframes ping-soft {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+.ping-soft {
+  animation: ping-soft 1.6s ease-out infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.6s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--muted) 35%, transparent);
+  border-radius: 8px;
+}

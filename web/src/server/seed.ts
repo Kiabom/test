@@ -3,6 +3,7 @@ import { normalizePlate, randomPlate } from "@/domain/plate";
 import { defaultRules, SLA_MINUTES } from "@/domain/rules";
 import { indicatorFrame } from "@/domain/weighing";
 import type * as T from "@/domain/types";
+import { USERS_LIST } from "@/lib/users";
 import { chance, gauss, int, mulberry32, pick, range, type Rand } from "./rng";
 import { evidenceHash, shiftOf, siteHour, type DB } from "./store";
 
@@ -16,21 +17,7 @@ const LAST_EN = ["Rezaei", "Ahmadi", "Karimi", "Hosseini", "Mousavi", "Mohammadi
 const TRUCK_COLORS = ["#d9480f", "#1971c2", "#2f9e44", "#e8590c", "#f08c00", "#5f3dc4", "#c92a2a", "#495057", "#0b7285", "#e67700"];
 const HOUR_WEIGHTS = [0.3, 0.2, 0.2, 0.2, 0.3, 0.6, 1.2, 1.8, 2.2, 2.3, 2.1, 1.7, 1.2, 1.3, 1.6, 2.0, 2.1, 1.9, 1.4, 1.0, 0.8, 0.6, 0.5, 0.4];
 
-export const USERS: T.User[] = [
-  { id: "U-ADMIN", name: "مهندس صدری", nameEn: "Eng. Sadri", role: "system_admin" },
-  { id: "U-MGR", name: "مهندس فرهمند", nameEn: "Eng. Farahmand", role: "site_manager" },
-  { id: "U-OP1", name: "سارا امینی", nameEn: "Sara Amini", role: "scale_operator" },
-  { id: "U-OP2", name: "کامران نیک‌نام", nameEn: "Kamran Niknam", role: "scale_operator" },
-  { id: "U-GD1", name: "جمشید پاکزاد", nameEn: "Jamshid Pakzad", role: "gate_guard" },
-  { id: "U-GD2", name: "بهرام شجاعی", nameEn: "Bahram Shojaei", role: "gate_guard" },
-  { id: "U-LOG", name: "نرگس توکلی", nameEn: "Narges Tavakoli", role: "logistics" },
-  { id: "U-SAL", name: "پیمان رستمی", nameEn: "Peyman Rostami", role: "sales" },
-  { id: "U-QC", name: "دکتر لیلا مختاری", nameEn: "Dr. Leila Mokhtari", role: "qc" },
-  { id: "U-MNT", name: "مهندس اکبری", nameEn: "Eng. Akbari", role: "maintenance" },
-  { id: "U-AUD", name: "مریم وحیدی", nameEn: "Maryam Vahidi", role: "auditor" },
-  { id: "U-FLT", name: "مهندس کیانی", nameEn: "Eng. Kiani", role: "fleet_manager" },
-  { id: "U-FIN", name: "حمید ملکی", nameEn: "Hamid Maleki", role: "finance" },
-];
+export const USERS: T.User[] = USERS_LIST;
 
 function masters(r: Rand, now: number) {
   const iso = (t: number) => new Date(t).toISOString();

@@ -88,7 +88,7 @@ export function liveSnapshot(d: DB) {
     speed: d.live.speed,
     mode: d.live.mode,
     wanOnline: d.live.wanOnline,
-    syncQueue: d.outbox.filter((m) => m.status === "PENDING" || m.status === "FAILED").length,
+    syncQueue: d.outbox.filter((m) => m.status === "PENDING").length,
     lanes: d.live.lanes,
     queues: { gateIn: d.live.queueGateIn, B: d.live.queueB, C: d.live.queueC, gateOut: d.live.queueGateOut },
     visits: Object.fromEntries([...active, ...recentExited].map((v) => [v.id, visitBrief(d, v)])),
@@ -244,7 +244,7 @@ export function driverView(d: DB, tokenValue: string) {
     guidance,
     material: d.materials.find((m) => m.id === det.permit?.materialId),
     destination: d.locations.find((l) => l.id === det.permit?.destinationId),
-    freeSlots: d.bookings.filter((b) => b.status === "BOOKED").slice(0, 6).map((b) => b.slotStart),
+    freeSlots: [...new Set(d.bookings.filter((b) => b.status === "BOOKED").map((b) => b.slotStart))].slice(0, 6),
   };
 }
 export type DriverView = NonNullable<ReturnType<typeof driverView>>;
