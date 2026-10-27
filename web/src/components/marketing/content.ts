@@ -1,4 +1,4 @@
-import { Box, ClipboardCheck, DoorOpen, FileText, ListOrdered, Receipt, Scale, ScanLine, type LucideIcon } from "lucide-react";
+import { Box, ClipboardCheck, DoorOpen, FileText, ListOrdered, Receipt, Scale, type LucideIcon } from "lucide-react";
 
 export interface Stop {
   n: number;

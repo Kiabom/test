@@ -24,8 +24,6 @@ import {
 } from "./ops";
 import { audit, bump, enqueueOutbox, log, nextId, nowIso, raiseAlert, shiftOf, token, type DB } from "./store";
 
-const LOAD_POINTS = ["L-01", "L-02", "SH-01"];
-
 interface VisitSim {
   targetFirstKg: number;
   targetSecondKg: number;
@@ -116,7 +114,7 @@ export function spawnArrival(d: DB, scenario?: string, silent = false): T.Visit 
   }
   if (!vehicle) return;
   const driver = d.drivers.find((x) => x.carrierId === vehicle!.carrierId && x.status === "ACTIVE" && new Date(x.licenseUntil) > now) ?? d.drivers[0];
-  const operation: T.Operation = scenario === "S-INBOUND" ? "RECEIVE" : !scenario && rnd() < 0.08 ? "RECEIVE" : "DISPATCH";
+  const inbound = scenario === "S-INBOUND" || (!scenario && rnd() < 0.08);
   let permit: T.Permit | undefined;
   if (scenario === "S-PERMIT-EXP") permit = d.permits.find((p) => p.status === "EXPIRED");
   else if (scenario === "S-OVERDRAW") {
@@ -124,9 +122,11 @@ export function spawnArrival(d: DB, scenario?: string, silent = false): T.Visit 
     permit = { ...base, id: nextId(d, "PM"), permitNo: `SO-DEMO-${String(d.counters.PM).slice(-3)}`, allowedKg: 6000, consumedKg: 0, reservedKg: 0, tripsUsed: 0, validFrom: new Date(Date.now() - 864e5).toISOString() };
     d.permits.push(permit);
   } else {
-    const pool = d.permits.filter((p) => p.status === "ACTIVE" && new Date(p.validTo) > now && (operation === "RECEIVE" ? p.type === "PURCHASE" : p.type === "SALE" || p.type === "HAUL") && p.allowedKg - p.consumedKg > 60000);
+    const pool = d.permits.filter((p) => p.status === "ACTIVE" && new Date(p.validTo) > now && (inbound ? p.type === "PURCHASE" : p.type === "SALE" || p.type === "HAUL") && p.allowedKg - p.consumedKg > 60000);
     permit = pool[Math.floor(rnd() * pool.length)];
   }
+  // haul permits move ore to the plant/another site — a transfer, not a sale
+  const operation: T.Operation = inbound ? "RECEIVE" : permit?.type === "HAUL" ? "TRANSFER" : "DISPATCH";
   d.counters.queueNo = ((d.counters.queueNo ?? 0) % 99) + 1;
   const tare = vehicle.storedTareKg ? vehicle.storedTareKg + Math.round((rnd() - 0.5) * 300 / 20) * 20 : 15800;
   let net = Math.round(between(vehicle.ratedPayloadKg * 0.75, vehicle.ratedPayloadKg * 0.98) / 20) * 20;
@@ -776,6 +776,10 @@ export function runScenario(d: DB, code: string, actorId: string) {
       d.live.wanOfflineUntil = Date.now() + 60_000;
       raiseAlert(d, "R37", { deviceId: "EDGE-1", detail: "قطع WAN — صف محلی فعال" });
       log(d, "warn", "EDGE-1", "WAN link down — local queue engaged; gates keep operating with cached permits");
+      break;
+    case "S-ONLINE":
+      // recovery itself (alert resolve + sync flush) runs in slowChecks on the next tick
+      if (!d.live.wanOnline) d.live.wanOfflineUntil = Date.now() - 1;
       break;
     case "S-CAL-EXP": {
       const cal = d.calibrations.find((c) => c.id === "CAL-2")!;

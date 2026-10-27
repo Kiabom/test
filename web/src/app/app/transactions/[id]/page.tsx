@@ -6,7 +6,7 @@ import { Barcode, origin, Qr } from "@/components/domain/codes";
 import { IranPlate } from "@/components/domain/IranPlate";
 import { EvidenceGallery, GateDecisionTrace, VisitTimeline } from "@/components/domain/visit";
 import { UvssImage } from "@/components/hardware/Devices";
-import { HeightMap } from "@/components/hardware/PointCloud";
+import { HeightMap } from "@/components/hardware/heap";
 import { Badge, Button, Card, CardHeader, ConfirmDialog, Kv, PageHeader, Skeleton, StatusPill, Table, Td, toast } from "@/components/ui";
 import { DECISION_CODE, ERRORS, lbl, OPERATION, STAGE, TX_STATE } from "@/i18n/labels";
 import { downloadJson } from "@/lib/export";

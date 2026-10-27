@@ -345,10 +345,12 @@ export function buildSeed(): DB {
 
   for (const t0 of visitTimes) {
     const roll = r();
-    const operation: T.Operation = roll < 0.85 ? "DISPATCH" : roll < 0.95 ? "RECEIVE" : "INTERNAL";
-    const vehicle = operation === "INTERNAL" ? pick(r, internalV) : pick(r, external);
-    const permitPool = operation === "DISPATCH" ? salePermits : operation === "RECEIVE" ? buyPermits : trPermits;
+    const kind: T.Operation = roll < 0.85 ? "DISPATCH" : roll < 0.95 ? "RECEIVE" : "INTERNAL";
+    const vehicle = kind === "INTERNAL" ? pick(r, internalV) : pick(r, external);
+    const permitPool = kind === "DISPATCH" ? salePermits : kind === "RECEIVE" ? buyPermits : trPermits;
     const permit = pick(r, permitPool);
+    // haul permits move ore to the plant/another site — a transfer, not a sale
+    const operation: T.Operation = kind === "DISPATCH" && permit.type === "HAUL" ? "TRANSFER" : kind;
     const material = d.materials.find((x) => x.id === permit.materialId)!;
     const driver = d.drivers.find((x) => x.carrierId === vehicle.carrierId && x.status === "ACTIVE") ?? d.drivers[0];
     const vid = id("VS");

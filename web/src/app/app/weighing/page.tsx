@@ -8,7 +8,7 @@ import { BarrierIcon, TrafficLight, WeightDisplay } from "@/components/domain/in
 import { EvidenceGallery, VisitTimeline } from "@/components/domain/visit";
 import { CameraFeed } from "@/components/hardware/CameraFeed";
 import { ScaleDeckTop } from "@/components/hardware/ScaleDeck";
-import { Badge, Button, Card, CardHeader, ConfirmDialog, cx, Dialog, EmptyState, Field, Input, Kv, PageHeader, Segmented, StatusPill, toast } from "@/components/ui";
+import { Badge, Button, Card, CardHeader, ConfirmDialog, cx, Dialog, Field, Input, Kv, PageHeader, Segmented, StatusPill, toast } from "@/components/ui";
 import { guidanceFor } from "@/domain/driverGuidance";
 import { remainingKg } from "@/domain/permits";
 import { captureGuard } from "@/domain/weighing";

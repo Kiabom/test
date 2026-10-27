@@ -6,7 +6,7 @@ import { Suspense, useMemo, useState } from "react";
 import { IranPlate } from "@/components/domain/IranPlate";
 import { CameraFeed } from "@/components/hardware/CameraFeed";
 import { GatePortalSvg, LidarGantrySvg, UvssImage } from "@/components/hardware/Devices";
-import { HeightMap } from "@/components/hardware/PointCloud";
+import { HeightMap } from "@/components/hardware/heap";
 import { ScaleDeckTop } from "@/components/hardware/ScaleDeck";
 import { Badge, Button, Card, CardHeader, Kv, PageHeader, Segmented, Skeleton, StatusPill, Table, Tabs, Td, toast } from "@/components/ui";
 import type { LidarScan, UvssScan, Vehicle } from "@/domain/types";
@@ -14,7 +14,7 @@ import { volumeCrossCheckPct } from "@/domain/kpi";
 import { fmtDateTime, fmtKg, fmtNum, fmtPct, fmtTime } from "@/lib/format";
 import { act, useData, useLive, useMasters } from "@/lib/live";
 import { useL, useLocale } from "@/lib/prefs";
-import type { CloudMode } from "@/components/hardware/PointCloud";
+import type { CloudMode } from "@/components/hardware/heap";
 
 const PointCloudViewer = dynamic(() => import("@/components/hardware/PointCloud"), { ssr: false, loading: () => <Skeleton className="h-[360px]" /> });
 
