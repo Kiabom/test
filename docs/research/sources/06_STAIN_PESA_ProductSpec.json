@@ -1,0 +1,2651 @@
+{
+  "document": {
+    "title": "Smart Mining Weighbridge PRD",
+    "version": "1.0",
+    "language": "fa",
+    "created_at": "2026-10-25",
+    "primary_reference": "STAIN PESA+",
+    "nature": "independent proposed product",
+    "claims_policy": "separate confirmed_vendor_features from proposed_requirements"
+  },
+  "product": {
+    "key": "SMART_WEIGH",
+    "display_name": "سامانه یکپارچه توزین و تردد معدن",
+    "deployment_modes": [
+      "edge-on-prem",
+      "hybrid",
+      "multisite"
+    ],
+    "tenancy": "organization/site-scoped",
+    "default_locale": "fa-IR",
+    "units": {
+      "mass": "kg",
+      "volume": "m3",
+      "density": "kg/m3"
+    }
+  },
+  "roles": [
+    {
+      "code": "system_admin",
+      "label_fa": "مدیر سامانه",
+      "summary": "پیکربندی سایت، حقوق و آداپتورها"
+    },
+    {
+      "code": "site_manager",
+      "label_fa": "مدیر سایت",
+      "summary": "نمایش همه تراکنش‌ها و مجوزهای سایت"
+    },
+    {
+      "code": "scale_operator",
+      "label_fa": "اپراتور باسکول",
+      "summary": "توزین، بررسی تصویر، توقف خروج"
+    },
+    {
+      "code": "gate_guard",
+      "label_fa": "حراست و دربان",
+      "summary": "کنترل ورود/خروج، بازرسی هویت"
+    },
+    {
+      "code": "logistics",
+      "label_fa": "کارشناس حمل",
+      "summary": "حواله، نوبت، برنامه حمل و بارنامه"
+    },
+    {
+      "code": "sales",
+      "label_fa": "فروش/بازرگانی",
+      "summary": "سفارش، مشتری، سقف مجاز و تطبیق"
+    },
+    {
+      "code": "mine_dispatcher",
+      "label_fa": "دیسپچر معدن",
+      "summary": "تخصیص مسیر و تجهیزات، رویداد چرخه"
+    },
+    {
+      "code": "qc",
+      "label_fa": "آزمایشگاه/کنترل کیفیت",
+      "summary": "نوع ماده، عیار، نمونه و نتیجه"
+    },
+    {
+      "code": "maintenance",
+      "label_fa": "تعمیرات و ابزار دقیق",
+      "summary": "وضعیت سلامت، گواهی کالیبراسیون"
+    },
+    {
+      "code": "auditor",
+      "label_fa": "ممیز",
+      "summary": "خواندن audit/اسناد و شواهد"
+    },
+    {
+      "code": "driver_kiosk",
+      "label_fa": "راننده/کیوسک",
+      "summary": "تأیید نوبت، مشاهده راهنمایی و چاپ رسید"
+    },
+    {
+      "code": "api_service",
+      "label_fa": "سرویس ERP",
+      "summary": "دسترسی محدود ماشینی با توکن"
+    }
+  ],
+  "requirements": {
+    "functional": [
+      {
+        "id": "FR-01",
+        "text_fa": "مدیریت چندسایتی/چندگیت/چندباسکول با شناسه یکتا",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S17",
+          "S25"
+        ]
+      },
+      {
+        "id": "FR-02",
+        "text_fa": "ثبت Vehicle و Driver و Carrier و اعتبار اسناد و تاریخ انقضا",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01"
+        ]
+      },
+      {
+        "id": "FR-03",
+        "text_fa": "ثبت ورود با شناسایی دستی یا RFID و ANPR اختیاری و confidence",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S14",
+          "S15",
+          "S17"
+        ]
+      },
+      {
+        "id": "FR-04",
+        "text_fa": "همبستگی RFID/ANPR/ثبت قبلی در یک VehicleVisit و تعیین تعارض",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-05",
+        "text_fa": "خواندن وزن از درایور نشان‌دهنده (indicator) با health/sequence/timestamp",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S24",
+          "S29"
+        ]
+      },
+      {
+        "id": "FR-06",
+        "text_fa": "شرط تثبیت وزن و حضور کامل خودرو پیش از ثبت رسمی توزین",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S15",
+          "S25"
+        ]
+      },
+      {
+        "id": "FR-07",
+        "text_fa": "ثبت وزن اول و دوم فارغ از ترتیب بارگیری/تخلیه",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S17",
+          "S25"
+        ]
+      },
+      {
+        "id": "FR-08",
+        "text_fa": "محاسبه gross و tare و net با ردیابی مبنای هر مقدار",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01",
+          "S25"
+        ]
+      },
+      {
+        "id": "FR-09",
+        "text_fa": "حالت one-pass بر مبنای stored tare با سیاست انقضا",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S17",
+          "S25"
+        ]
+      },
+      {
+        "id": "FR-10",
+        "text_fa": "پیاده‌سازی رویدادهای بدون امکان حذف (event log) و نسخه‌های اصلاحی",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-11",
+        "text_fa": "ثبت عکس رویدادهای ورود، روی باسکول، توزین، خروج",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01",
+          "S16",
+          "S17"
+        ]
+      },
+      {
+        "id": "FR-12",
+        "text_fa": "نمایش تصویر پلاک و کادر OCR؛ اعتبارسنجی دستی مورد مشکوک",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S14",
+          "S23"
+        ]
+      },
+      {
+        "id": "FR-13",
+        "text_fa": "حواله حمل/فروش و سفارش خرید با اعتبار زمانی و محدودیت ماده و طرف معامله",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01",
+          "S05",
+          "S19"
+        ]
+      },
+      {
+        "id": "FR-14",
+        "text_fa": "تطبیق مجوز با وسیله/راننده/مسیر/ماده/مقدار و ظرفیت باقی‌مانده",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01",
+          "S05"
+        ]
+      },
+      {
+        "id": "FR-15",
+        "text_fa": "قفل کردن gate خروج هنگام اختلال/مغایرت بحرانی با override ثبت‌شونده",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01",
+          "S17"
+        ]
+      },
+      {
+        "id": "FR-16",
+        "text_fa": "چاپ رسید دارای شناسه و QR/Barcode با فیلدهای قابل‌تنظیم",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01",
+          "S25"
+        ]
+      },
+      {
+        "id": "FR-17",
+        "text_fa": "مدیریت صف خودرو و تابلو فراخوان",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01",
+          "S09"
+        ]
+      },
+      {
+        "id": "FR-18",
+        "text_fa": "فرمان کنترل چراغ و راهبند پس از دریافت نتیجه ایمنی از PLC",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S15",
+          "S17"
+        ]
+      },
+      {
+        "id": "FR-19",
+        "text_fa": "محاسبه مدت حضور در سایت، زمان هر مرحله و تعداد سفر",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S17"
+        ]
+      },
+      {
+        "id": "FR-20",
+        "text_fa": "فیلتر داده بر تاریخ/شیفت/ماده/پلاک/راننده/حمل‌کننده/وضعیت",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01",
+          "S17"
+        ]
+      },
+      {
+        "id": "FR-21",
+        "text_fa": "گزارش تولید وزنی، تعداد سفر، مغایرت‌ها و مقایسه با هدف شیفت",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01",
+          "S35",
+          "S37"
+        ]
+      },
+      {
+        "id": "FR-22",
+        "text_fa": "صدور XLSX/CSV/PDF با محدودیت دسترسی و ثبت audit",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S14",
+          "S23",
+          "S30"
+        ]
+      },
+      {
+        "id": "FR-23",
+        "text_fa": "پایش اتصال و خطای تجهیزات، وزن صفر و درخواست سرویس",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S27",
+          "S29"
+        ]
+      },
+      {
+        "id": "FR-24",
+        "text_fa": "مدیریت سوابق کالیبراسیون، گواهی‌ها و هشدار موعد",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-25",
+        "text_fa": "نمایش بررسی تک‌لودسل فقط در صورت پشتیبانی سخت‌افزار و API",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S27",
+          "S29"
+        ]
+      },
+      {
+        "id": "FR-26",
+        "text_fa": "کنترل کنترل‌شده override با تأیید دوم در موارد بحرانی",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-27",
+        "text_fa": "RBAC سایت‌محور و تفکیک عملیات/تعمیرات/ممیزی",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S17"
+        ]
+      },
+      {
+        "id": "FR-28",
+        "text_fa": "Audit trail امضاشده برای تغییرات مهم و تاریخچه شواهد",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S16"
+        ]
+      },
+      {
+        "id": "FR-29",
+        "text_fa": "API /v1 برای داده اصلی و webhook outbox با retry/idempotency",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S26",
+          "S33"
+        ]
+      },
+      {
+        "id": "FR-30",
+        "text_fa": "ارسال اعلان SMS/Email با سیاست‌های قابل‌پیکربندی",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S23",
+          "S29"
+        ]
+      },
+      {
+        "id": "FR-31",
+        "text_fa": "دریافت سفارش و حواله از ERP؛ صادرات نتیجه با شماره مرجع",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S04",
+          "S05",
+          "S33"
+        ]
+      },
+      {
+        "id": "FR-32",
+        "text_fa": "کار آفلاین با edge queue و همگام‌سازی پس از اتصال",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S04"
+        ]
+      },
+      {
+        "id": "FR-33",
+        "text_fa": "تجمیع چندسایتی و محدودسازی داده براساس tenancy",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S14",
+          "S25"
+        ]
+      },
+      {
+        "id": "FR-34",
+        "text_fa": "تطبیق repeat weighing/replay و تشخیص تعویض پلاک در همان سفر",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-35",
+        "text_fa": "امکان افزودن adapter ماژولار بدون تغییر منطق domain",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S26",
+          "S33"
+        ]
+      },
+      {
+        "id": "FR-36",
+        "text_fa": "داشبورد kiosk مستقل و عملیات راننده با کمترین داده ورودی",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S17",
+          "S28"
+        ]
+      },
+      {
+        "id": "FR-37",
+        "text_fa": "استفاده از zone/geofence برای تعریف ورودی/خروجی و نقاط مجاز",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-38",
+        "text_fa": "تشخیص مغایرت ظرفیت اسمی، مجوز، بارنامه و حد مجاز جاده‌ای",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01"
+        ]
+      },
+      {
+        "id": "FR-39",
+        "text_fa": "مدیریت وضعیت سند: issued/active/reserved/consumed/expired/revoked",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-40",
+        "text_fa": "استرداد یا ابطال تراکنش فقط با سند اصلاح و ارجاع تراکنش پیشین",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-41",
+        "text_fa": "رابط چندزبانه و نمایش شمسی/میلادی با ذخیره UTC",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S17",
+          "S25"
+        ]
+      },
+      {
+        "id": "FR-42",
+        "text_fa": "رصد دقت ANPR/RFID با شمارنده نمونه‌های تصحیح‌شده",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-43",
+        "text_fa": "LiDAR optional: ثبت هندسه مرجع خالی برای هر TruckBody",
+        "priority": "P2",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S31"
+        ]
+      },
+      {
+        "id": "FR-44",
+        "text_fa": "LiDAR optional: حجم، پروفایل 3D و flag scan-quality",
+        "priority": "P2",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S31",
+          "S32"
+        ]
+      },
+      {
+        "id": "FR-45",
+        "text_fa": "LiDAR optional: تخمین جرم از حجم و چگالی مصوب با ثبت عدم‌قطعیت",
+        "priority": "P2",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-46",
+        "text_fa": "Payload optional: ingest اطلاعات جام شاول/لودر و شناسه بار",
+        "priority": "P2",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S35",
+          "S36"
+        ]
+      },
+      {
+        "id": "FR-47",
+        "text_fa": "Fleet optional: چرخه haul، کارکرد، بیکاری و اهداف شیفت",
+        "priority": "P2",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S37",
+          "S40",
+          "S41"
+        ]
+      },
+      {
+        "id": "FR-48",
+        "text_fa": "Fleet optional: reconcile payload/scale/LiDAR براساس trip_id",
+        "priority": "P2",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-49",
+        "text_fa": "ثبت آرشیو شواهد اصلی با hash و chain of custody",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-50",
+        "text_fa": "برنامه‌ریزی گزارش‌های زمان‌بندی‌شده و دریافت‌کنندگان نقش‌محور",
+        "priority": "P2",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S30"
+        ]
+      },
+      {
+        "id": "FR-51",
+        "text_fa": "چرخه handling استثناها: create/assign/ack/resolve/close",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-52",
+        "text_fa": "کاربرد همزمان دو باسکول برای ورود/خروج با اتصال Visit واحد",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S17",
+          "S25"
+        ]
+      },
+      {
+        "id": "FR-53",
+        "text_fa": "مدیریت توزین محوری جدا از توزین کل و عدم جایگزینی قانونی آن بدون تأیید",
+        "priority": "P2",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-54",
+        "text_fa": "ثبت منبع/مقصد/موقعیت بارگیری و تخلیه و دسته‌بندی grade",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S35",
+          "S40"
+        ]
+      },
+      {
+        "id": "FR-55",
+        "text_fa": "نقشه عملیاتی و نمای تناسب جریان مواد بر اساس زمان/مقصد",
+        "priority": "P2",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S40"
+        ]
+      },
+      {
+        "id": "FR-56",
+        "text_fa": "سیاست زمان توقف و فراخوان راننده در صف و ثبت اعلان",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S01",
+          "S09"
+        ]
+      },
+      {
+        "id": "FR-57",
+        "text_fa": "قفل جلوگیری از اجرای وزن‌کشی در حالت گواهی منقضی طبق مقررات محلی",
+        "priority": "P0",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-58",
+        "text_fa": "مدیریت دستی با دلیل، تأیید و snapshot در صورت قطع دوربین/RFID",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": []
+      },
+      {
+        "id": "FR-59",
+        "text_fa": "بازپخش audit بر مبنای timeline رویداد، تصاویر و مجوزها",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S16",
+          "S25"
+        ]
+      },
+      {
+        "id": "FR-60",
+        "text_fa": "تشخیص نوسان غیرعادی وزن و بررسی کامل بودن موقعیت محورهای خودرو",
+        "priority": "P1",
+        "confidence": "پیشنهادی",
+        "reference_sources": [
+          "S16",
+          "S26"
+        ]
+      }
+    ],
+    "nonfunctional": [
+      {
+        "id": "NFR-01",
+        "text_fa": "ایمنی: API قادر به دورزدن interlock سخت‌افزاری PLC نباشد؛ fail-safe gate",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-02",
+        "text_fa": "دقت اندازه‌گیری تابع indicator تأییدشده است؛ نرم‌افزار مترولوژی قانونی را ادعا نکند",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-03",
+        "text_fa": "رویدادها UTC و زمان محلی مجزا؛ NTP و سنجش clock drift",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-04",
+        "text_fa": "درخواست‌های تکراری با idempotency_key و unique index یک‌بار ثبت شوند",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-05",
+        "text_fa": "قطع شبکه مرکزی تراکنش‌های local را از بین نبرد؛ RPO/RTO پس از ارزیابی سایت",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-06",
+        "text_fa": "RBAC، SSO/OIDC اختیاری، MFA برای نقش‌های حساس، TLS و رمزنگاری at-rest",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-07",
+        "text_fa": "ممانعت از دستکاری رکورد با immutable events و پیوند hash",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-08",
+        "text_fa": "شاخص‌های latency/throughput/availability باید از SLA کارفرما تعیین شوند؛ نه فرض ثابت",
+        "status": "tbd",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-09",
+        "text_fa": "نگهداری داده/تصویر و مدت retention مطابق قرارداد و قانون ملی تنظیم شود",
+        "status": "tbd",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-10",
+        "text_fa": "مانیتورینگ observability شامل heartbeat، log ساختاریافته، trace و metric",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-11",
+        "text_fa": "پشتیبان‌گیری خودکار + آزمون restore و رمزنگاری کلیدها",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-12",
+        "text_fa": "پشتیبانی Desktop 1920x1080 و Tablet؛ Mobile read-only برای مدیر",
+        "status": "recommended",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-13",
+        "text_fa": "واحد وزن SI kg/t، حجم m³، چگالی kg/m³ با نمایش precision مستند",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-14",
+        "text_fa": "کنترل ورودی، محدودسازی فایل، دوربین RTSP و داده مخرب خارجی",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-15",
+        "text_fa": "حقوق مالکیت مستقل: لوگو، آیکون، تصاویر و متن‌های محصول مرجع استفاده نشود",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-16",
+        "text_fa": "تاب‌آوری دستگاه: watchdog، backpressure، dead-letter queue و replay",
+        "status": "recommended",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-17",
+        "text_fa": "قابلیت آزمایش شبیه‌ساز indicator/PLC/camera پیش از تحویل",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-18",
+        "text_fa": "زمان‌بندی shift قابل پیکربندی، عبور از نیمه‌شب و DST در نمایش",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-19",
+        "text_fa": "هیچ مدل ANPR/LiDAR درصد دقت تضمین‌شده بدون داده آزمون میدانی ندارد",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      },
+      {
+        "id": "NFR-20",
+        "text_fa": "قرارداد API با نسخه‌بندی و تست سازگاری schema",
+        "status": "mandatory",
+        "confidence": "پیشنهادی"
+      }
+    ]
+  },
+  "data_model": {
+    "entity_definitions": [
+      {
+        "name": "Organization",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "timezone",
+            "type": "IANA"
+          },
+          {
+            "name": "status",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "Site",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "organization_id",
+            "type": "UUID"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "code",
+            "type": "string"
+          },
+          {
+            "name": "timezone",
+            "type": "IANA"
+          },
+          {
+            "name": "configuration",
+            "type": "JSON"
+          }
+        ]
+      },
+      {
+        "name": "Gate",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "site_id",
+            "type": "UUID"
+          },
+          {
+            "name": "direction",
+            "type": "IN|OUT|BIDIRECTIONAL"
+          },
+          {
+            "name": "plc_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "zone_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "status",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "Vehicle",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "site_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "plate_normalized",
+            "type": "string"
+          },
+          {
+            "name": "plate_country",
+            "type": "string"
+          },
+          {
+            "name": "rfid_tag_ids",
+            "type": "UUID[]"
+          },
+          {
+            "name": "vehicle_type",
+            "type": "enum"
+          },
+          {
+            "name": "nominal_payload_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "max_gvw_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "trailer_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "inspection_expires_at",
+            "type": "datetime?"
+          },
+          {
+            "name": "carrier_id",
+            "type": "UUID?"
+          }
+        ]
+      },
+      {
+        "name": "Driver",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "license_number_encrypted",
+            "type": "string?"
+          },
+          {
+            "name": "license_expires_at",
+            "type": "date?"
+          },
+          {
+            "name": "identity_ref",
+            "type": "string?"
+          },
+          {
+            "name": "carrier_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "allowed_status",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "Carrier",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "legal_name",
+            "type": "string"
+          },
+          {
+            "name": "registration_no",
+            "type": "string?"
+          },
+          {
+            "name": "license_expiry",
+            "type": "date?"
+          },
+          {
+            "name": "status",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "Customer",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "type": "CUSTOMER|SUPPLIER|BOTH"
+          },
+          {
+            "name": "erp_code",
+            "type": "string?"
+          },
+          {
+            "name": "status",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "Material",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "code",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "grade",
+            "type": "string?"
+          },
+          {
+            "name": "density_kg_m3",
+            "type": "decimal?"
+          },
+          {
+            "name": "density_source",
+            "type": "string?"
+          },
+          {
+            "name": "density_valid_from",
+            "type": "datetime?"
+          },
+          {
+            "name": "density_uncertainty",
+            "type": "decimal?"
+          },
+          {
+            "name": "unit",
+            "type": "kg|t|m3"
+          }
+        ]
+      },
+      {
+        "name": "Permit",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "permit_no",
+            "type": "string"
+          },
+          {
+            "name": "permit_type",
+            "type": "SALE|HAUL|PURCHASE|DISPATCH"
+          },
+          {
+            "name": "customer_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "vehicle_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "carrier_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "material_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "origin_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "destination_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "allowed_net_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "consumed_net_kg",
+            "type": "decimal"
+          },
+          {
+            "name": "valid_from",
+            "type": "datetime"
+          },
+          {
+            "name": "expires_at",
+            "type": "datetime"
+          },
+          {
+            "name": "status",
+            "type": "enum"
+          },
+          {
+            "name": "issuer",
+            "type": "string"
+          },
+          {
+            "name": "document_hash",
+            "type": "sha256?"
+          }
+        ]
+      },
+      {
+        "name": "Transaction",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "site_id",
+            "type": "UUID"
+          },
+          {
+            "name": "visit_id",
+            "type": "UUID"
+          },
+          {
+            "name": "permit_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "vehicle_id",
+            "type": "UUID"
+          },
+          {
+            "name": "driver_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "carrier_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "customer_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "material_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "origin_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "destination_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "status",
+            "type": "enum"
+          },
+          {
+            "name": "gross_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "tare_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "net_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "gross_source",
+            "type": "enum?"
+          },
+          {
+            "name": "tare_source",
+            "type": "enum?"
+          },
+          {
+            "name": "shift_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "in_at",
+            "type": "datetime?"
+          },
+          {
+            "name": "out_at",
+            "type": "datetime?"
+          },
+          {
+            "name": "created_at",
+            "type": "datetime"
+          },
+          {
+            "name": "closed_at",
+            "type": "datetime?"
+          },
+          {
+            "name": "version",
+            "type": "int"
+          },
+          {
+            "name": "is_override",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "VehicleVisit",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "site_id",
+            "type": "UUID"
+          },
+          {
+            "name": "vehicle_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "gate_in_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "gate_out_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "arrived_at",
+            "type": "datetime"
+          },
+          {
+            "name": "departed_at",
+            "type": "datetime?"
+          },
+          {
+            "name": "state",
+            "type": "enum"
+          },
+          {
+            "name": "queue_entered_at",
+            "type": "datetime?"
+          },
+          {
+            "name": "queue_called_at",
+            "type": "datetime?"
+          },
+          {
+            "name": "trip_id",
+            "type": "UUID?"
+          }
+        ]
+      },
+      {
+        "name": "WeighEvent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "transaction_id",
+            "type": "UUID"
+          },
+          {
+            "name": "scale_id",
+            "type": "UUID"
+          },
+          {
+            "name": "sequence_no",
+            "type": "int"
+          },
+          {
+            "name": "pass_type",
+            "type": "FIRST|SECOND|ONE_PASS|AXLE"
+          },
+          {
+            "name": "weight_kg",
+            "type": "decimal"
+          },
+          {
+            "name": "stable",
+            "type": "bool"
+          },
+          {
+            "name": "stability_window_ms",
+            "type": "int?"
+          },
+          {
+            "name": "captured_at",
+            "type": "datetime"
+          },
+          {
+            "name": "raw_indicator_frame_hash",
+            "type": "sha256"
+          },
+          {
+            "name": "indicator_sequence",
+            "type": "string?"
+          },
+          {
+            "name": "position_ok",
+            "type": "bool?"
+          },
+          {
+            "name": "vehicle_present",
+            "type": "bool?"
+          },
+          {
+            "name": "operator_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "evidence_ids",
+            "type": "UUID[]"
+          },
+          {
+            "name": "idempotency_key",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "GateEvent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "visit_id",
+            "type": "UUID"
+          },
+          {
+            "name": "gate_id",
+            "type": "UUID"
+          },
+          {
+            "name": "event_type",
+            "type": "ARRIVE|AUTHORIZED|OPEN|CLOSE|EXIT|DENIED"
+          },
+          {
+            "name": "occurred_at",
+            "type": "datetime"
+          },
+          {
+            "name": "cause",
+            "type": "string"
+          },
+          {
+            "name": "actor_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "plc_receipt",
+            "type": "string?"
+          },
+          {
+            "name": "snapshot_id",
+            "type": "UUID?"
+          }
+        ]
+      },
+      {
+        "name": "Camera",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "site_id",
+            "type": "UUID"
+          },
+          {
+            "name": "gate_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "scale_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "camera_type",
+            "type": "PLATE|OVERVIEW|OVERHEAD"
+          },
+          {
+            "name": "stream_uri_secret_ref",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "PlateRead",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "camera_id",
+            "type": "UUID"
+          },
+          {
+            "name": "visit_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "plate_raw",
+            "type": "string"
+          },
+          {
+            "name": "plate_normalized",
+            "type": "string"
+          },
+          {
+            "name": "country",
+            "type": "string?"
+          },
+          {
+            "name": "confidence",
+            "type": "decimal"
+          },
+          {
+            "name": "bbox_xyxy",
+            "type": "decimal[4]?"
+          },
+          {
+            "name": "model_version",
+            "type": "string"
+          },
+          {
+            "name": "captured_at",
+            "type": "datetime"
+          },
+          {
+            "name": "image_evidence_id",
+            "type": "UUID"
+          },
+          {
+            "name": "review_status",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "RFIDReader",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "gate_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "frequency_band",
+            "type": "LF|HF|UHF|OTHER|UNKNOWN"
+          },
+          {
+            "name": "protocol",
+            "type": "string?"
+          },
+          {
+            "name": "status",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "RFIDRead",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "reader_id",
+            "type": "UUID"
+          },
+          {
+            "name": "tag_hash",
+            "type": "sha256"
+          },
+          {
+            "name": "rssi",
+            "type": "decimal?"
+          },
+          {
+            "name": "seen_at",
+            "type": "datetime"
+          },
+          {
+            "name": "visit_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "matching_vehicle_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "read_quality",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "Scale",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "site_id",
+            "type": "UUID"
+          },
+          {
+            "name": "indicator_id",
+            "type": "UUID"
+          },
+          {
+            "name": "capacity_kg",
+            "type": "decimal"
+          },
+          {
+            "name": "min_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "division_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "zero_tolerance_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "status",
+            "type": "enum"
+          },
+          {
+            "name": "last_calibration_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "weigh_mode",
+            "type": "STATIC|AXLE|OTHER"
+          }
+        ]
+      },
+      {
+        "name": "CalibrationRecord",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "scale_id",
+            "type": "UUID"
+          },
+          {
+            "name": "certificate_no",
+            "type": "string"
+          },
+          {
+            "name": "issuer",
+            "type": "string"
+          },
+          {
+            "name": "calibrated_at",
+            "type": "datetime"
+          },
+          {
+            "name": "valid_until",
+            "type": "datetime"
+          },
+          {
+            "name": "test_points",
+            "type": "JSON"
+          },
+          {
+            "name": "max_error",
+            "type": "decimal?"
+          },
+          {
+            "name": "certificate_hash",
+            "type": "sha256"
+          },
+          {
+            "name": "status",
+            "type": "VALID|EXPIRED|REVOKED|UNKNOWN"
+          }
+        ]
+      },
+      {
+        "name": "Equipment",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "site_id",
+            "type": "UUID"
+          },
+          {
+            "name": "equipment_type",
+            "type": "TRUCK|LOADER|SHOVEL|PLC|INDICATOR|LIDAR|SENSOR"
+          },
+          {
+            "name": "serial_no",
+            "type": "string"
+          },
+          {
+            "name": "make_model",
+            "type": "string?"
+          },
+          {
+            "name": "adapter_id",
+            "type": "string?"
+          },
+          {
+            "name": "health_status",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "EquipmentHealthSample",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "equipment_id",
+            "type": "UUID"
+          },
+          {
+            "name": "metric",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "decimal"
+          },
+          {
+            "name": "unit",
+            "type": "string"
+          },
+          {
+            "name": "sampled_at",
+            "type": "datetime"
+          },
+          {
+            "name": "quality",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "Alert",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "rule_id",
+            "type": "string"
+          },
+          {
+            "name": "site_id",
+            "type": "UUID"
+          },
+          {
+            "name": "visit_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "transaction_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "equipment_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "severity",
+            "type": "INFO|WARN|BLOCK|CRITICAL"
+          },
+          {
+            "name": "status",
+            "type": "OPEN|ACK|RESOLVED|CLOSED"
+          },
+          {
+            "name": "triggered_at",
+            "type": "datetime"
+          },
+          {
+            "name": "threshold_snapshot",
+            "type": "JSON"
+          },
+          {
+            "name": "observed_snapshot",
+            "type": "JSON"
+          },
+          {
+            "name": "assigned_to",
+            "type": "UUID?"
+          },
+          {
+            "name": "ack_at",
+            "type": "datetime?"
+          },
+          {
+            "name": "resolution_note",
+            "type": "string?"
+          }
+        ]
+      },
+      {
+        "name": "Shift",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "site_id",
+            "type": "UUID"
+          },
+          {
+            "name": "start_at",
+            "type": "datetime"
+          },
+          {
+            "name": "end_at",
+            "type": "datetime"
+          },
+          {
+            "name": "team",
+            "type": "string?"
+          },
+          {
+            "name": "target_tonnes",
+            "type": "decimal?"
+          },
+          {
+            "name": "timezone",
+            "type": "IANA"
+          }
+        ]
+      },
+      {
+        "name": "LidarScan",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "scanner_equipment_id",
+            "type": "UUID"
+          },
+          {
+            "name": "visit_id",
+            "type": "UUID"
+          },
+          {
+            "name": "truck_body_profile_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "kind",
+            "type": "EMPTY|LOADED"
+          },
+          {
+            "name": "captured_at",
+            "type": "datetime"
+          },
+          {
+            "name": "volume_m3",
+            "type": "decimal?"
+          },
+          {
+            "name": "point_cloud_uri",
+            "type": "string"
+          },
+          {
+            "name": "mesh_uri",
+            "type": "string?"
+          },
+          {
+            "name": "quality_score",
+            "type": "decimal?"
+          },
+          {
+            "name": "calibration_version",
+            "type": "string?"
+          },
+          {
+            "name": "material_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "density_kg_m3",
+            "type": "decimal?"
+          },
+          {
+            "name": "estimated_mass_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "uncertainty",
+            "type": "decimal?"
+          }
+        ]
+      },
+      {
+        "name": "PayloadEvent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "trip_id",
+            "type": "UUID"
+          },
+          {
+            "name": "equipment_id",
+            "type": "UUID"
+          },
+          {
+            "name": "source",
+            "type": "LOADER|SHOVEL|TRUCK"
+          },
+          {
+            "name": "event_at",
+            "type": "datetime"
+          },
+          {
+            "name": "payload_kg",
+            "type": "decimal?"
+          },
+          {
+            "name": "bucket_count",
+            "type": "int?"
+          },
+          {
+            "name": "material_id",
+            "type": "UUID?"
+          },
+          {
+            "name": "source_event_id",
+            "type": "string"
+          },
+          {
+            "name": "quality",
+            "type": "enum"
+          }
+        ]
+      },
+      {
+        "name": "AuditEvent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "entity_type",
+            "type": "string"
+          },
+          {
+            "name": "entity_id",
+            "type": "UUID"
+          },
+          {
+            "name": "action",
+            "type": "string"
+          },
+          {
+            "name": "before_hash",
+            "type": "sha256?"
+          },
+          {
+            "name": "after_hash",
+            "type": "sha256"
+          },
+          {
+            "name": "actor_id",
+            "type": "UUID"
+          },
+          {
+            "name": "reason",
+            "type": "string?"
+          },
+          {
+            "name": "occurred_at",
+            "type": "datetime"
+          },
+          {
+            "name": "prev_audit_hash",
+            "type": "sha256?"
+          }
+        ]
+      },
+      {
+        "name": "Evidence",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "source_type",
+            "type": "CAMERA|DOCUMENT|INDICATOR|RFID|LIDAR"
+          },
+          {
+            "name": "storage_uri",
+            "type": "string"
+          },
+          {
+            "name": "sha256",
+            "type": "string"
+          },
+          {
+            "name": "captured_at",
+            "type": "datetime"
+          },
+          {
+            "name": "retention_policy_id",
+            "type": "UUID"
+          },
+          {
+            "name": "metadata",
+            "type": "JSON"
+          }
+        ]
+      },
+      {
+        "name": "IntegrationOutbox",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID"
+          },
+          {
+            "name": "event_type",
+            "type": "string"
+          },
+          {
+            "name": "entity_id",
+            "type": "UUID"
+          },
+          {
+            "name": "payload_json",
+            "type": "JSON"
+          },
+          {
+            "name": "destination",
+            "type": "string"
+          },
+          {
+            "name": "idempotency_key",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "PENDING|SENT|FAILED"
+          },
+          {
+            "name": "attempts",
+            "type": "int"
+          },
+          {
+            "name": "next_retry_at",
+            "type": "datetime?"
+          }
+        ]
+      }
+    ],
+    "primary_key": "UUID",
+    "timestamps": "ISO-8601 UTC",
+    "mass_storage": "decimal kg",
+    "audit_immutable": true
+  },
+  "alerts": [
+    {
+      "id": "AL-01",
+      "name_fa": "مجوز منقضی/باطل",
+      "condition_expression": "permit.status in (EXPIRED,REVOKED) or now>permit.expires_at",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "قفل خروج/ورود بسته به سیاست، ارجاع حراست",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": []
+    },
+    {
+      "id": "AL-02",
+      "name_fa": "مغایرت ماده",
+      "condition_expression": "transaction.material_id != permit.material_id",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "متوقف‌کردن خروج و ثبت exception",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S05"
+      ]
+    },
+    {
+      "id": "AL-03",
+      "name_fa": "تجاوز از سقف وزن مجوز",
+      "condition_expression": "net_kg > permit.remaining_net_kg + configured_tolerance_kg",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "توقف و تأیید مسئول فروش",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S05"
+      ]
+    },
+    {
+      "id": "AL-04",
+      "name_fa": "اضافه‌بار مجاز خودرو",
+      "condition_expression": "gross_kg > vehicle.max_gvw_kg",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "توقف؛ ارزیابی حد مجاز/مقررات",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S01"
+      ]
+    },
+    {
+      "id": "AL-05",
+      "name_fa": "راننده/پلاک نامنطبق",
+      "condition_expression": "identified_vehicle != permit.vehicle_id OR driver not authorized",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "درخواست بازرسی و تطبیق دستی",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S01"
+      ]
+    },
+    {
+      "id": "AL-06",
+      "name_fa": "ناهمخوانی RFID و ANPR",
+      "condition_expression": "rfid_vehicle_id != anpr_vehicle_id AND both reliable",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "بازبینی عکس/کارت، عدم عبور خودکار",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": []
+    },
+    {
+      "id": "AL-07",
+      "name_fa": "وزن ناپایدار",
+      "condition_expression": "stable==false OR variation_over_window>scale.stability_limit",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "عدم ثبت WeighEvent نهایی",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S26"
+      ]
+    },
+    {
+      "id": "AL-08",
+      "name_fa": "موقعیت نامناسب روی باسکول",
+      "condition_expression": "position_ok==false OR axle_presence_incomplete",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "راهنمای راننده، نگهداری فرمان راهبند",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S15",
+        "S16"
+      ]
+    },
+    {
+      "id": "AL-09",
+      "name_fa": "بازگشت صفر خارج از رواداری",
+      "condition_expression": "abs(zero_reading)>scale.zero_tolerance_kg",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "WARN/BLOCK",
+      "action_fa": "توقف توزین بر اساس سیاست و درخواست تعمیرات",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S29"
+      ]
+    },
+    {
+      "id": "AL-10",
+      "name_fa": "عدم‌تقارن/رانش لودسل",
+      "condition_expression": "diagnostic_metric>manufacturer_site_limit",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "CRITICAL",
+      "action_fa": "اعلام تعمیرات؛ نمایش فقط با سنسور سازگار",
+      "priority": "P1",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S27",
+        "S29"
+      ]
+    },
+    {
+      "id": "AL-11",
+      "name_fa": "انقضای گواهی کالیبراسیون",
+      "condition_expression": "now>calibration.valid_until",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "غیرفعال کردن ثبت تجاری طبق تنظیم مقررات",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": []
+    },
+    {
+      "id": "AL-12",
+      "name_fa": "کالیبراسیون نزدیک انقضا",
+      "condition_expression": "valid_until - now < configured_lead_days",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "WARN",
+      "action_fa": "ایجاد کار نگهداری و اعلان",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": []
+    },
+    {
+      "id": "AL-13",
+      "name_fa": "عبور تکراری یا replay",
+      "condition_expression": "same visit+scale+pass/idempotency duplicated OR replay signal",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "رد ثبت دوم، اطلاع ممیز",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": []
+    },
+    {
+      "id": "AL-14",
+      "name_fa": "توقف طولانی در صف",
+      "condition_expression": "now - queue_entered_at > queue_wait_threshold",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "WARN",
+      "action_fa": "اخطار سرپرست حمل و اولویت‌بندی صف",
+      "priority": "P1",
+      "confidence": "پیشنهادی",
+      "reference_sources": []
+    },
+    {
+      "id": "AL-15",
+      "name_fa": "ماندگاری بیش از حد در سایت",
+      "condition_expression": "now-arrived_at > site_turnaround_threshold",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "WARN",
+      "action_fa": "بازبینی موقعیت کامیون",
+      "priority": "P1",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S17"
+      ]
+    },
+    {
+      "id": "AL-16",
+      "name_fa": "اختلال خواندن دستگاه",
+      "condition_expression": "device_heartbeat_missing > configured_timeout",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "BLOCK",
+      "action_fa": "رفتار fail-safe، صف آفلاین و تیکت",
+      "priority": "P0",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S04"
+      ]
+    },
+    {
+      "id": "AL-17",
+      "name_fa": "اسکن LiDAR بی‌کیفیت",
+      "condition_expression": "scan.quality_score < configured_min_quality",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "WARN",
+      "action_fa": "درخواست اسکن مجدد، عدم صدور حجم قطعی",
+      "priority": "P2",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S31"
+      ]
+    },
+    {
+      "id": "AL-18",
+      "name_fa": "مغایرت وزن/حجم",
+      "condition_expression": "abs(net_kg - estimated_mass_kg) > tolerance_model(material,uncertainty)",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "WARN",
+      "action_fa": "بررسی چگالی/رطوبت و خطای بارگیری",
+      "priority": "P2",
+      "confidence": "پیشنهادی",
+      "reference_sources": []
+    },
+    {
+      "id": "AL-19",
+      "name_fa": "اضافه‌بار/کم‌بار نسبت به هدف",
+      "condition_expression": "payload_kg outside configured_target_band",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "WARN",
+      "action_fa": "اصلاح بارگیری؛ اطلاع دیسپچر",
+      "priority": "P2",
+      "confidence": "پیشنهادی",
+      "reference_sources": [
+        "S37"
+      ]
+    },
+    {
+      "id": "AL-20",
+      "name_fa": "افزایش حجم بار بدون تغییر وزن مطابق الگوی ریسک",
+      "condition_expression": "change(volume)/change(weight) unusual",
+      "threshold_type": "site_configured_or_document_defined",
+      "severity": "WARN",
+      "action_fa": "بازبینی اپراتور؛ فقط هشدار تحلیلی",
+      "priority": "P2",
+      "confidence": "پیشنهادی",
+      "reference_sources": []
+    }
+  ],
+  "ui_pages": [
+    {
+      "id": "UI-01",
+      "name": "Overview/KPI",
+      "components_fa": "کارت وزن خالص امروز، تعداد کامیون، تعداد سفر، زمان ماندگاری، مجوزهای منتظر؛ نمودار ورودی/خروجی ساعتی و جدول هشدار"
+    },
+    {
+      "id": "UI-02",
+      "name": "Live Gate Control",
+      "components_fa": "فید دروازه، پلاک/نمره OCR، RFID، مجوز، چراغ/راهبند READONLY + کنش تأیید مجاز"
+    },
+    {
+      "id": "UI-03",
+      "name": "Weighing Console",
+      "components_fa": "وزن زنده indicator، واحد/پایداری، scale status، فرم خودرو/نوع بار/حواله، دو تصویر، دکمه Capture/Reject"
+    },
+    {
+      "id": "UI-04",
+      "name": "Queue & Call Board",
+      "components_fa": "صف ورود، ETA نامشخص تا داده واقعی، گروه‌های صف، دکمه فراخوان، نمای تابلو بزرگ"
+    },
+    {
+      "id": "UI-05",
+      "name": "Transactions",
+      "components_fa": "جدول فیلترشونده، وزن اول/دوم، خالص، وضعیت، لینک عکس و چاپ قبض"
+    },
+    {
+      "id": "UI-06",
+      "name": "Transaction Detail",
+      "components_fa": "timeline کامل، raw weight receipt، تصاویر، تعارض OCR/RFID، مجوز، log امضا"
+    },
+    {
+      "id": "UI-07",
+      "name": "Vehicles",
+      "components_fa": "رجیستری پلاک، کلاس، ظرفیت، معاینه، RFID، تریلر و تاریخچه سفر"
+    },
+    {
+      "id": "UI-08",
+      "name": "Drivers & Carriers",
+      "components_fa": "هویت/مدارک/اعتبارنامه/شرکت و تاریخچه ورود، دسترسی ماسک‌شده"
+    },
+    {
+      "id": "UI-09",
+      "name": "Permits & Orders",
+      "components_fa": "حواله، بارنامه، وضعیت، مانده وزن، سقف مجاز، مشتری، اعتبار"
+    },
+    {
+      "id": "UI-10",
+      "name": "Materials & Routes",
+      "components_fa": "کد ماده/عیار، مبدأ، مقصد، وضعیت کیفیت/چگالی پیشنهادی"
+    },
+    {
+      "id": "UI-11",
+      "name": "Production Shift",
+      "components_fa": "مقدار تولید، تعداد سفر، جدول شیفت/ماده/ماشین، روند برنامه و عملکرد"
+    },
+    {
+      "id": "UI-12",
+      "name": "Fleet Operations",
+      "components_fa": "نقشه موقعیت (در صورت داده GPS)، زمان چرخه، صف، توقف، بهره‌برداری"
+    },
+    {
+      "id": "UI-13",
+      "name": "Scale Health",
+      "components_fa": "نمودار صفر، ارتباط indicator، per-cell فقط در صورت data، آخرین گواهی کالیبراسیون"
+    },
+    {
+      "id": "UI-14",
+      "name": "Calibration Records",
+      "components_fa": "فهرست گواهی‌ها، تاریخ صدور/اعتبار، فایل اصلی و هشدار موعد"
+    },
+    {
+      "id": "UI-15",
+      "name": "Alerts Center",
+      "components_fa": "Severity/status، علت، داده مشاهده‌شده/حد، مسئول، ack و resolution"
+    },
+    {
+      "id": "UI-16",
+      "name": "Evidence Gallery",
+      "components_fa": "عکس پلاک، نمای بدنه، بار از بالا، نوع camera و تاریخ و sha256"
+    },
+    {
+      "id": "UI-17",
+      "name": "LiDAR 3D Add-on",
+      "components_fa": "مدل مرجع خالی، نقشه حرارتی پروفایل، حجم، کیفیت scan و بازپخش"
+    },
+    {
+      "id": "UI-18",
+      "name": "Onboard Payload Add-on",
+      "components_fa": "جمع بار هر شاول/لودر و مقایسه با باسکول، اختلاف منبع"
+    },
+    {
+      "id": "UI-19",
+      "name": "Reports/Exports",
+      "components_fa": "فیلترهای تاریخ/شیفت/راننده/ماده/مجوز/Scale، خروجی مجاز و گزارش زمان‌بندی"
+    },
+    {
+      "id": "UI-20",
+      "name": "Integrations & Devices",
+      "components_fa": "adapter، device heartbeat، ارتباط ERP، queue و retry و mapping"
+    },
+    {
+      "id": "UI-21",
+      "name": "Users/RBAC/Audit",
+      "components_fa": "کاربران، نقش/سایت، login history، override log و export log"
+    },
+    {
+      "id": "UI-22",
+      "name": "Site Configuration",
+      "components_fa": "سایت، گیت، scale، shift، thresholds، سیاست آفلاین و نسخه سیاست"
+    },
+    {
+      "id": "UI-23",
+      "name": "Driver Kiosk",
+      "components_fa": "نمایش راهنمای ساده پلاک/نوبت/باسکول/نتیجه/رسید بدون داده شخصی غیرضروری"
+    },
+    {
+      "id": "UI-24",
+      "name": "Manager Mobile",
+      "components_fa": "فقط شاخص و اعلان و drill-down در نقش مجاز؛ بدون کنترل خطرناک در موبایل"
+    }
+  ],
+  "workflow": {
+    "states": [
+      "DRAFT",
+      "ARRIVED",
+      "ID_VERIFIED",
+      "FIRST_WEIGHTED",
+      "LOADING_OR_UNLOADING",
+      "SECOND_WEIGHTED",
+      "COMPLIANCE_CHECKED",
+      "APPROVED",
+      "CLOSED",
+      "HOLD",
+      "MANUAL_REVIEW",
+      "CANCELLED",
+      "CORRECTED"
+    ],
+    "critical_gates": [
+      "valid_permit",
+      "identity_match",
+      "stable_weight",
+      "position_ok",
+      "calibration_valid",
+      "weight_capacity_compliant"
+    ],
+    "operations": [
+      "RECEIVE",
+      "DISPATCH"
+    ]
+  },
+  "plugins": [
+    {
+      "id": "lidar-volume",
+      "requires": [
+        "visit_id",
+        "truck_body_reference_id",
+        "scan_kind",
+        "point_cloud_uri"
+      ],
+      "emits": [
+        "volume_m3",
+        "quality_score",
+        "estimated_mass_kg"
+      ]
+    },
+    {
+      "id": "onboard-payload",
+      "requires": [
+        "equipment_id",
+        "trip_id",
+        "payload_kg",
+        "event_at"
+      ],
+      "emits": [
+        "payload.reconciled"
+      ]
+    },
+    {
+      "id": "fleet-kpi",
+      "requires": [
+        "trip_id",
+        "equipment_id",
+        "cycle_events"
+      ],
+      "emits": [
+        "shift.production",
+        "fleet.cycle",
+        "fleet.utilization"
+      ]
+    }
+  ],
+  "source_index": {
+    "S01": {
+      "name": "STAIN PESA+ | صفحه محصول",
+      "url": "https://www.stain.it/en/modules/pesa-gestione-ingresso-uscita-automezzi-e-ufficio-pesa/",
+      "type": "HTML"
+    },
+    "S02": {
+      "name": "STAIN PESA+ | ایتالیایی",
+      "url": "https://www.stain.it/it/moduli/pesa-gestione-ingresso-uscita-automezzi-e-ufficio-pesa/",
+      "type": "HTML"
+    },
+    "S03": {
+      "name": "STAIN MILL+",
+      "url": "https://www.stain.it/en/products/mill-suite-for-metal/",
+      "type": "HTML"
+    },
+    "S04": {
+      "name": "STAIN MES | معماری",
+      "url": "https://www.stain.it/en/about-us/our-software-mes/",
+      "type": "HTML"
+    },
+    "S05": {
+      "name": "STAIN | Scrap sampling",
+      "url": "https://www.stain.it/en/modules/scrap-sampling-and-area-management/",
+      "type": "HTML"
+    },
+    "S06": {
+      "name": "STAIN | Plant logistics",
+      "url": "https://www.stain.it/en/modules/plant-identification-and-logistics/",
+      "type": "HTML"
+    },
+    "S07": {
+      "name": "STAIN | Steel mills",
+      "url": "https://www.stain.it/en/industries/metal/steel-mills/",
+      "type": "HTML"
+    },
+    "S08": {
+      "name": "STAIN | MILL+ brochure",
+      "url": "https://www.stain.it/uploads/PagineWE/metal_web1.pdf",
+      "type": "PDF [indexed; direct fetch timeout]"
+    },
+    "S09": {
+      "name": "STAIN | نمایش فراخوان خودرو",
+      "url": "https://www.stain.it/uploads/FasceImmagine/fascia22.jpg",
+      "type": "Image"
+    },
+    "S10": {
+      "name": "STAIN | تصویر باسکول",
+      "url": "https://www.stain.it/uploads/FasceImmagine/fascia-pesa1.jpg",
+      "type": "Image"
+    },
+    "S11": {
+      "name": "STAIN | refs",
+      "url": "https://www.stain.it/en/references/",
+      "type": "HTML"
+    },
+    "S12": {
+      "name": "STAIN | MTZ maintenance",
+      "url": "https://www.stain.it/en/modules/run-to-failure-predictive-maintenance/",
+      "type": "HTML"
+    },
+    "S13": {
+      "name": "STAIN | LGT department logistics",
+      "url": "https://www.stain.it/en/modules/lgt-department-logistics/",
+      "type": "HTML"
+    },
+    "S14": {
+      "name": "Avery | Weighman 8",
+      "url": "https://www.averyweigh-tronix.com/en/product/weighman-8-weighbridge-software",
+      "type": "HTML"
+    },
+    "S15": {
+      "name": "Avery | SmarTower",
+      "url": "https://www.averyweigh-tronix.com/en/product/smartower-unmanned-weighbridge-system/",
+      "type": "HTML"
+    },
+    "S16": {
+      "name": "Avery | Vehicle Image Capture",
+      "url": "https://www.averyweigh-tronix.com/en-gb/wp-content/uploads/sites/2/2023/07/Weighman8_Vehicle_Image_Capture_spec_100164.pdf",
+      "type": "PDF [indexed; redirected]"
+    },
+    "S17": {
+      "name": "PRECIA MOLEN | TRUCKFLOW datasheet",
+      "url": "https://us.preciamolen.com/wp-content/uploads/sites/22/2019/07/09-15-01-1-FT-TRUCKFLOW-V00.09.pdf",
+      "type": "PDF 2 pages [text inspected; screenshot blocked]"
+    },
+    "S18": {
+      "name": "PRECIA MOLEN | TRUCKFLOW UI تصویر",
+      "url": "https://be-fr.preciamolen.com/wp-content/uploads/sites/12/2017/07/%C3%A9cran-1024x613.png",
+      "type": "Image [web indexed]"
+    },
+    "S19": {
+      "name": "PRECIA MOLEN | Truckflow brochure",
+      "url": "https://www.preciamolen.com/wp-content/uploads/2022/10/DC10041-1-014_interactif.pdf",
+      "type": "PDF [indexed; open 404]"
+    },
+    "S20": {
+      "name": "Dariel | WBX article",
+      "url": "https://it-online.co.za/2019/05/24/wbx-automates-weighbridge-process/",
+      "type": "News"
+    },
+    "S21": {
+      "name": "Dariel | WBX product modules",
+      "url": "https://easterncapeindustrialnews.co.za/software-suite-takes-the-weight-off-logistics-operations/",
+      "type": "News"
+    },
+    "S22": {
+      "name": "Dariel | Coal case",
+      "url": "https://www.dariel.co.za/coal-logistics-services-optimisation/",
+      "type": "Official case"
+    },
+    "S23": {
+      "name": "Endel Digital | WeighMAST",
+      "url": "https://endel.digital/weighmast-weighbridge-software/",
+      "type": "HTML"
+    },
+    "S24": {
+      "name": "METTLER TOLEDO | DataBridge",
+      "url": "https://www.mt.com/in/en/home/products/Transport_and_Logistics_Solutions/weighbridge-and-rail-scale-systems/weighbridge-systems/databridge-software-61046589001.html",
+      "type": "HTML"
+    },
+    "S25": {
+      "name": "METTLER TOLEDO | DataBridge brochure",
+      "url": "https://www.mt.com/dam/product_organizations/industry/transport-and-logistics/vehicle/databridge-downloads/DataBridge_Brochure-EN-PB-B-VEH-20250203-00193661.pdf",
+      "type": "PDF 6 pages [screenshots inspected]"
+    },
+    "S26": {
+      "name": "METTLER TOLEDO | DataBridge datasheet",
+      "url": "https://www.mt.com/dam/product_organizations/industry/transport-and-logistics/vehicle/databridge-downloads/DataBridge_Datasheet-EN-DS-B-VEH-20250110-00191484.pdf",
+      "type": "PDF 5 pages [text inspected]"
+    },
+    "S27": {
+      "name": "METTLER TOLEDO | POWERCELL PDX",
+      "url": "https://www.mt.com/us/en/home/products/Transport_and_Logistics_Solutions/truck-and-rail-scale-systems/truck-scale-systems/powercell-pdx-load-cells-42904891002.html",
+      "type": "HTML"
+    },
+    "S28": {
+      "name": "METTLER TOLEDO | VSK 901",
+      "url": "https://www.mt.com/ca/en/home/products/Transport_and_Logistics_Solutions/truck-and-rail-scale-systems/software-upgrades-and-systems/vsk9-series-truck-scale-kiosk-31125888.html",
+      "type": "HTML"
+    },
+    "S29": {
+      "name": "Rice Lake | iQUBE²",
+      "url": "https://www.ricelake.com/products/iqube2-digital-diagnostic-junction-box?part=54224",
+      "type": "HTML"
+    },
+    "S30": {
+      "name": "Loadscan | MyScanner",
+      "url": "https://www.loadscan.com/myscanner/",
+      "type": "HTML"
+    },
+    "S31": {
+      "name": "Loadscan | MPS",
+      "url": "https://www.loadscan.com/mine-payload-scanner/",
+      "type": "HTML"
+    },
+    "S32": {
+      "name": "Loadscan | LVS",
+      "url": "https://www.loadscan.com/load-volume-scanner/",
+      "type": "HTML"
+    },
+    "S33": {
+      "name": "Loadscan | API",
+      "url": "https://www.loadscan.com/loadscan-integration-api/",
+      "type": "HTML"
+    },
+    "S34": {
+      "name": "Loadscan | MyScanner dashboard update",
+      "url": "https://www.loadscan.com/myscanner-dashboard-update/",
+      "type": "HTML"
+    },
+    "S35": {
+      "name": "Trimble LOADRITE | InsightHQ",
+      "url": "https://www.goloadrite.com/insighthq",
+      "type": "HTML"
+    },
+    "S36": {
+      "name": "Trimble | LR360 release",
+      "url": "https://www.prnewswire.com/news-releases/trimble-introduces-loadrite-360-loadout-management-system-for-quarries-300071668.html",
+      "type": "press release"
+    },
+    "S37": {
+      "name": "Wenco | Fleet Performance",
+      "url": "https://www.hitachi.com/en-us/press/wenco-mine-performance-suite-6-reimagines-dispatching-analytics-and-total-mine-performance/",
+      "type": "official press release"
+    },
+    "S38": {
+      "name": "Wenco | dispatch",
+      "url": "https://www.wencomine.com/our-solutions/dispatching",
+      "type": "HTML"
+    },
+    "S39": {
+      "name": "Hexagon | mine operations",
+      "url": "https://hexagon.com/products/mine-operations",
+      "type": "HTML"
+    },
+    "S40": {
+      "name": "Komatsu Modular | DISPATCH",
+      "url": "https://www.komatsu.com/en-us/technology/smart-mining/loading-and-haulage/dispatch",
+      "type": "HTML"
+    },
+    "S41": {
+      "name": "Caterpillar | MineStar Fleet",
+      "url": "https://www.cat.com/en_US/by-industry/mining/surface-mining/surface-technology/fleet.html",
+      "type": "HTML"
+    },
+    "S42": {
+      "name": "TruckFlow screenshot indexed",
+      "url": "https://cdn.techjockey.com/web/assets/images/techjockey/products/screenshots/21235_truckflowsoftwareweight.jpg",
+      "type": "Image third-party"
+    },
+    "S43": {
+      "name": "STAIN | foundry context",
+      "url": "https://www.stain.it/en/industries/metal/brass-aluminium-foundries-and-wire-mills/",
+      "type": "HTML"
+    },
+    "S44": {
+      "name": "STAIN | distribution centers",
+      "url": "https://www.stain.it/en/industries/metal/pipe-and-sheet-metal-distribution-centres/",
+      "type": "HTML"
+    }
+  },
+  "open_questions": [
+    "indicator_models",
+    "legal_metrology_jurisdiction",
+    "ERP_contract",
+    "shift_definition",
+    "network_offline_policy",
+    "lidar_vehicle_profiles"
+  ]
+}

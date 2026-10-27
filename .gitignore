@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+*.log
+.env*
+web/data/db.json
+web/test-results/
+web/playwright-report/
+.DS_Store

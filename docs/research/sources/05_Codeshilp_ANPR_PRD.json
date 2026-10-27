@@ -1,0 +1,1100 @@
+{
+  "document": {
+    "title": "Mining Weighbridge ANPR RFID PRD",
+    "version": "1.0",
+    "language": "fa-IR",
+    "generated_date": "2026-10-25",
+    "target_company": "Codeshilp",
+    "source_registry": {
+      "C01": "https://codeshilp.com/anpr-weighbridge-software/",
+      "C02": "https://codeshilp.com/unmanned-weighbridge-software/",
+      "C03": "https://5.imimg.com/data5/SELLER/Doc/2025/1/478857094/JM/IO/EQ/88887902/cctv-weighbridge-software.pdf",
+      "C04": "https://codeshilp.com/wp-content/uploads/2025/03/Weighbridge-with-Cloud-Reporting.pdf",
+      "C05": "https://codeshilp.com/order-delivery-tally-integration-with-weighbridge/",
+      "C06": "https://codeshilp.com/weighbridge-software/",
+      "C07": "https://codeshilp.com/online-weighbridge-software/",
+      "C08": "https://codeshilp.com/royalty-weighbridge-software/",
+      "C09": "https://codeshilp.com/wp-content/uploads/2025/07/anpr-wb-4.png",
+      "C10": "https://codeshilp.com/wp-content/uploads/2025/04/1-weighing-form-1024x632.png",
+      "C11": "https://codeshilp.com/wp-content/uploads/2025/07/anpr-wb-1.png",
+      "C12": "https://codeshilp.com/gallery/",
+      "C13": "https://codeshilp.com/site-map/",
+      "C14": "https://codeshilp.com/comport-utility/",
+      "C15": "https://codeshilp.com/weighbridge-mobile-application/",
+      "C16": "https://codeshilp.com/weighbridge-software-with-tally-integration/",
+      "A01": "https://www.averyweigh-tronix.com/en/product/weighman-8-weighbridge-software/",
+      "A02": "https://www.averyweigh-tronix.com/en/product/smartower-unmanned-weighbridge-system/",
+      "A03": "https://www.averyweigh-tronix.com/en-gb/wp-content/uploads/sites/2/2023/07/Weighman8_Vehicle_Image_Capture_spec_100164.pdf",
+      "P01": "https://www.preciamolen.com/en/products/vehicle-weighing/weighbridge/out-weighing-management-software-truckflow",
+      "P02": "https://www.preciamolen.com/en/products/vehicle-weighing",
+      "P03": "https://www.preciamolen.com/wp-content/uploads/2018/05/09-15-01-1-FT-TRUCKFLOW-V00.09.pdf",
+      "D01": "https://www.dariel.co.za/coal-logistics-services-optimisation/",
+      "D02": "https://www.miningweekly.com/article/weighbridge-solution-installed-at-mpumalanga-coal-mine-2014-05-23/page%3A2",
+      "E01": "https://endel.digital/weighmast-weighbridge-software/",
+      "M01": "https://www.mt.com/dam/ind/IND_PDF/2024/IND780-downloads/others/IND560PDX-and-IND780_MAN_30137756_R00_TraxEMT_AppGuide_EN.pdf",
+      "R01": "https://www.ricelake.com/products/iqube2-digital-diagnostic-junction-box?part=93243",
+      "L01": "https://www.loadscan.com/mine-payload-scanner/",
+      "L02": "https://www.loadscan.com/myscanner/",
+      "L03": "https://www.loadscan.com/load-volume-scanner/",
+      "T01": "https://www.goloadrite.com/loadrite-360",
+      "T02": "https://www.neloadrite.com/reporting",
+      "W01": "https://www.wencomine.com/our-solutions/mining-fleet-management",
+      "H01": "https://hexagon.com/about/news-media/press-releases/2022/hexagon-awarded-significant-fleet-management-project",
+      "H02": "https://hexagon.com/-/media/project/one-web/master-site/products/hxgn-mineoperate-op-pro-hp/case_study_01_mineoperate_op_pro_lp.pdf",
+      "K01": "https://www.komatsu.com/en-us/technology/smart-mining/loading-and-haulage/dispatch",
+      "F01": "https://www.cat.com/en_US/by-industry/mining/surface-mining/surface-technology/fleet.html",
+      "F02": "https://www.cat.com/en_US/news/machine-press-releases/new-cat-minestar-reporting-integrates-minestar-and-other-vendor-data-into-a-single--unified-interface.html"
+    },
+    "evidence_policy": "vendor_claim_not_field_verified",
+    "scope": "proposed new standalone product, not competitor implementation"
+  },
+  "prd": {
+    "roles": [
+      {
+        "role": "اپراتور باسکول",
+        "goal": "ثبت/بررسی وزن و شواهد",
+        "permissions": [
+          "capture_weight",
+          "review_anpr",
+          "print_ticket"
+        ]
+      },
+      {
+        "role": "نگهبان دروازه",
+        "goal": "کنترل مجوز تردد",
+        "permissions": [
+          "view_vehicle",
+          "barrier_request"
+        ]
+      },
+      {
+        "role": "مدیر شیفت",
+        "goal": "مدیریت استثنا و عملکرد",
+        "permissions": [
+          "ack_alert",
+          "shift_report"
+        ]
+      },
+      {
+        "role": "دیسپچر/مسئول حمل",
+        "goal": "برنامه تردد و صف",
+        "permissions": [
+          "manage_trip",
+          "view_queue"
+        ]
+      },
+      {
+        "role": "واحد بازرگانی/فروش",
+        "goal": "مجوز و سقف سفارش",
+        "permissions": [
+          "manage_permit",
+          "approve_order"
+        ]
+      },
+      {
+        "role": "حسابداری",
+        "goal": "صورتحساب و مغایرت ERP",
+        "permissions": [
+          "reconcile",
+          "export_invoice"
+        ]
+      },
+      {
+        "role": "ناظر کالیبراسیون",
+        "goal": "گواهی/وضعیت تجهیز",
+        "permissions": [
+          "verify_calibration",
+          "view_diagnostics"
+        ]
+      },
+      {
+        "role": "مدیر معدن",
+        "goal": "KPI/گزارش تولید",
+        "permissions": [
+          "analytics_read"
+        ]
+      },
+      {
+        "role": "ادمین IT/OT",
+        "goal": "تجهیز، نقش و لاگ",
+        "permissions": [
+          "configure_device",
+          "rbac",
+          "audit_read"
+        ]
+      },
+      {
+        "role": "راننده (کیوسک)",
+        "goal": "تأیید پلاک و دستور حرکت",
+        "permissions": [
+          "kiosk_self_service"
+        ]
+      }
+    ],
+    "user_stories": [
+      "US-01 به‌عنوان نگهبان می‌خواهم پلاک و RFID پیش از باز شدن راهبند با مجوز تطبیق داده شوند تا خودرو غیرمجاز وارد نشود.",
+      "US-02 به‌عنوان اپراتور می‌خواهم وزن خام، ثبات، عکس و موقعیت خودرو یک‌جا نمایش داده شوند تا ثبت معتبر انجام شود.",
+      "US-03 به‌عنوان مسئول فروش می‌خواهم هر تراکنش به حواله با مانده معتبر متصل باشد تا بیش از مجوز تحویل نشود.",
+      "US-04 به‌عنوان ناظر کالیبراسیون می‌خواهم تاریخ گواهی و سلامت سخت‌افزار جدا نمایش داده شود تا هشدار کاذب تولید نشود.",
+      "US-05 به‌عنوان مدیر شیفت می‌خواهم تناژ خالص و تعداد سفر بر اساس زمان نهایی تراکنش و فیلتر سایت/شیفت استخراج شوند.",
+      "US-06 به‌عنوان مدیر بارگیری می‌خواهم سفارش باسکول به لودر برسد و payload لودر با وزن خروجی تطبیق شود.",
+      "US-07 به‌عنوان نگهبان می‌خواهم خروج بدون وزن ثبت‌شده به‌صورت رخداد ضدتقلب ضبط و علامت‌گذاری شود.",
+      "US-08 به‌عنوان دیسپچر می‌خواهم خودروهای منتظر و مدت ماندگاری را ببینم تا صف را مدیریت کنم.",
+      "US-09 به‌عنوان مدیر مالی می‌خواهم وضعیت ارسال هر قبض به ERP و خطاهای همگام‌سازی روشن باشد.",
+      "US-10 به‌عنوان کارشناس معدن می‌خواهم حجم LiDAR و جرم باسکول دو اندازه‌گیری مستقل باشند و اختلافشان ثبت شود.",
+      "US-11 به‌عنوان مدیر سامانه می‌خواهم در زمان قطع WAN توزین در کنترلر محلی طبق سیاست ادامه یابد و بعداً با dedupe همگام شود.",
+      "US-12 به‌عنوان حسابرس می‌خواهم هر اصلاح قبض همراه با هویت، نسخه و علت در audit غیرقابل دستکاری قابل مشاهده باشد."
+    ],
+    "functional_requirements": [
+      {
+        "id": "FR-01",
+        "description_fa": "ثبت سایت، مسیر، باسکول و تجهیزات",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C01"
+      },
+      {
+        "id": "FR-02",
+        "description_fa": "دریافت وزن زنده از indicator با Device Adapter و ثبت داده خام",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C01"
+      },
+      {
+        "id": "FR-03",
+        "description_fa": "اعلام پایداری وزن، حالت zero، overload و کیفیت ارتباط",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C02"
+      },
+      {
+        "id": "FR-04",
+        "description_fa": "تشخیص پلاک با confidence، snapshot و تأیید اپراتور برای موارد مبهم",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C01"
+      },
+      {
+        "id": "FR-05",
+        "description_fa": "خواندن RFID و تطبیق آن با شناسه خودرو، راننده و پلاک",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C02"
+      },
+      {
+        "id": "FR-06",
+        "description_fa": "ثبت رویدادهای ورود/خروج و موقعیت دروازه",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C01"
+      },
+      {
+        "id": "FR-07",
+        "description_fa": "کنترل ایمن راهبند، چراغ، نمایشگر و سنسور موقعیت",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C02"
+      },
+      {
+        "id": "FR-08",
+        "description_fa": "مدیریت masterهای خودرو، راننده، شرکت حمل، مشتری و ماده",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C04"
+      },
+      {
+        "id": "FR-09",
+        "description_fa": "ثبت اولین وزن و جلوگیری از انتساب آن به سفر اشتباه",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C03"
+      },
+      {
+        "id": "FR-10",
+        "description_fa": "ثبت دومین وزن، محاسبه خالص با جهت ورود/خروج و کنترل علامت",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C03"
+      },
+      {
+        "id": "FR-11",
+        "description_fa": "تارای ذخیره‌شده با تاریخ اعتبار، منبع و مجوز استفاده",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C04"
+      },
+      {
+        "id": "FR-12",
+        "description_fa": "ثبت سفارش، حواله، مجوز فروش/حمل و اعتبارسنجی مقدار",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C05"
+      },
+      {
+        "id": "FR-13",
+        "description_fa": "باز کردن راهبند خروج فقط پس از گذر از قوانین و اتمام تراکنش",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C02"
+      },
+      {
+        "id": "FR-14",
+        "description_fa": "ثبت تصاویر هر وزن و اتصال عکس به شناسه رویداد",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C03"
+      },
+      {
+        "id": "FR-15",
+        "description_fa": "مدیریت ضدتکرار (idempotency) در خوانش، تراکنش و API",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": null
+      },
+      {
+        "id": "FR-16",
+        "description_fa": "صدور قبض نسخه‌دار با اطلاعات خودرو، وزن و QR راستی‌آزمایی",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C03"
+      },
+      {
+        "id": "FR-17",
+        "description_fa": "ثبت عملیات دستی فقط با دلیل، تایید سطح دوم و audit trail",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C01"
+      },
+      {
+        "id": "FR-18",
+        "description_fa": "داشبورد صف، وزن لحظه‌ای، رویداد جاری و رخدادهای استثنا",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C04"
+      },
+      {
+        "id": "FR-19",
+        "description_fa": "گزارش تراکنش/راننده/شرکت/ماده/شیفت و خروجی CSV/XLSX/PDF",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C04"
+      },
+      {
+        "id": "FR-20",
+        "description_fa": "مدیریت نقش‌ها، مجوزهای جزءبه‌جزء و محدوده دسترسی به سایت",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C01"
+      },
+      {
+        "id": "FR-21",
+        "description_fa": "گردش کار اصلاح تراکنش با نسخه قبلی و ردپای کامل",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "A01"
+      },
+      {
+        "id": "FR-22",
+        "description_fa": "آفلاین محلی و همگام‌سازی قابل بازیابی با سرور مرکزی",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": "C04"
+      },
+      {
+        "id": "FR-23",
+        "description_fa": "مدیریت انقضای گواهی و وضعیت سلامت باسکول؛ تفکیک اداری و سنسوری",
+        "priority": "P0",
+        "status": "proposed",
+        "inspiration_source_id": null
+      },
+      {
+        "id": "FR-24",
+        "description_fa": "ارسال رویداد به ERP از صف پایدار با retry و reconciliation",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": "C05"
+      },
+      {
+        "id": "FR-25",
+        "description_fa": "پشتیبانی دو باسکول و مسیر جفت‌شدن رویدادها بین دو ایستگاه",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": "P01"
+      },
+      {
+        "id": "FR-26",
+        "description_fa": "پایش turnaround و طول صف با منبع timestamp مشخص",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": "T01"
+      },
+      {
+        "id": "FR-27",
+        "description_fa": "هشدار خروج بدون ذخیره وزن، پلاک مغایر و موقعیت نامعتبر",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": "C02"
+      },
+      {
+        "id": "FR-28",
+        "description_fa": "مدیریت مجوز/سهمیه، کسری باقیمانده و عدم مصرف مجدد",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": "D02"
+      },
+      {
+        "id": "FR-29",
+        "description_fa": "کانال SMS/Email با الگوهای پیام و لاگ تحویل",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": "C01"
+      },
+      {
+        "id": "FR-30",
+        "description_fa": "ثبت کالیبراسیون، سوابق تست و رسیدگی به هشدار سلامت",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": null
+      },
+      {
+        "id": "FR-31",
+        "description_fa": "استفاده از تشخیص خرابی تک‌لودسل فقط در صورت خروجی پشتیبانی‌شده تجهیز",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": "R01"
+      },
+      {
+        "id": "FR-32",
+        "description_fa": "صفحه موبایل/Responsive برای مدیر، اپراتور و ناظر",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": "P01"
+      },
+      {
+        "id": "FR-33",
+        "description_fa": "پلاگین مستقل LiDAR برای empty reference، اسکن پر، 3D و m³",
+        "priority": "P2",
+        "status": "proposed",
+        "inspiration_source_id": "L01"
+      },
+      {
+        "id": "FR-34",
+        "description_fa": "ثبت چگالی با بازه اعتبار و محاسبه جرم تخمینی غیرتجاری",
+        "priority": "P2",
+        "status": "proposed",
+        "inspiration_source_id": null
+      },
+      {
+        "id": "FR-35",
+        "description_fa": "پلاگین Payload برای لودر/شاول و تطبیق با باسکول",
+        "priority": "P2",
+        "status": "proposed",
+        "inspiration_source_id": "T01"
+      },
+      {
+        "id": "FR-36",
+        "description_fa": "پلاگین Fleet KPI، نرخ تولید، تعداد سفر، زمان چرخه، تأخیر، سوخت",
+        "priority": "P2",
+        "status": "proposed",
+        "inspiration_source_id": "F01"
+      },
+      {
+        "id": "FR-37",
+        "description_fa": "API و Webhook نسخه‌بندی‌شده برای داده مجوز، وزن، رخداد و اعلان",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": "C01"
+      },
+      {
+        "id": "FR-38",
+        "description_fa": "تعریف شیفت عبوری از نیمه‌شب و انتساب یکتای تراکنش",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": null
+      },
+      {
+        "id": "FR-39",
+        "description_fa": "گزارش مغایرت سه‌طرفه باسکول، حجم و Payload",
+        "priority": "P2",
+        "status": "proposed",
+        "inspiration_source_id": null
+      },
+      {
+        "id": "FR-40",
+        "description_fa": "مدیریت وضعیت دوربین، لودسل، شبکه، PLC و تأخیر heartbeat",
+        "priority": "P1",
+        "status": "proposed",
+        "inspiration_source_id": "C02"
+      }
+    ],
+    "nonfunctional_requirements": [
+      {
+        "id": "NFR-01",
+        "description_fa": "هر رویداد یک UUID و زمان UTC به‌همراه offset محلی داشته باشد؛ زمان تجهیز جدا ذخیره شود.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-02",
+        "description_fa": "هیچ وزن سنسور در سرور با مقدار دستی جایگزین نشود؛ دو فیلد مستقل و منشأ داده الزامی است.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-03",
+        "description_fa": "ثبت نهایی تراکنش اتمیک و تکرار امن باشد؛ unique constraint و idempotency key.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-04",
+        "description_fa": "در قطع ارتباط، کنترلر محلی به حالت fail-safe پیکربندی‌شده برود؛ باز کردن خودکار مجاز نیست.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-05",
+        "description_fa": "سازگاری با مرورگرهای مدرن، RTL فارسی و LTR برای پلاک/شماره، و WCAG 2.2 AA هدف طراحی است.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-06",
+        "description_fa": "حدود تأخیر، نرخ پردازش، SLA و ظرفیت دوربین/تجهیز با آزمون پذیرش سایت تعیین شوند [TBD].",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-07",
+        "description_fa": "ارتباطات TLS؛ نگه‌داری محرمانه رازها؛ احراز هویت MFA برای سطوح حساس.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-08",
+        "description_fa": "ثبت audit غیرقابل ویرایش عملیاتی با هش زنجیره‌ای یا مخزن WORM متناسب با تهدید.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-09",
+        "description_fa": "Retention تصاویر/پلاک و حق حذف/دسترسی مطابق مقررات محل اجرا؛ اعداد [TBD].",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-10",
+        "description_fa": "نسخه‌بندی API و Device Adapter؛ تست سازگاری با simulator تجهیزات.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-11",
+        "description_fa": "مانیتورینگ uptime، کیفیت ارتباط، queue lag، fail rate، سلامت سنسور و alarms.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-12",
+        "description_fa": "پشتیبان‌گیری دوره‌ای و تمرین بازیابی؛ RPO/RTO [TBD] برای هر سایت.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-13",
+        "description_fa": "رفع تضاد رخدادهای آفلاین با event append-only و شناسه یکتا، نه last-write-wins روی وزن.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-14",
+        "description_fa": "ارقام وزن/حجم با Decimal و واحد ذخیره شوند؛ گرد کردن تابع تأییدیه قانونی و دستگاه است.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-15",
+        "description_fa": "کنترلر PLC باید interlock سخت‌افزاری و emergency-stop مستقل از مرورگر داشته باشد.",
+        "status": "proposed"
+      },
+      {
+        "id": "NFR-16",
+        "description_fa": "سوابق کالیبراسیون/گواهی فقط توسط ناظر مجاز ثبت و با سند امضاشده پیوست شوند.",
+        "status": "proposed"
+      }
+    ],
+    "state_machine": {
+      "initial": "EXPECTED",
+      "states": [
+        "EXPECTED",
+        "ARRIVED",
+        "VERIFIED",
+        "ENTERED",
+        "FIRST_WEIGHED",
+        "LOADING",
+        "SECOND_WEIGHED",
+        "VERIFIED_PERMIT",
+        "COMPLETED",
+        "EXITED",
+        "HOLD",
+        "CANCELLED",
+        "MANUAL_REVIEW"
+      ],
+      "terminal": [
+        "EXITED",
+        "CANCELLED"
+      ]
+    },
+    "plugins": [
+      "lidar-volume",
+      "onboard-payload",
+      "fleet-kpi"
+    ]
+  },
+  "data_model": {
+    "unit_policy": {
+      "mass": "kg",
+      "volume": "m3",
+      "timestamp": "UTC ISO8601 with source timestamp separately",
+      "quantity_type": "Decimal"
+    },
+    "entities": [
+      {
+        "name": "Site",
+        "fields": [
+          "id UUID PK",
+          "code unique",
+          "name",
+          "timezone",
+          "location",
+          "status"
+        ]
+      },
+      {
+        "name": "Gate",
+        "fields": [
+          "id",
+          "site_id FK",
+          "direction IN|OUT|BOTH",
+          "lane_id",
+          "controller_id",
+          "status"
+        ]
+      },
+      {
+        "name": "Vehicle",
+        "fields": [
+          "id",
+          "plate_normalized",
+          "plate_country",
+          "vehicle_class",
+          "axle_count",
+          "max_gvw_kg nullable",
+          "default_tare_kg nullable",
+          "tare_valid_until nullable",
+          "rfid_tag_id nullable",
+          "active"
+        ]
+      },
+      {
+        "name": "Driver",
+        "fields": [
+          "id",
+          "name",
+          "license_number_hash_or_token",
+          "carrier_id FK nullable",
+          "phone_protected",
+          "active"
+        ]
+      },
+      {
+        "name": "Carrier",
+        "fields": [
+          "id",
+          "legal_name",
+          "registration_no",
+          "contacts",
+          "active"
+        ]
+      },
+      {
+        "name": "Customer",
+        "fields": [
+          "id",
+          "name",
+          "external_erp_id",
+          "role CUSTOMER|SUPPLIER|BOTH",
+          "active"
+        ]
+      },
+      {
+        "name": "Material",
+        "fields": [
+          "id",
+          "code",
+          "name",
+          "material_type",
+          "grade_label nullable",
+          "measurement_unit",
+          "default_density_kg_m3 nullable"
+        ]
+      },
+      {
+        "name": "Permit",
+        "fields": [
+          "id",
+          "kind SALE|TRANSPORT|PURCHASE|DISPATCH",
+          "external_ref",
+          "customer_id",
+          "carrier_id nullable",
+          "material_id",
+          "valid_from",
+          "valid_to",
+          "max_net_kg nullable",
+          "remaining_kg nullable",
+          "max_vehicle_gvw_kg nullable",
+          "status",
+          "revision"
+        ]
+      },
+      {
+        "name": "Transaction",
+        "fields": [
+          "id UUID",
+          "site_id",
+          "vehicle_id",
+          "driver_id nullable",
+          "carrier_id nullable",
+          "customer_id nullable",
+          "material_id",
+          "permit_id nullable",
+          "origin_id",
+          "destination_id",
+          "shift_id",
+          "status",
+          "direction INBOUND|OUTBOUND",
+          "gross_kg nullable",
+          "tare_kg nullable",
+          "net_kg nullable",
+          "first_weigh_at nullable",
+          "second_weigh_at nullable",
+          "entry_at nullable",
+          "exit_at nullable",
+          "hold_reason nullable",
+          "revision",
+          "created_at"
+        ]
+      },
+      {
+        "name": "WeighEvent",
+        "fields": [
+          "id",
+          "transaction_id",
+          "scale_id",
+          "sequence_no",
+          "weight_kg Decimal",
+          "raw_payload",
+          "stable_flag",
+          "zero_flag",
+          "capture_method SENSOR|MANUAL",
+          "captured_at_utc",
+          "device_at nullable",
+          "operator_id nullable",
+          "manual_override_reason nullable",
+          "image_refs",
+          "calibration_snapshot_id nullable"
+        ]
+      },
+      {
+        "name": "GateEvent",
+        "fields": [
+          "id",
+          "vehicle_id nullable",
+          "transaction_id nullable",
+          "gate_id",
+          "event_type ARRIVAL|BARRIER_OPEN|ENTRY|EXIT|DENY",
+          "timestamp_utc",
+          "source",
+          "rfid_read_id nullable",
+          "plate_read_id nullable",
+          "decision_reason"
+        ]
+      },
+      {
+        "name": "Camera",
+        "fields": [
+          "id",
+          "site_id",
+          "gate_id nullable",
+          "scale_id nullable",
+          "stream_ref_secret",
+          "position FRONT|REAR|TOP|SIDE",
+          "status",
+          "heartbeat_at"
+        ]
+      },
+      {
+        "name": "PlateRead",
+        "fields": [
+          "id",
+          "camera_id",
+          "observed_at",
+          "plate_raw",
+          "plate_normalized",
+          "confidence",
+          "vehicle_id nullable",
+          "image_uri",
+          "bbox",
+          "review_status",
+          "model_version"
+        ]
+      },
+      {
+        "name": "RFIDRead",
+        "fields": [
+          "id",
+          "reader_id",
+          "tag_epc",
+          "frequency_band HF|UHF|OTHER",
+          "observed_at",
+          "vehicle_id nullable",
+          "signal_quality nullable"
+        ]
+      },
+      {
+        "name": "Scale",
+        "fields": [
+          "id",
+          "site_id",
+          "indicator_model",
+          "driver_adapter_id",
+          "serial_no",
+          "capacity_kg",
+          "division_kg",
+          "mode STATIC|DYNAMIC",
+          "metrology_status",
+          "last_zero_check_at",
+          "calibration_due_at",
+          "health_state"
+        ]
+      },
+      {
+        "name": "CalibrationRecord",
+        "fields": [
+          "id",
+          "scale_id",
+          "certificate_no",
+          "issuer",
+          "performed_at",
+          "expires_at",
+          "document_uri",
+          "document_sha256",
+          "verified_by",
+          "certificate_status",
+          "test_results_json"
+        ]
+      },
+      {
+        "name": "Alert",
+        "fields": [
+          "id",
+          "rule_id",
+          "severity INFO|WARN|CRITICAL",
+          "entity_type",
+          "entity_id",
+          "opened_at",
+          "status OPEN|ACK|RESOLVED",
+          "evidence_refs",
+          "ack_by nullable",
+          "resolved_by nullable"
+        ]
+      },
+      {
+        "name": "Shift",
+        "fields": [
+          "id",
+          "site_id",
+          "shift_code",
+          "start_at_utc",
+          "end_at_utc",
+          "production_plan_kg nullable",
+          "timezone"
+        ]
+      },
+      {
+        "name": "Equipment",
+        "fields": [
+          "id",
+          "site_id",
+          "kind TRUCK|LOADER|SHOVEL|SCALE|SCANNER",
+          "external_fms_id nullable",
+          "manufacturer",
+          "model",
+          "status"
+        ]
+      },
+      {
+        "name": "LidarScan",
+        "fields": [
+          "id",
+          "transaction_id nullable",
+          "scanner_id",
+          "vehicle_id",
+          "scan_type EMPTY|LOADED",
+          "reference_scan_id nullable",
+          "volume_m3 nullable",
+          "pointcloud_uri nullable",
+          "profile_uri nullable",
+          "density_kg_m3 nullable",
+          "estimated_mass_kg nullable",
+          "quality_flag",
+          "captured_at",
+          "legal_use_flag"
+        ]
+      },
+      {
+        "name": "PayloadEvent",
+        "fields": [
+          "id",
+          "transaction_id nullable",
+          "equipment_id",
+          "truck_id nullable",
+          "material_id",
+          "payload_kg",
+          "bucket_count nullable",
+          "operator_id nullable",
+          "timestamp",
+          "sensor_source",
+          "confidence nullable"
+        ]
+      },
+      {
+        "name": "AuditLog",
+        "fields": [
+          "id",
+          "actor_id",
+          "action",
+          "entity_type",
+          "entity_id",
+          "before_hash",
+          "after_hash",
+          "reason nullable",
+          "occurred_at",
+          "device_id",
+          "correlation_id"
+        ]
+      },
+      {
+        "name": "DeviceEvent",
+        "fields": [
+          "id",
+          "device_id",
+          "kind HEARTBEAT|ERROR|STATUS|INPUT",
+          "timestamp",
+          "payload_json",
+          "quality",
+          "correlation_id"
+        ]
+      },
+      {
+        "name": "IntegrationOutbox",
+        "fields": [
+          "id",
+          "topic",
+          "aggregate_id",
+          "event_version",
+          "payload_json",
+          "status",
+          "attempt_count",
+          "next_retry_at",
+          "idempotency_key"
+        ]
+      }
+    ]
+  },
+  "alert_rules": [
+    {
+      "id": "AL-01",
+      "type": "duplicate_weigh",
+      "condition": "OPEN first transaction on same vehicle or same stable-weight sample within configured window",
+      "severity": "WARN",
+      "action": "hold new event + operator review",
+      "threshold_configuration": "window_seconds=TBD",
+      "status": "proposed",
+      "inspiration_source_id": "C01"
+    },
+    {
+      "id": "AL-02",
+      "type": "plate_rfid_mismatch",
+      "condition": "normalizedPlate.vehicle_id != RFID.vehicle_id when both high confidence",
+      "severity": "CRITICAL",
+      "action": "deny barrier + capture image",
+      "threshold_configuration": "plate_confidence=TBD",
+      "status": "proposed",
+      "inspiration_source_id": "C02"
+    },
+    {
+      "id": "AL-03",
+      "type": "low_anpr_confidence",
+      "condition": "plate confidence below configured threshold",
+      "severity": "WARN",
+      "action": "manual review; no auto-match",
+      "threshold_configuration": "confidence=TBD",
+      "status": "proposed",
+      "inspiration_source_id": null
+    },
+    {
+      "id": "AL-04",
+      "type": "invalid_position",
+      "condition": "any required position sensor false during stable capture",
+      "severity": "CRITICAL",
+      "action": "block weigh/save",
+      "threshold_configuration": "required_sensors=site config",
+      "status": "proposed",
+      "inspiration_source_id": "C02"
+    },
+    {
+      "id": "AL-05",
+      "type": "unstable_weight",
+      "condition": "indicator stability false / oscillation beyond device rule",
+      "severity": "WARN",
+      "action": "wait for stable event",
+      "threshold_configuration": "stable_time=TBD",
+      "status": "proposed",
+      "inspiration_source_id": "C02"
+    },
+    {
+      "id": "AL-06",
+      "type": "overweight",
+      "condition": "gross exceeds min(vehicle certified limit, scale limit, permit limit) where known",
+      "severity": "CRITICAL",
+      "action": "HOLD + supervisor",
+      "threshold_configuration": "limits from validated master",
+      "status": "proposed",
+      "inspiration_source_id": "C01"
+    },
+    {
+      "id": "AL-07",
+      "type": "permit_expired",
+      "condition": "now outside permit validity or status not ACTIVE",
+      "severity": "CRITICAL",
+      "action": "hold exit; approval",
+      "threshold_configuration": "none",
+      "status": "proposed",
+      "inspiration_source_id": null
+    },
+    {
+      "id": "AL-08",
+      "type": "permit_overdraw",
+      "condition": "proposed net_kg > remaining authorized kg",
+      "severity": "CRITICAL",
+      "action": "reject booking and exit",
+      "threshold_configuration": "remaining_kg>=0",
+      "status": "proposed",
+      "inspiration_source_id": "D02"
+    },
+    {
+      "id": "AL-09",
+      "type": "unrecorded_departure",
+      "condition": "exit detected after stable loaded weigh with no committed weigh event",
+      "severity": "CRITICAL",
+      "action": "evidence snapshot + incident ticket",
+      "threshold_configuration": "dwell_window=TBD",
+      "status": "proposed",
+      "inspiration_source_id": "C02"
+    },
+    {
+      "id": "AL-10",
+      "type": "calibration_expired",
+      "condition": "now > calibration_record.expires_at",
+      "severity": "CRITICAL",
+      "action": "mark scale restricted; escalation",
+      "threshold_configuration": "expiry timestamp",
+      "status": "proposed",
+      "inspiration_source_id": null
+    },
+    {
+      "id": "AL-11",
+      "type": "zero_drift",
+      "condition": "reported digital cell/zero diagnostic exceeds device certified limits",
+      "severity": "CRITICAL",
+      "action": "scale health lock pending QA",
+      "threshold_configuration": "vendor device limits [TBD]",
+      "status": "proposed",
+      "inspiration_source_id": "M01"
+    },
+    {
+      "id": "AL-12",
+      "type": "cell_imbalance",
+      "condition": "per-cell imbalance diagnostic raised by compatible junction box",
+      "severity": "CRITICAL",
+      "action": "maintenance work order",
+      "threshold_configuration": "vendor algorithm/threshold",
+      "status": "proposed",
+      "inspiration_source_id": "R01"
+    },
+    {
+      "id": "AL-13",
+      "type": "communication_lost",
+      "condition": "missing indicator/PLC heartbeat > configured timeout",
+      "severity": "CRITICAL",
+      "action": "local fail-safe; alert control room",
+      "threshold_configuration": "timeout=TBD",
+      "status": "proposed",
+      "inspiration_source_id": null
+    },
+    {
+      "id": "AL-14",
+      "type": "duplicate_exit",
+      "condition": "same transaction/vehicle exits multiple times without reentry",
+      "severity": "WARN",
+      "action": "flag anomaly",
+      "threshold_configuration": "window=TBD",
+      "status": "proposed",
+      "inspiration_source_id": null
+    },
+    {
+      "id": "AL-15",
+      "type": "turnaround_overdue",
+      "condition": "exit_at absent and now-entry_at > configured percentile/limit",
+      "severity": "WARN",
+      "action": "notify dispatch",
+      "threshold_configuration": "duration=TBD",
+      "status": "proposed",
+      "inspiration_source_id": "T01"
+    },
+    {
+      "id": "AL-16",
+      "type": "payload_variance",
+      "condition": "abs(scale.net_kg-payload.payload_kg) > tolerance agreed per material",
+      "severity": "WARN",
+      "action": "flag reconciliation",
+      "threshold_configuration": "tolerance_kg=TBD",
+      "status": "proposed",
+      "inspiration_source_id": null
+    },
+    {
+      "id": "AL-17",
+      "type": "volume_mass_variance",
+      "condition": "abs(net_kg - volume_m3*density_kg_m3) > adaptive tolerance",
+      "severity": "WARN",
+      "action": "technical review; never overwrite certified mass",
+      "threshold_configuration": "density/tolerance=TBD",
+      "status": "proposed",
+      "inspiration_source_id": null
+    },
+    {
+      "id": "AL-18",
+      "type": "sensor_cctv_offline",
+      "condition": "camera/RFID/position sensor unhealthy at weighing",
+      "severity": "WARN",
+      "action": "hold according to site policy",
+      "threshold_configuration": "grace_period=TBD",
+      "status": "proposed",
+      "inspiration_source_id": null
+    }
+  ],
+  "implementation_notes": {
+    "legal_metrology": "do_not_substitute_lidar_estimates_for_certified_scale_mass",
+    "calibration": "certificate_expiry_not_equivalent_to_sensor_failure",
+    "security": "barrier_hardware_interlocks_and_manual_override_policy_required",
+    "tbd_parameters": [
+      "stability_window",
+      "anpr_threshold",
+      "permit_limits",
+      "calibration_device_limits",
+      "turnaround_threshold",
+      "image_retention",
+      "rpo",
+      "rto",
+      "capacity",
+      "legal_approval"
+    ]
+  }
+}
