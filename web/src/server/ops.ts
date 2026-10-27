@@ -70,7 +70,10 @@ export function gateContextFor(d: DB, visit: T.Visit, direction: "IN" | "OUT"): 
   const txs = visit.transactionIds.map((id) => findTx(d, id)).filter(Boolean) as T.Transaction[];
   const ep = d.exitPermits.find((e) => e.id === visit.exitPermitId);
   const uv = d.uvssScans.find((u) => u.id === visit.uvssScanId);
-  const openCritical = d.alerts.filter((a) => a.visitId === visit.id && a.severity === "CRITICAL" && (a.status === "OPEN" || a.status === "ACK" || a.status === "INVESTIGATING")).length;
+  // R36 flags a reuse attempt of a token this truck already consumed legitimately; it stays open for security
+  // review but must not trap the truck that owns the permit at the exit barrier.
+  const reuseOfOwnConsumedPermit = (a: T.Alert) => a.ruleCode === "R36" && ep?.status === "CONSUMED";
+  const openCritical = d.alerts.filter((a) => a.visitId === visit.id && a.severity === "CRITICAL" && (a.status === "OPEN" || a.status === "ACK" || a.status === "INVESTIGATING") && !reuseOfOwnConsumedPermit(a)).length;
   return {
     direction,
     safety: { emergencyStop: false, laneClear: true, interlockFault: false },

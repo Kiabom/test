@@ -1,6 +1,6 @@
 "use client";
 import { CheckCircle2, DoorOpen, Keyboard, ScanQrCode, XCircle } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IranPlate } from "@/components/domain/IranPlate";
 import { QrScanner } from "@/components/domain/QrScanner";
 import { CameraFeed } from "@/components/hardware/CameraFeed";
@@ -28,6 +28,11 @@ export default function GuardPage() {
   const [res, setRes] = useState<ScanRes | null>(null);
   const [history, setHistory] = useState<{ at: number; code: string; ok: boolean; kind: string }[]>([]);
   const { data: eps } = useData<ExitPermit>("exitPermits", { status: "APPROVED", limit: 8 }, 3000);
+  const resRef = useRef<HTMLDivElement>(null);
+  // on a phone the verdict sits below the scanner — bring it into view so the guard sees it immediately
+  useEffect(() => {
+    if (res && window.innerWidth < 1024) resRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [res]);
 
   const scan = useCallback(
     async (raw: string) => {
@@ -86,7 +91,7 @@ export default function GuardPage() {
 
         <div className="flex flex-col gap-4">
           {res ? (
-            <div className={cx("rise rounded-2xl p-5 text-white shadow-lg", res.ok ? "bg-success" : "bg-danger")}>
+            <div ref={resRef} className={cx("rise scroll-mt-16 rounded-2xl p-5 text-white shadow-lg", res.ok ? "bg-success" : "bg-danger")}>
               <div className="flex items-center gap-3">
                 {res.ok ? <CheckCircle2 className="size-12" /> : <XCircle className="size-12" />}
                 <div>

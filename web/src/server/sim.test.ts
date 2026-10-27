@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { verifyChain } from "@/domain/audit";
 import { buildSeed } from "./seed";
 import { initLive, runScenario, tick } from "./sim";
-import { consumeExitPermit, issueExitPermit } from "./ops";
+import { consumeExitPermit, gateContextFor, issueExitPermit } from "./ops";
 import type { DB } from "./store";
 
 let d: DB;
@@ -52,6 +52,9 @@ describe("simulator", () => {
     const again = consumeExitPermit(d, ep.token, "U-GD2");
     expect(again.ok).toBe(false);
     expect(d.alerts.some((a) => a.ruleCode === "R36")).toBe(true);
+    // the reuse alert stays open for security but does not trap the truck that legitimately consumed the permit
+    expect(d.alerts.some((a) => a.ruleCode === "R36" && a.visitId === v.id && a.status === "OPEN")).toBe(true);
+    expect(gateContextFor(d, v, "OUT").openCriticalAlerts).toBe(0);
   });
 
   it("mismatch scenario holds the truck at the gate", () => {
