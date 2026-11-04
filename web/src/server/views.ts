@@ -1,5 +1,8 @@
 // Read models assembled on the server so clients don't need to download the whole store.
 import { guidanceFor } from "@/domain/driverGuidance";
+import { LANE_STATION, LOADER_STATION, type StationKey } from "@/domain/geo";
+import { JOURNEY_STEPS, journeyIndex, type StepId } from "@/domain/journey";
+import { outboundTrip, routeFor } from "@/domain/trips";
 import { computeKpis } from "@/domain/kpi";
 import { maskPlate } from "@/domain/plate";
 import { remainingKg } from "@/domain/permits";
@@ -250,8 +253,31 @@ export function driverView(d: DB, tokenValue: string) {
   const pos = queue.indexOf(v.id);
   const eq = d.equipment.find((e) => e.id === v.loadingEquipmentId);
   const guidance = guidanceFor(v, laneLive?.kind === "SCALE" ? laneLive : undefined, { loadPoint: eq?.code, queuePos: pos >= 0 ? pos + 1 : undefined });
+  const txs = det.transactions.filter((t) => t.state !== "VOIDED");
+  const firstWeighed = txs.some((t) => !!t.firstWeighId);
+  const approved = txs.find((t) => t.state === "APPROVED");
+  const index = journeyIndex(v, { firstWeighed, hasTicket: !!approved });
+  const weighAt = (pass: string) => det.weighEvents.find((w) => w.pass === pass)?.capturedAt;
+  const vehicle = det.vehicle;
+  const route = routeFor(v.operation, det.permit?.customerId, vehicle.carrierId);
+  const trip = v.exitedAt && route ? outboundTrip(v.id, v.exitedAt, route, Date.now()) : null;
+  const times: Partial<Record<StepId, string>> = {
+    BOOK: d.bookings.find((b) => b.id === v.bookingId)?.slotStart,
+    GATE_IN: v.enteredAt ?? (index > 1 ? v.arrivedAt : undefined),
+    QUEUE: v.calledAt ?? (index > 2 ? v.queueJoinedAt : undefined),
+    SCALE_1: weighAt("FIRST"),
+    LOAD: det.payload.at(-1)?.at,
+    LIDAR: det.lidarScans.at(-1)?.capturedAt,
+    SCALE_2: weighAt("SECOND") ?? weighAt("ONE_PASS"),
+    TICKET: approved?.approvedAt,
+    EXIT: v.exitedAt,
+    DELIVER: trip?.delivered ? trip.events.find((e) => e.kind === "DELIVERED")?.at : undefined,
+  };
   return {
     ...det,
+    journey: { index, firstWeighed, hasTicket: !!approved, times, steps: JOURNEY_STEPS.length },
+    trip,
+    loadingEquipmentCode: eq?.code,
     laneLive,
     queuePos: pos >= 0 ? pos + 1 : null,
     etaMin: pos >= 0 ? (pos + 1) * 4 : null,
@@ -277,3 +303,229 @@ export function verifyView(d: DB, code: string) {
   }
   return null;
 }
+
+// ---------------- Fleet & events map ----------------
+export interface MapSiteTruck {
+  id: string;
+  plate: T.Plate;
+  plateNormalized: string;
+  driver: string;
+  driverEn: string;
+  state: T.VisitState;
+  step: number;
+  station: StationKey;
+  slot: number;
+  hold: boolean;
+  laneCode?: string;
+  token: string;
+  ticketNo?: string;
+  operation: T.Operation;
+}
+export interface MapRoadTruck {
+  id: string;
+  kind: "OUT" | "IN";
+  plate: T.Plate;
+  plateNormalized: string;
+  driver: string;
+  driverEn: string;
+  customer?: string;
+  customerEn?: string;
+  /** OUT: exit time; IN: slot start. */
+  t: string;
+  /** OUT: customer id for the route; IN: carrier id. */
+  routeKey: string;
+  token?: string;
+  ticketNo?: string;
+  netKg?: number;
+}
+export interface MapFleetTruck {
+  id: string;
+  plate: T.Plate;
+  plateNormalized: string;
+  loop: "HAUL" | "DUMP";
+  cycleMin: number;
+  offsetMin: number;
+}
+export interface MapAlert {
+  id: string;
+  ruleCode: string;
+  severity: T.Severity;
+  title: string;
+  titleEn: string;
+  station: StationKey;
+  openedAt: string;
+  visitId?: string;
+}
+
+export function mapView(d: DB) {
+  const now = Date.now();
+  const active = d.visits.filter((v) => !TERMINAL.includes(v.state));
+  const qB = d.live.queueB;
+  const qC = d.live.queueC;
+  const slots: Record<string, number> = {};
+  const site: MapSiteTruck[] = active.map((v) => {
+    const vh = findVehicle(d, v.vehicleId)!;
+    const dr = d.drivers.find((x) => x.id === v.driverId);
+    const txs = v.transactionIds.map((id) => findTx(d, id)).filter(Boolean) as T.Transaction[];
+    const firstWeighed = txs.some((t) => !!t.firstWeighId);
+    let station: StationKey;
+    if (v.laneCode) station = LANE_STATION[v.laneCode];
+    else if (v.state === "LOADING") station = v.operation === "RECEIVE" ? "unload" : LOADER_STATION[v.loadingEquipmentId ?? ""] ?? "L-01";
+    else if (qB.includes(v.id)) station = "parking";
+    else if (qC.includes(v.id)) station = "D";
+    else if (v.state === "READY_TO_EXIT") station = "E";
+    else if (v.state === "HOLD") station = firstWeighed ? "C" : "A";
+    else if (v.state === "ARRIVED" || v.state === "IDENTIFIED") station = "approach";
+    else station = firstWeighed ? "D" : "parking";
+    const slot = v.laneCode ? 0 : (slots[station] = (slots[station] ?? 0) + 1);
+    return {
+      id: v.id,
+      plate: vh.plate,
+      plateNormalized: vh.plateNormalized,
+      driver: dr?.name ?? "—",
+      driverEn: dr?.nameEn ?? "—",
+      state: v.state,
+      step: journeyIndex(v, { firstWeighed, hasTicket: txs.some((t) => t.state === "APPROVED") }),
+      station,
+      slot,
+      hold: v.state === "HOLD",
+      laneCode: v.laneCode,
+      token: v.driverToken,
+      ticketNo: txs.at(-1)?.ticketNo,
+      operation: v.operation,
+    };
+  });
+
+  // road: trucks that left in the last 24 h (the client computes where they are now)
+  const since = new Date(now - 24 * 3600_000).toISOString();
+  const road: MapRoadTruck[] = [];
+  for (let i = d.visits.length - 1; i >= 0; i--) {
+    const v = d.visits[i];
+    if (v.state !== "EXITED" || !v.exitedAt) continue;
+    if (v.exitedAt < since) {
+      if (v.arrivedAt < since) break;
+      continue;
+    }
+    const tx = v.transactionIds.map((id) => findTx(d, id)).find((t) => t?.state === "APPROVED");
+    const vh = findVehicle(d, v.vehicleId)!;
+    const custId = tx?.customerId ?? findPermit(d, v.permitId)?.customerId;
+    const routeKey = v.operation === "RECEIVE" ? `CARRIER:${vh.carrierId}` : custId;
+    if (!routeKey) continue;
+    const dr = d.drivers.find((x) => x.id === v.driverId);
+    const cu = d.customers.find((c) => c.id === custId);
+    road.push({ id: v.id, kind: "OUT", plate: vh.plate, plateNormalized: vh.plateNormalized, driver: dr?.name ?? "—", driverEn: dr?.nameEn ?? "—", customer: cu?.name, customerEn: cu?.nameEn, t: v.exitedAt, routeKey, token: v.driverToken, ticketNo: tx?.ticketNo, netKg: tx?.netKg });
+  }
+  // inbound: booked trucks driving towards their slot
+  for (const b of d.bookings) {
+    if (b.status !== "BOOKED") continue;
+    const vh = findVehicle(d, b.vehicleId);
+    if (!vh || new Date(b.slotStart).getTime() < now) continue;
+    const dr = d.drivers.find((x) => x.id === b.driverId);
+    road.push({ id: b.id, kind: "IN", plate: vh.plate, plateNormalized: vh.plateNormalized, driver: dr?.name ?? "—", driverEn: dr?.nameEn ?? "—", t: b.slotStart, routeKey: vh.carrierId });
+  }
+
+  // the mine's own trucks cycle between the shovel and the crusher / dump
+  const fleet: MapFleetTruck[] = d.vehicles
+    .filter((v) => v.internal && v.status === "ACTIVE")
+    .map((v, i) => {
+      const cyc = d.fleetCycles.filter((c) => c.vehicleId === v.id).slice(-6);
+      const cycleMin = cyc.length ? cyc.reduce((a, c) => a + c.loadMin + c.haulMin + c.queueMin + c.dumpMin + c.returnMin, 0) / cyc.length : 32;
+      return { id: v.id, plate: v.plate, plateNormalized: v.plateNormalized, loop: i % 3 === 2 ? "DUMP" : "HAUL", cycleMin: Math.round(cycleMin * 10) / 10, offsetMin: (i * 7.3) % cycleMin };
+    });
+
+  const equipment = d.equipment.map((e) => ({ id: e.id, code: e.code, name: e.name, nameEn: e.nameEn, type: e.type, status: e.status, station: LOADER_STATION[e.id] ?? "SH-01" }));
+  const alerts: MapAlert[] = d.alerts
+    .filter((a) => ["OPEN", "ACK", "INVESTIGATING"].includes(a.status))
+    .map((a) => {
+      const st: StationKey = a.laneCode ? LANE_STATION[a.laneCode] : a.visitId ? site.find((s) => s.id === a.visitId)?.station ?? "control" : "control";
+      return { id: a.id, ruleCode: a.ruleCode, severity: a.severity, title: a.title, titleEn: a.titleEn, station: st, openedAt: a.openedAt, visitId: a.visitId };
+    });
+  return { now: new Date(now).toISOString(), scene: d.live.scene, site, road, fleet, equipment, alerts };
+}
+export type MapData = ReturnType<typeof mapView>;
+
+// ---------------- Owner's process view ----------------
+const LANE_STEP: Record<string, StepId> = { A: "GATE_IN", B: "SCALE_1", C: "SCALE_2", D: "LIDAR", E: "EXIT" };
+const RULE_STEP: Record<string, StepId> = {
+  R05: "GATE_IN", R06: "GATE_IN", R07: "GATE_IN", R08: "GATE_IN", R11: "GATE_IN", R35: "GATE_IN",
+  R29: "QUEUE", R30: "QUEUE", R32: "LIDAR", R31: "LIDAR", R34: "LOAD",
+  R12: "SCALE_2", R14: "SCALE_2", R15: "SCALE_2", R16: "SCALE_2", R40: "SCALE_2", R39: "TICKET",
+  R36: "EXIT", R09: "EXIT",
+};
+
+export function processView(d: DB) {
+  const now = Date.now();
+  const from = siteMidnightUtc().toISOString();
+  const minutes = (a?: string, b?: string) => (a && b ? (new Date(b).getTime() - new Date(a).getTime()) / 60_000 : null);
+  const avg = (xs: (number | null)[]) => {
+    const v = xs.filter((x): x is number => x != null && x >= 0 && x < 24 * 60);
+    return v.length ? Math.round((v.reduce((a, b) => a + b, 0) / v.length) * 10) / 10 : null;
+  };
+  const today = d.visits.filter((v) => v.arrivedAt >= from);
+  const weighs = new Map<string, { first?: string; second?: string }>();
+  for (const w of d.weighEvents) {
+    if (w.capturedAt < from) continue;
+    const e = weighs.get(w.transactionId) ?? {};
+    if (w.pass === "FIRST") e.first = w.capturedAt;
+    if (w.pass === "SECOND" || w.pass === "ONE_PASS") e.second = w.capturedAt;
+    weighs.set(w.transactionId, e);
+  }
+  const rows = today.map((v) => {
+    const tx = v.transactionIds.map((id) => findTx(d, id)).find((t) => t && t.state !== "VOIDED");
+    const w = tx ? weighs.get(tx.id) ?? {} : {};
+    return { v, tx, first: w.first, second: w.second };
+  });
+
+  // trucks at each step right now (on site + on the road + booked)
+  const current: Record<StepId, number> = { BOOK: 0, GATE_IN: 0, QUEUE: 0, SCALE_1: 0, LOAD: 0, LIDAR: 0, SCALE_2: 0, TICKET: 0, EXIT: 0, DELIVER: 0 };
+  for (const v of d.visits) {
+    if (TERMINAL.includes(v.state)) continue;
+    const txs = v.transactionIds.map((id) => findTx(d, id)).filter(Boolean) as T.Transaction[];
+    current[JOURNEY_STEPS[journeyIndex(v, { firstWeighed: txs.some((t) => !!t.firstWeighId), hasTicket: txs.some((t) => t.state === "APPROVED") })].id]++;
+  }
+  if (d.live.lanes.find((l) => l.code === "D")?.visitId) current.LIDAR++;
+  current.BOOK = d.bookings.filter((b) => b.status === "BOOKED" && b.slotStart >= from).length;
+  let delivered = 0;
+  for (const r of rows) {
+    if (!r.v.exitedAt) continue;
+    const route = routeFor(r.v.operation, r.tx?.customerId, findVehicle(d, r.v.vehicleId)!.carrierId);
+    if (!route) continue;
+    const trip = outboundTrip(r.v.id, r.v.exitedAt, route, now);
+    if (trip.delivered) delivered++;
+    else current.DELIVER++;
+  }
+
+  const durations: Partial<Record<StepId, number | null>> = {
+    GATE_IN: avg(rows.map((r) => minutes(r.v.arrivedAt, r.v.enteredAt))),
+    QUEUE: avg(rows.map((r) => minutes(r.v.enteredAt, r.first))),
+    LOAD: avg(rows.map((r) => minutes(r.first, r.second))),
+    TICKET: avg(rows.map((r) => minutes(r.second, r.tx?.approvedAt))),
+    EXIT: avg(rows.map((r) => minutes(r.tx?.approvedAt, r.v.exitedAt))),
+  };
+  const exceptions: Record<StepId, number> = { BOOK: 0, GATE_IN: 0, QUEUE: 0, SCALE_1: 0, LOAD: 0, LIDAR: 0, SCALE_2: 0, TICKET: 0, EXIT: 0, DELIVER: 0 };
+  for (const a of d.alerts) {
+    if (a.openedAt < from) continue;
+    const step = RULE_STEP[a.ruleCode] ?? (a.laneCode ? LANE_STEP[a.laneCode] : undefined);
+    if (step) exceptions[step]++;
+  }
+  const rejected = today.filter((v) => v.state === "REJECTED").length;
+  exceptions.GATE_IN = Math.max(exceptions.GATE_IN, rejected);
+  const longest = (Object.entries(durations) as [StepId, number | null][]).filter(([, m]) => m != null).sort((a, b) => b[1]! - a[1]!)[0];
+  const funnel = [
+    { key: "ARRIVED", fa: "رسیده به دروازه", en: "Arrived", count: today.length },
+    { key: "ENTERED", fa: "وارد سایت", en: "Entered", count: today.filter((v) => !!v.enteredAt).length },
+    { key: "WEIGHED", fa: "توزین کامل", en: "Fully weighed", count: rows.filter((r) => !!r.second).length },
+    { key: "TICKET", fa: "تیکت تأییدشده", en: "Approved ticket", count: rows.filter((r) => r.tx?.state === "APPROVED").length },
+    { key: "EXITED", fa: "خارج‌شده", en: "Exited", count: today.filter((v) => v.state === "EXITED").length },
+    { key: "DELIVERED", fa: "تحویل‌شده", en: "Delivered", count: delivered },
+  ];
+  return {
+    scene: d.live.scene,
+    steps: JOURNEY_STEPS.map((s) => ({ id: s.id, now: current[s.id], avgMin: durations[s.id] ?? null, exceptions: exceptions[s.id] })),
+    funnel,
+    bottleneck: longest ? { step: longest[0], avgMin: longest[1]! } : null,
+    rejected,
+    netTonsToday: Math.round(rows.reduce((a, r) => a + (r.tx?.state === "APPROVED" ? r.tx.netKg ?? 0 : 0), 0) / 100) / 10,
+  };
+}
+export type ProcessData = ReturnType<typeof processView>;

@@ -6,7 +6,10 @@ try { pw = require("playwright"); } catch { pw = require("/opt/node-tools/node_m
 const [, , path = "/app", out = "shot.png", w = "1440", h = "900", locale = "fa", theme = "light"] = process.argv;
 const browser = await pw.chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: Number(w), height: Number(h) }, deviceScaleFactor: 1 });
-await ctx.addInitScript(([l, t]) => localStorage.setItem("tozin-prefs", JSON.stringify({ state: { locale: l, theme: t, userId: "U-ADMIN", collapsed: false, latinDigits: false }, version: 0 })), [locale, theme]);
+await ctx.addInitScript(([l, t, bm]) => {
+  localStorage.setItem("tozin-prefs", JSON.stringify({ state: { locale: l, theme: t, userId: "U-ADMIN", collapsed: false, latinDigits: false }, version: 0 }));
+  localStorage.setItem("tozin-basemap", bm);
+}, [locale, theme, process.env.BASEMAP ?? "none"]);
 const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));

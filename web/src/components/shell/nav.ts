@@ -32,6 +32,11 @@ import {
   FlaskConical,
   Box,
   DoorOpen,
+  Globe2,
+  Presentation,
+  GalleryHorizontalEnd,
+  Workflow,
+  BookOpen,
 } from "lucide-react";
 
 export interface NavItem {
@@ -53,7 +58,9 @@ export const NAV: NavGroup[] = [
     en: "Operations",
     items: [
       { href: "/app", fa: "داشبورد", en: "Dashboard", icon: LayoutDashboard },
+      { href: "/app/process", fa: "فرآیند و مراحل", en: "Process & steps", icon: Workflow },
       { href: "/app/live", fa: "اتاق کنترل زنده", en: "Live control room", icon: MonitorPlay },
+      { href: "/app/map", fa: "نقشه ناوگان و رویدادها", en: "Fleet & events map", icon: Globe2 },
       { href: "/app/gate", fa: "دروازه / حراست", en: "Gate / security", icon: DoorOpen, badge: "holds" },
       { href: "/app/weighing", fa: "ایستگاه توزین", en: "Weighing station", icon: Scale },
       { href: "/app/scan", fa: "مرکز اسکن", en: "Scan center", icon: ScanLine },
@@ -113,6 +120,9 @@ export const NAV: NavGroup[] = [
 ];
 
 export const DISPLAY_LINKS = [
+  { href: "/showcase", fa: "ویترین نمونه‌ها", en: "Showcase", icon: GalleryHorizontalEnd },
+  { href: "/present", fa: "ارائه اسلایدی", en: "Slide presentation", icon: Presentation },
+  { href: "/d/guide", fa: "راهنمای راننده", en: "Driver guide", icon: BookOpen },
   { href: "/display/B", fa: "مانیتور راننده — باسکول ۱", en: "Driver display — scale 1", icon: MonitorPlay },
   { href: "/display/queue", fa: "تابلو فراخوان صف", en: "Queue call board", icon: ListOrdered },
   { href: "/kiosk/B", fa: "کیوسک راننده", en: "Driver kiosk", icon: HardDrive },

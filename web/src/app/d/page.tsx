@@ -1,5 +1,5 @@
 "use client";
-import { Smartphone } from "lucide-react";
+import { BookOpen, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { IranPlate } from "@/components/domain/IranPlate";
 import { Logo } from "@/components/shell/Logo";
@@ -19,6 +19,9 @@ export default function DriverIndex() {
         <Smartphone className="size-5" /> {L("پورتال موبایل راننده — لینک‌های نمونه", "Driver mobile portal — sample links")}
       </h1>
       <p className="mt-1 text-sm text-muted">{L("در عمل، این لینک با پیامک به گوشی راننده ارسال می‌شود. یکی از سفرهای فعال را انتخاب کنید:", "In production this link is sent to the driver's phone by SMS. Pick an active trip:")}</p>
+      <Link href="/d/guide" className="mt-3 flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm font-semibold text-primary">
+        <BookOpen className="size-4" /> {L("راهنمای کامل راننده: همه مراحل، نقشه و مسیریابی", "Full driver guide: every step, map and navigation")}
+      </Link>
       <div className="mt-4 flex flex-col gap-2">
         {!live && <Skeleton className="h-40" />}
         {live?.activeIds.map((id) => {

@@ -205,3 +205,27 @@ body {
   background: color-mix(in oklab, var(--muted) 35%, transparent);
   border-radius: 8px;
 }
+
+/* ---------- Leaflet maps ---------- */
+:root {
+  --map-bg: #ece6d6;
+}
+[data-theme="dark"] {
+  --map-bg: #1d2533;
+}
+.leaflet-container {
+  font-family: inherit;
+}
+.leaflet-tooltip.map-label {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: #2b2b2b;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff;
+  padding: 0;
+}
+.leaflet-tooltip.map-label::before {
+  display: none;
+}

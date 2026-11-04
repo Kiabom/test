@@ -15,6 +15,8 @@ const arg = (k) => process.argv.find((a) => a.startsWith(`--${k}`));
 const BASE = (arg("base")?.split("=")[1] ?? process.env.BASE ?? "http://localhost:3000").replace(/\/$/, "");
 const SHOTS = !!arg("shots");
 const SHOT_DIR = new URL("../../docs/screenshots/", import.meta.url).pathname;
+// map tiles need internet; the sandbox has none, so screenshots use the offline "plain" basemap
+const BASEMAP = process.env.BASEMAP ?? "none";
 const IGNORE = [/favicon/i, /EventSource/i, /ERR_ABORTED/i, /net::ERR_/i, /Download the React DevTools/i];
 
 const api = async (path, init) => {
@@ -38,13 +40,14 @@ const STATIC = [
 
 async function newContext(browser, { locale = "fa", theme = "light", user = "U-ADMIN", width = 1440, height = 900 } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height } });
-  await ctx.addInitScript(([l, t, u]) => {
+  await ctx.addInitScript(([l, t, u, bm]) => {
     try {
       localStorage.setItem("tozin-prefs", JSON.stringify({ state: { locale: l, theme: t, userId: u, collapsed: false, latinDigits: false }, version: 0 }));
+      localStorage.setItem("tozin-basemap", bm);
     } catch {
       /* storage blocked */
     }
-  }, [locale, theme, user]);
+  }, [locale, theme, user, BASEMAP]);
   return ctx;
 }
 
