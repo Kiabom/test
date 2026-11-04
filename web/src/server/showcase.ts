@@ -116,7 +116,10 @@ export function stageShowcase(d: DB): ShowcaseRefs {
       backdate(v, min + 70, min + 66);
       v.exitedAt = ago(min);
       refs.exited.push(v.id);
-      if (i === 0) refs.recentTx = tx.id;
+      if (i === 0) {
+        refs.recentTx = tx.id;
+        refs.recentVerify = tx.verifyCode;
+      }
     }
     // one of them: the guard scanned the used QR again → security alert R36
     const reuse = d.visits.find((x) => x.id === refs.exited[1])!;

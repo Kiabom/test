@@ -77,3 +77,31 @@ export function guidanceFor(visit: Visit | undefined, lane?: LaneLive, extra?: {
       return g("REJECTED", "⛔ ورود رد شد — به اتاق حراست مراجعه کنید", "⛔ Entry rejected — report to security", "stop", "RED");
   }
 }
+
+/** Every message the driver screens can show, produced by the real `guidanceFor` (for the showcase). */
+export function guidanceSamples(): { where: [string, string]; g: Guidance }[] {
+  const visit = (state: Visit["state"], extra: Partial<Visit> = {}) => ({ state, transactionIds: [], laneCode: "B", holdReasons: [], ...extra }) as unknown as Visit;
+  const scale = (phase: string, extra: Partial<LaneLive> = {}): LaneLive => ({ code: "B", kind: "SCALE", visitId: "V", barrier: "CLOSED", barrierAck: true, light: "RED", phase, ...extra });
+  const gate = (extra: Partial<LaneLive>): LaneLive => ({ code: "A", kind: "GATE_IN", visitId: "V", barrier: "CLOSED", barrierAck: true, light: "RED", ...extra });
+  const S: [string, string] = ["مانیتور باسکول", "Scale display"];
+  const G: [string, string] = ["مانیتور دروازه", "Gate display"];
+  const P: [string, string] = ["گوشی راننده", "Driver phone"];
+  return [
+    { where: G, g: guidanceFor(visit("ARRIVED"), gate({ phase: "READING" })) },
+    { where: G, g: guidanceFor(visit("HOLD"), gate({ decision: "REVIEW" })) },
+    { where: G, g: guidanceFor(visit("IN_SITE"), gate({ decision: "PASS", barrier: "OPEN" })) },
+    { where: G, g: guidanceFor(visit("REJECTED"), gate({ decision: "BLOCK" })) },
+    { where: P, g: guidanceFor(visit("IN_SITE", { laneCode: undefined }), undefined, { queuePos: 3 }) },
+    { where: S, g: guidanceFor(visit("ON_SCALE_1"), scale("APPROACH")) },
+    { where: S, g: guidanceFor(visit("ON_SCALE_1"), scale("POSITION_BAD")) },
+    { where: S, g: guidanceFor(visit("ON_SCALE_1"), scale("SETTLING")) },
+    { where: S, g: guidanceFor(visit("ON_SCALE_1"), scale("STABLE")) },
+    { where: S, g: guidanceFor(visit("LOADING"), scale("CAPTURED"), { loadPoint: "L-02" }) },
+    { where: P, g: guidanceFor(visit("LOADING", { laneCode: undefined }), undefined, { loadPoint: "L-02" }) },
+    { where: S, g: guidanceFor(visit("READY_TO_EXIT"), scale("CAPTURED")) },
+    { where: S, g: guidanceFor(visit("HOLD"), scale("STABLE")) },
+    { where: S, g: guidanceFor(visit("ON_SCALE_1"), scale("IDLE", { locked: true })) },
+    { where: P, g: guidanceFor(visit("READY_TO_EXIT", { laneCode: undefined })) },
+    { where: G, g: guidanceFor(visit("EXITED"), { ...gate({ decision: "PASS", barrier: "OPEN" }), kind: "GATE_OUT", code: "E" }) },
+  ];
+}

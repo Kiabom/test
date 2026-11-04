@@ -12,6 +12,7 @@ import type { LidarScan, Transaction } from "@/domain/types";
 import { fmtDateTime, fmtKg, fmtNum, fmtPct } from "@/lib/format";
 import { useData, useMasters } from "@/lib/live";
 import { useL, useLocale } from "@/lib/prefs";
+import { queryParam } from "@/lib/query";
 
 const PointCloudViewer = dynamic(() => import("@/components/hardware/PointCloud"), { ssr: false, loading: () => <Skeleton className="h-[360px]" /> });
 
@@ -21,7 +22,7 @@ export default function LidarModulePage() {
   const masters = useMasters();
   const { data } = useData<LidarScan>("lidarScans", { limit: 400, kind: "LOADED" }, 30_000);
   const { data: txs } = useData<Transaction>("transactions", { limit: 3000 }, 30_000);
-  const [sel, setSel] = useState<string>();
+  const [sel, setSel] = useState<string | undefined>(() => queryParam("id"));
   const [mode, setMode] = useState<CloudMode>("loaded");
   const txById = useMemo(() => new Map((txs?.items ?? []).map((t) => [t.id, t])), [txs]);
   const rows = useMemo(

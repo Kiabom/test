@@ -83,6 +83,7 @@ export interface ShowcaseRefs {
   overdrawTx?: string;
   qrReuseVisit?: string;
   recentTx?: string;
+  recentVerify?: string;
   lidarScan?: string;
   loading: string[];
   queued: string[];

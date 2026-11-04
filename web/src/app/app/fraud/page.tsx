@@ -14,6 +14,7 @@ import { act, ActionError, useData, useMasters, useView } from "@/lib/live";
 import { useL, useLocale } from "@/lib/prefs";
 import { userName, USERS_LIST } from "@/lib/users";
 import type { VisitDetail } from "@/server/views";
+import { queryParam } from "@/lib/query";
 
 const KIND: Record<FraudCase["kind"], [string, string]> = {
   TARE_OUTLIER: ["تارای غیرعادی", "Tare outlier"],
@@ -30,7 +31,7 @@ export default function FraudPage() {
   const masters = useMasters();
   const { data } = useData<FraudCase>("fraudCases", {}, 3000);
   const { data: we } = useData<WeighEvent>("weighEvents", { limit: 5000 }, 60_000);
-  const [sel, setSel] = useState<string>();
+  const [sel, setSel] = useState<string | undefined>(() => queryParam("id"));
   const [notes, setNotes] = useState("");
   const cases = data?.items ?? [];
   const fc = cases.find((c) => c.id === sel) ?? cases[0];

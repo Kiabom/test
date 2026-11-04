@@ -18,6 +18,7 @@ import { useGps } from "@/lib/gps";
 import { act, useView } from "@/lib/live";
 import { useL, useLocale, usePrefs } from "@/lib/prefs";
 import type { DriverView } from "@/server/views";
+import { queryParam } from "@/lib/query";
 
 const DriverMap = dynamic(() => import("@/components/map/DriverMap"), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
 
@@ -29,7 +30,7 @@ export default function DriverPortal({ params }: { params: Promise<{ token: stri
   const locale = useLocale();
   const setLocale = usePrefs((s) => s.setLocale);
   const { data, error } = useView<DriverView>("driver", { id: token }, 800);
-  const [tab, setTab] = useState<Tab>("trip");
+  const [tab, setTab] = useState<Tab>(() => (["trip", "map", "docs"].includes(queryParam("tab") ?? "") ? (queryParam("tab") as Tab) : "trip"));
   const [open, setOpen] = useState<number | null>(null);
   const [showQr, setShowQr] = useState(false);
   const [useGpsOn, setUseGpsOn] = useState(false);

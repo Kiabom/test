@@ -30,8 +30,9 @@ function ScanInner() {
   const { data: lidar } = useData<LidarScan>("lidarScans", { limit: 60 });
   const { data: uvss } = useData<UvssScan>("uvssScans", { limit: 60 });
   const { data: txs } = useData<{ id: string; netKg?: number; materialId: string; lidarScanIds: string[]; ticketNo: string }>("transactions", { limit: 300 });
-  const [lidarSel, setLidarSel] = useState<string | undefined>();
-  const [uvSel, setUvSel] = useState<string | undefined>();
+  // ?id= opens a specific scan (deep links from the showcase)
+  const [lidarSel, setLidarSel] = useState<string | undefined>(() => (sp.get("id")?.startsWith("LS") ? sp.get("id")! : undefined));
+  const [uvSel, setUvSel] = useState<string | undefined>(() => (sp.get("id")?.startsWith("UV") ? sp.get("id")! : undefined));
   const [mode, setMode] = useState<CloudMode>("loaded");
   const [cmp, setCmp] = useState(50);
   const veh = (id?: string) => masters?.vehicles.find((v) => v.id === id) as Vehicle | undefined;

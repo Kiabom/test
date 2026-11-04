@@ -2,7 +2,8 @@
 // ending with the guard scanning the one-time exit QR twice (accept, then reject).
 // Usage: node e2e/run.mjs [--base=http://localhost:3000] [--shots] [--skip-smoke] [--skip-flow]
 import { createRequire } from "module";
-import { mkdirSync } from "fs";
+import { execFileSync } from "child_process";
+import { copyFileSync, existsSync, mkdirSync } from "fs";
 const require = createRequire(import.meta.url);
 let pw;
 try {
@@ -15,6 +16,7 @@ const arg = (k) => process.argv.find((a) => a.startsWith(`--${k}`));
 const BASE = (arg("base")?.split("=")[1] ?? process.env.BASE ?? "http://localhost:3000").replace(/\/$/, "");
 const SHOTS = !!arg("shots");
 const SHOT_DIR = new URL("../../docs/screenshots/", import.meta.url).pathname;
+const PUBLIC_SHOTS = new URL("../public/showcase/", import.meta.url).pathname;
 // map tiles need internet; the sandbox has none, so screenshots use the offline "plain" basemap
 const BASEMAP = process.env.BASEMAP ?? "none";
 const IGNORE = [/favicon/i, /EventSource/i, /ERR_ABORTED/i, /net::ERR_/i, /Download the React DevTools/i];
@@ -36,6 +38,7 @@ const STATIC = [
   "/app/devices", "/app/hardware", "/app/site-map",
   "/app/reports", "/app/billing", "/app/masters", "/app/integrations", "/app/notifications", "/app/admin", "/app/simulator",
   "/display/B", "/display/C", "/display/queue", "/kiosk/B", "/d", "/wallboard",
+  "/app/process", "/app/map", "/d/guide", "/showcase", "/present", "/present?track=driver", "/present?track=owner",
 ];
 
 async function newContext(browser, { locale = "fa", theme = "light", user = "U-ADMIN", width = 1440, height = 900 } = {}) {
@@ -226,8 +229,6 @@ const SHOT_LIST = [
   ["/app/gate", "gate", 1440, 900, "fa"],
   ["/app/weighing", "weighing", 1440, 900, "fa"],
   ["/app/scan", "scan-gate", 1440, 900, "fa"],
-  ["/app/scan?tab=lidar", "scan-lidar", 1440, 900, "fa"],
-  ["/app/scan?tab=uvss", "scan-uvss", 1440, 900, "fa"],
   ["/app/permits", "permits", 1440, 900, "fa"],
   ["/app/alerts", "alerts", 1440, 900, "fa"],
   ["/app/devices", "devices", 1440, 900, "fa"],
@@ -242,20 +243,48 @@ const SHOT_LIST = [
   ["/kiosk/B", "kiosk", 1080, 1920, "fa"],
   ["/wallboard", "wallboard", 1920, 1080, "fa"],
   ["/d", "driver-portal-mobile", 390, 844, "fa"],
+  ["/d/guide", "driver-guide", 1280, 800, "fa"],
+  ["/app/exit-permits", "exit-permits", 1440, 900, "fa"],
+  ["/app/process", "process", 1440, 900, "fa"],
+  ["/app/map", "fleet-map", 1440, 900, "fa"],
+  ["/app/billing", "billing", 1440, 900, "fa"],
+  ["/app/fraud?id=FC-3", "fraud", 1440, 900, "fa"],
+  ["/app/audit", "audit", 1440, 900, "fa"],
+  ["/showcase", "showcase", 1440, 900, "fa"],
 ];
 
 async function shots(browser) {
   mkdirSync(SHOT_DIR, { recursive: true });
-  const dyn = await dynamicRoutes();
-  const list = [...SHOT_LIST, [dyn[0], "transaction-detail", 1440, 900, "fa"], [dyn[1], "ticket-a5", 1000, 1300, "fa"], [dyn[3], "verify-mobile", 390, 844, "fa"]];
-  if (dyn[4]) list.push([dyn[4], "driver-trip-mobile", 390, 844, "fa"]);
+  mkdirSync(PUBLIC_SHOTS, { recursive: true });
+  // screenshots always show the staged presentation scene
+  await act("sim.reset");
+  await sleep(1500);
+  const r = await api("/api/view/showcase");
+  const t = r.driverTokens;
+  const list = [
+    ...SHOT_LIST,
+    [`/app/transactions/${r.recentTx}`, "transaction-detail", 1440, 900, "fa"],
+    [`/print/ticket/${r.recentTx}`, "ticket-a5", 1000, 1300, "fa"],
+    [`/verify/${r.recentVerify}`, "verify-mobile", 390, 844, "fa"],
+    [`/d/${t.scale1}`, "driver-trip-mobile", 390, 844, "fa"],
+    [`/d/${t.loading}?tab=map`, "driver-map-mobile", 390, 844, "fa"],
+    [`/d/${t.exited}?tab=map`, "driver-road-mobile", 390, 844, "fa"],
+    [`/d/${t.exit}?tab=docs`, "driver-exit-qr-mobile", 390, 844, "fa"],
+    [`/app/scan?tab=uvss&id=${r.uvssScan}`, "scan-uvss", 1440, 900, "fa"],
+    [`/app/scan?tab=lidar&id=${r.lidarScan}`, "scan-lidar", 1440, 900, "fa"],
+  ];
   for (const [path, name, w, h, locale, theme] of list) {
     const ctx = await newContext(browser, { locale, theme: theme ?? "light", width: w, height: h });
-    const { page } = await visit(ctx, path, 4000);
+    const { page } = await visit(ctx, path, name.includes("map") || name.includes("road") ? 6000 : 4000);
     await page.screenshot({ path: `${SHOT_DIR}${name}.png` });
+    copyFileSync(`${SHOT_DIR}${name}.png`, `${PUBLIC_SHOTS}${name}.png`);
     console.log("  📸", name);
     await ctx.close();
   }
+  // taken during the guard flow
+  if (existsSync(`${SHOT_DIR}guard-accept-mobile.png`)) copyFileSync(`${SHOT_DIR}guard-accept-mobile.png`, `${PUBLIC_SHOTS}guard-accept-mobile.png`);
+  // showcase cards only need small thumbnails (top crop, 800 px wide)
+  execFileSync("python3", ["-I", "-c", "import sys,glob\nfrom PIL import Image\nfor f in glob.glob(sys.argv[1]+'*.png'):\n  im=Image.open(f).convert('RGB')\n  w,h=im.size\n  im=im.crop((0,0,w,min(h,int(w*0.75))))\n  im.thumbnail((800,800))\n  im.save(f[:-4]+'.jpg',quality=78,optimize=True)\n  import os; os.remove(f)", PUBLIC_SHOTS]);
 }
 
 const browser = await pw.chromium.launch();
