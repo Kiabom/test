@@ -17,7 +17,7 @@ export default function BillingPage() {
   const masters = useMasters();
   const [range, setRange] = useState<"7d" | "30d">("7d");
   const since = useMemo(() => new Date(Date.now() - (range === "7d" ? 7 : 30) * 864e5).toISOString(), [range]);
-  const { data } = useData<Transaction>("transactions", { limit: 5000, state: "APPROVED", since }, 10000);
+  const { data } = useData<Transaction>("transactions", { limit: 5000, state: "APPROVED", since }, 30_000);
   const [cust, setCust] = useState("");
   const customers = (masters?.customers ?? []).filter((c) => c.type !== "SUPPLIER");
   const customerId = cust || customers[0]?.id;

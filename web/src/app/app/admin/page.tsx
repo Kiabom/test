@@ -208,7 +208,7 @@ export default function AdminPage() {
         </div>
       )}
       {tab === "flags" && (
-        <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <div className="grid gap-3">
             {PLANS.map((p) => (
               <button key={p.id} onClick={() => setTier(p.id as typeof tier)} className={cx("rounded-xl border-2 p-4 text-start transition", tier === p.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>

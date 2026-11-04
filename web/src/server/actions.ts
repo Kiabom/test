@@ -2,7 +2,7 @@ import { verifyChain } from "@/domain/audit";
 import { can, type Permission } from "@/domain/rbac";
 import type * as T from "@/domain/types";
 import { ackAlert, captureWeigh, finalizeTx, findTx, findVisit, gateDecide, issueExitPermit, lane, OpError, printTx, registerGuest, requestBarrierOpen, confirmBarrierOpen, scanAny, setDeduction, voidTx } from "./ops";
-import { enqueueDemoSms, runScenario } from "./sim";
+import { enqueueDemoSms, runScenario, setScene } from "./sim";
 import { audit, bump, enqueueOutbox, log, nextId, nowIso, raiseAlert, type DB } from "./store";
 import { resetDb } from "./runtime";
 
@@ -38,6 +38,7 @@ const PERMS: Record<string, Permission | null> = {
   "sim.speed": "sim.control",
   "sim.mode": "sim.control",
   "sim.reset": "sim.control",
+  "sim.scene": "sim.control",
   "audit.verify": null,
   "audit.tamper": "admin.manage",
   "audit.restore": "admin.manage",
@@ -245,8 +246,11 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
     case "sim.reset":
       resetDb();
       return { ok: true };
+    case "sim.scene":
+      setScene(d, str(p, "scene") === "LIVE" ? "LIVE" : "PRESENTATION");
+      return { scene: d.live.scene };
     case "audit.verify":
-      return verifyChain(d.audit);
+      return verifyChain(d.audit, d.auditBase.prevHash);
     case "audit.tamper": {
       const target = d.audit[Math.floor(d.audit.length / 2)];
       d.live.tamperedAuditSeq = target.seq;

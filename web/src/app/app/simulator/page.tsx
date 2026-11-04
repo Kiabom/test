@@ -53,10 +53,29 @@ export default function SimulatorPage() {
         subtitle={L("همه سخت‌افزارها شبیه‌سازی‌اند؛ هیچ فرمان واقعی به PLC ارسال نمی‌شود. سناریوها روی کامیون بعدی اعمال می‌شوند.", "All hardware is simulated; no real PLC command is ever sent. Scenarios apply to the next arriving truck.")}
         actions={
           <Button variant="danger" onClick={() => setReset(true)}>
-            <RotateCcw className="size-4" /> {L("بازنشانی داده", "Reset data")}
+            <RotateCcw className="size-4" /> {L("بازگشت به صحنه نمایش", "Back to staged scene")}
           </Button>
         }
       />
+      <Card className="mb-4 flex flex-wrap items-center gap-4 p-4">
+        <div className="flex-1">
+          <div className="text-sm font-semibold">{L("صحنه", "Scene")}</div>
+          <div className="text-xs text-muted">
+            {live?.scene === "LIVE"
+              ? L("شبیه‌سازی زنده: کامیون‌ها پشت سر هم می‌رسند و بازیگران مجازی تصمیم می‌گیرند. داده‌های قدیمی‌تر از ۷ روز بایگانی می‌شوند.", "Live simulation: trucks keep arriving and virtual actors decide. Data older than 7 days is archived.")
+              : L("حالت ارائه: یک صحنه آماده با نمونه در هر ایستگاه. هیچ چیز خودبه‌خود عوض نمی‌شود؛ فقط اقدام شما (Capture، اسکن QR، تصمیم دروازه) صحنه را جلو می‌برد. اجرای سناریو حالت زنده را روشن می‌کند.", "Presentation: a staged scene with an example at every station. Nothing changes on its own — only your actions (capture, QR scan, gate decision) move it. Running a scenario switches to live.")}
+          </div>
+        </div>
+        <Segmented
+          size="md"
+          options={[
+            { id: "PRESENTATION", label: L("حالت ارائه (ثابت)", "Presentation (frozen)") },
+            { id: "LIVE", label: L("شبیه‌سازی زنده", "Live simulation") },
+          ]}
+          value={live?.scene ?? "PRESENTATION"}
+          onChange={(sc) => run("sim.scene", { scene: sc }, sc === "LIVE" ? L("شبیه‌سازی زنده روشن شد", "Live simulation on") : L("صحنه ثابت شد", "Scene frozen"))}
+        />
+      </Card>
       <div className="mb-4 grid gap-4 md:grid-cols-3">
         <Card className="p-4">
           <div className="mb-2 text-sm font-semibold">{L("سرعت شبیه‌سازی", "Simulation speed")}</div>
@@ -127,7 +146,7 @@ export default function SimulatorPage() {
           ))}
         </div>
       </Card>
-      <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <Card>
           <CardHeader title={L("قطع/وصل دستگاه‌ها", "Toggle devices")} />
           <div className="grid gap-2 p-3 sm:grid-cols-2">
@@ -155,7 +174,7 @@ export default function SimulatorPage() {
           </div>
         </Card>
       </div>
-      <ConfirmDialog open={reset} onClose={() => setReset(false)} needReason={false} danger title={L("بازنشانی همه داده‌ها؟", "Reset all data?")} description={L("پایگاه داده درون‌حافظه‌ای با seed قطعی از نو ساخته می‌شود.", "The in-memory database is rebuilt from the deterministic seed.")} onConfirm={() => run("sim.reset", {}, L("داده بازنشانی شد", "Data reset"))} />
+      <ConfirmDialog open={reset} onClose={() => setReset(false)} needReason={false} danger title={L("بازگشت به صحنه نمایش؟", "Back to the staged scene?")} description={L("داده از seed قطعی از نو ساخته و صحنه ارائه دوباره چیده می‌شود؛ تغییرات فعلی از بین می‌رود.", "Data is rebuilt from the deterministic seed and the presentation scene is staged again; current changes are lost.")} onConfirm={() => run("sim.reset", {}, L("صحنه نمایش آماده شد", "Staged scene restored"))} />
     </div>
   );
 }

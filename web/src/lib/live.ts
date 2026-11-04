@@ -9,6 +9,8 @@ interface LiveStore {
   data: LiveData | null;
   connected: boolean;
   lastAt: number;
+  /** Increments after every successful action so views reload right away, without waiting for the throttle. */
+  actNonce: number;
   set: (d: LiveData) => void;
   setConnected: (c: boolean) => void;
 }
@@ -17,6 +19,7 @@ export const useLiveStore = create<LiveStore>((set) => ({
   data: null,
   connected: false,
   lastAt: 0,
+  actNonce: 0,
   set: (data) => set({ data, lastAt: Date.now(), connected: true }),
   setConnected: (connected) => set({ connected }),
 }));
@@ -63,6 +66,7 @@ export function useRevision() {
 /** Fetch JSON and refetch when the server revision changes (throttled). */
 export function useFetch<R>(url: string | null, throttleMs = 1500): { data: R | null; loading: boolean; error: string | null; reload: () => void } {
   const revision = useRevision();
+  const actNonce = useLiveStore((s) => s.actNonce);
   const [data, setData] = useState<R | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,6 +111,14 @@ export function useFetch<R>(url: string | null, throttleMs = 1500): { data: R | 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revision]);
 
+  // the user's own action: reload now (the server applies it synchronously)
+  useEffect(() => {
+    if (!url || !actNonce) return;
+    const t = setTimeout(load, 120);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actNonce]);
+
   return { data, loading, error, reload: () => setNonce((n) => n + 1) };
 }
 
@@ -142,7 +154,8 @@ export interface Masters {
 }
 
 export function useMasters() {
-  return useFetch<Masters>("/api/data/masters", 4000).data;
+  // master data rarely changes; own edits reload immediately via actNonce
+  return useFetch<Masters>("/api/data/masters", 60_000).data;
 }
 
 export class ActionError extends Error {
@@ -160,6 +173,7 @@ export async function act<R = unknown>(type: string, payload: Record<string, unk
   });
   const j = await r.json();
   if (!j.ok) throw new ActionError(j.error, j.message);
+  useLiveStore.setState((s) => ({ actNonce: s.actNonce + 1 }));
   return j.result as R;
 }
 

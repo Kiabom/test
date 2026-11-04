@@ -70,7 +70,7 @@ export default function GatePage() {
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_1.2fr_320px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_320px]">
         {/* cameras */}
         <div className="flex flex-col gap-3">
           <Card>

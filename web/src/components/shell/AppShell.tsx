@@ -1,5 +1,5 @@
 "use client";
-import { Bell, ChevronsLeft, ChevronsRight, ExternalLink, Languages, Menu, Moon, Search, Sun, Wifi, WifiOff, X } from "lucide-react";
+import { Bell, ChevronsLeft, ChevronsRight, ExternalLink, Languages, Menu, Moon, Pause, Play, RotateCcw, Search, Sun, Wifi, WifiOff, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -8,7 +8,7 @@ import { BRAND } from "@/config/brand";
 import { ROLES } from "@/domain/rbac";
 import { USERS_LIST } from "@/lib/users";
 import { fmtNum, fmtTime } from "@/lib/format";
-import { useLive, useLiveConnection, useLiveStore, useNow } from "@/lib/live";
+import { act, useLive, useLiveConnection, useLiveStore, useNow } from "@/lib/live";
 import { useL, usePrefs } from "@/lib/prefs";
 import { Logo, LogoMark } from "./Logo";
 import { DISPLAY_LINKS, NAV } from "./nav";
@@ -99,6 +99,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("جست‌وجوی پلاک، تیکت، حواله…", "Search plate, ticket, permit…")} className="h-9 w-full rounded-lg border border-border bg-surface-2 ps-8 pe-2 text-sm outline-none focus:border-primary" />
       </form>
       <div className="ms-auto flex items-center gap-1.5">
+        <SceneToggle />
         <span className={cx("hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium sm:inline-flex", live?.wanOnline && connected ? "bg-success/10 text-success" : "bg-danger/10 text-danger")} title={L("وضعیت اتصال Edge و صف همگام‌سازی", "Edge link & sync queue")}>
           {live?.wanOnline && connected ? <Wifi className="size-4" /> : <WifiOff className="size-4" />}
           {live?.wanOnline && connected ? L("آنلاین", "Online") : L("آفلاین", "Offline")}
@@ -171,6 +172,39 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="flex-1 p-3 md:p-5">{children}</main>
         <footer className="border-t border-border px-5 py-2 text-center text-[11px] text-muted">{locale === "fa" ? BRAND.demoNotice : BRAND.demoNoticeEn}</footer>
       </div>
+    </div>
+  );
+}
+
+/** Presentation scene (frozen, staged examples) vs live simulation, plus "back to the staged scene". */
+function SceneToggle() {
+  const L = useL();
+  const live = useLive();
+  const [busy, setBusy] = useState(false);
+  if (!live) return null;
+  const isLive = live.scene === "LIVE";
+  const run = async (type: string, payload: Record<string, unknown> = {}) => {
+    setBusy(true);
+    try {
+      await act(type, payload);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="hidden items-center rounded-lg border border-border md:inline-flex">
+      <button
+        disabled={busy}
+        onClick={() => run("sim.scene", { scene: isLive ? "PRESENTATION" : "LIVE" })}
+        className={cx("inline-flex items-center gap-1.5 rounded-s-lg px-2 py-1.5 text-xs font-semibold", isLive ? "bg-success/10 text-success" : "bg-primary/10 text-primary")}
+        title={isLive ? L("شبیه‌سازی زنده روشن است — برای ثابت کردن کلیک کنید", "Live simulation is on — click to freeze") : L("صحنه ارائه ثابت است — برای شبیه‌سازی زنده کلیک کنید", "Presentation scene is frozen — click for the live simulation")}
+      >
+        {isLive ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
+        {isLive ? L("زنده", "Live") : L("حالت ارائه", "Presentation")}
+      </button>
+      <button disabled={busy} onClick={() => run("sim.reset")} className="rounded-e-lg border-s border-border px-2 py-1.5 text-muted hover:text-text" title={L("بازگشت به صحنه نمایش آماده", "Back to the staged scene")} aria-label="reset scene">
+        <RotateCcw className={cx("size-3.5", busy && "animate-spin")} />
+      </button>
     </div>
   );
 }

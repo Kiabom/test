@@ -18,7 +18,7 @@ export default function ExitPermitsPage() {
   const masters = useMasters();
   const [filter, setFilter] = useState<"" | "APPROVED" | "CONSUMED" | "CANCELLED">("");
   const { data } = useData<ExitPermit>("exitPermits", { limit: 300, ...(filter ? { status: filter } : {}) }, 3000);
-  const { data: visits } = useData<Visit>("visits", { limit: 1500 }, 6000);
+  const { data: visits } = useData<Visit>("visits", { limit: 1500 }, 15_000);
   const [open, setOpen] = useState<ExitPermit | null>(null);
   const [cancel, setCancel] = useState<ExitPermit | null>(null);
   const veh = (visitId: string) => masters?.vehicles.find((v) => v.id === visits?.items.find((x) => x.id === visitId)?.vehicleId);

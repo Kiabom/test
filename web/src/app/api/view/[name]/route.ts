@@ -11,6 +11,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ name: string }>
   const d = getDb();
   const id = url.searchParams.get("id") ?? "";
   switch (name) {
+    case "showcase":
+      return NextResponse.json({ scene: d.live.scene, ...(d.live.showcase ?? {}) });
     case "dashboard":
       return NextResponse.json(dashboard(d, url.searchParams.get("range") === "7d" ? "7d" : "today"));
     case "visit": {

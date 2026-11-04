@@ -49,6 +49,9 @@ export interface DB {
     log: T.LogLine[];
     speed: number;
     mode: "AUTO" | "MANUAL";
+    /** PRESENTATION = staged, nothing changes on its own; LIVE = trucks keep arriving. */
+    scene: "PRESENTATION" | "LIVE";
+    showcase?: ShowcaseRefs;
     wanOnline: boolean;
     wanOfflineUntil?: number;
     nextArrivalAt: number;
@@ -59,9 +62,36 @@ export interface DB {
   };
   revision: number;
   counters: Record<string, number>;
+  /** Hash of the last archived audit record (retention keeps the chain verifiable). */
+  auditBase: { prevHash: string; archived: number };
 }
 
-export type CollectionName = Exclude<keyof DB, "live" | "revision" | "counters">;
+/** Ids of the staged examples, used by the showcase, slides and deep links. */
+export interface ShowcaseRefs {
+  builtAt: string;
+  gateHold?: string;
+  lowConf?: string;
+  rejected?: string;
+  uvssVisit?: string;
+  uvssScan?: string;
+  laneB?: string;
+  laneC?: string;
+  laneE?: string;
+  exitPermitToken?: string;
+  exitPermitSerial?: string;
+  overdrawVisit?: string;
+  overdrawTx?: string;
+  qrReuseVisit?: string;
+  recentTx?: string;
+  lidarScan?: string;
+  loading: string[];
+  queued: string[];
+  inbound?: string;
+  exited: string[];
+  driverTokens: Record<string, string>;
+}
+
+export type CollectionName = Exclude<keyof DB, "live" | "revision" | "counters" | "auditBase">;
 
 export const globalRef = globalThis as unknown as { __tozinDb?: DB; __tozinSimTimer?: ReturnType<typeof setInterval> };
 

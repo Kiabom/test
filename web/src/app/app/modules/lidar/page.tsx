@@ -19,8 +19,8 @@ export default function LidarModulePage() {
   const L = useL();
   const locale = useLocale();
   const masters = useMasters();
-  const { data } = useData<LidarScan>("lidarScans", { limit: 400, kind: "LOADED" }, 4000);
-  const { data: txs } = useData<Transaction>("transactions", { limit: 3000 }, 15000);
+  const { data } = useData<LidarScan>("lidarScans", { limit: 400, kind: "LOADED" }, 30_000);
+  const { data: txs } = useData<Transaction>("transactions", { limit: 3000 }, 30_000);
   const [sel, setSel] = useState<string>();
   const [mode, setMode] = useState<CloudMode>("loaded");
   const txById = useMemo(() => new Map((txs?.items ?? []).map((t) => [t.id, t])), [txs]);
@@ -58,7 +58,7 @@ export default function LidarModulePage() {
           />
           <div className="p-3">{cur ? <PointCloudViewer seed={cur.s.seed} mode={mode} offCenter={cur.s.offCenterPct} /> : <Skeleton className="h-[360px]" />}</div>
           {cur && (
-            <div className="grid gap-4 p-3 pt-0 md:grid-cols-[1fr_220px]">
+            <div className="grid gap-4 p-3 pt-0 md:grid-cols-[minmax(0,1fr)_220px]">
               <div>
                 <div className="mb-1 text-xs text-muted">{L("نقشه ارتفاع بار (نمای بالا)", "Load height map (top view)")}</div>
                 <HeightMap seed={cur.s.seed} offCenter={cur.s.offCenterPct} className="w-full" />

@@ -29,7 +29,7 @@ export default function FraudPage() {
   const locale = useLocale();
   const masters = useMasters();
   const { data } = useData<FraudCase>("fraudCases", {}, 3000);
-  const { data: we } = useData<WeighEvent>("weighEvents", { limit: 5000 }, 60000);
+  const { data: we } = useData<WeighEvent>("weighEvents", { limit: 5000 }, 60_000);
   const [sel, setSel] = useState<string>();
   const [notes, setNotes] = useState("");
   const cases = data?.items ?? [];

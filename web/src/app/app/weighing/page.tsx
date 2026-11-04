@@ -355,7 +355,7 @@ export default function WeighingPage() {
     return (
       <Card className="overflow-hidden">
         <div className="bg-[#1d3557] px-4 py-2 text-sm font-bold text-white ltr">Weighment Entry — RFID / ANPR · {scale?.nameEn}</div>
-        <div className="grid gap-4 p-4 lg:grid-cols-[1.1fr_1fr_1fr]">
+        <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]">
           <div className="flex flex-col gap-3">
             <WeightDisplay variant="classic" kg={lane?.weightKg} stable={lane?.stable} motion={lane?.motion} zero={lane?.zero} online={lane?.indicatorOnline} size="lg" />
             <div className="grid grid-cols-3 gap-2 text-center text-xs">

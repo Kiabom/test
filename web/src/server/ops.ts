@@ -6,6 +6,7 @@ import { assertTransition } from "@/domain/workflow";
 import { EXIT_PERMIT_TRANSITIONS, TX_TRANSITIONS } from "@/domain/workflow";
 import { captureGuard, computeBillable, grossOverLimit, indicatorFrame, NegativeNetError, resolveGrossTare, storedTareUsable, computeNet } from "@/domain/weighing";
 import type * as T from "@/domain/types";
+import { simRandom } from "./rng";
 import { audit, bump, enqueueOutbox, evidenceHash, log, nextId, nowIso, raiseAlert, shiftOf, token, type DB } from "./store";
 
 export class OpError extends Error {
@@ -14,10 +15,27 @@ export class OpError extends Error {
   }
 }
 
-export const findVisit = (d: DB, id?: string) => d.visits.find((v) => v.id === id);
-export const findTx = (d: DB, id?: string) => d.transactions.find((t) => t.id === id);
-export const findVehicle = (d: DB, id?: string) => d.vehicles.find((v) => v.id === id);
-export const findPermit = (d: DB, id?: string) => d.permits.find((p) => p.id === id);
+// id → record index per array, extended incrementally on push and rebuilt after pruning/reset
+let indexes = new WeakMap<object, { len: number; first?: string; map: Map<string, { id: string }> }>();
+function byIndex<R extends { id: string }>(arr: R[], id?: string): R | undefined {
+  if (!id) return undefined;
+  let ix = indexes.get(arr);
+  if (!ix || ix.first !== arr[0]?.id || ix.len > arr.length) {
+    ix = { len: 0, first: arr[0]?.id, map: new Map() };
+    indexes.set(arr, ix);
+  }
+  for (; ix.len < arr.length; ix.len++) ix.map.set(arr[ix.len].id, arr[ix.len]);
+  return ix.map.get(id) as R | undefined;
+}
+/** Call after removing records from the middle of a collection (retention pruning). */
+export function invalidateIndexes() {
+  indexes = new WeakMap();
+}
+
+export const findVisit = (d: DB, id?: string) => byIndex(d.visits, id);
+export const findTx = (d: DB, id?: string) => byIndex(d.transactions, id);
+export const findVehicle = (d: DB, id?: string) => byIndex(d.vehicles, id);
+export const findPermit = (d: DB, id?: string) => byIndex(d.permits, id);
 export const lane = (d: DB, code: T.Lane["code"]) => d.live.lanes.find((l) => l.code === code)!;
 
 export function ledger(d: DB) {
@@ -39,7 +57,7 @@ export function freshMs(d: DB) {
 }
 
 function addEvidence(d: DB, visit: T.Visit, kind: T.EvidenceKind, stage: T.Evidence["stage"], cameraId: string, loaded: boolean, txId?: string): string {
-  const seed = Math.floor(Math.random() * 1e9);
+  const seed = Math.floor(simRandom() * 1e9);
   const at = nowIso();
   const e: T.Evidence = { id: nextId(d, "EV"), kind, cameraId, visitId: visit.id, transactionId: txId, stage, capturedAt: at, sha256: evidenceHash(seed, kind, at), seed, loaded };
   d.evidence.push(e);
@@ -251,7 +269,7 @@ export function captureWeigh(
     tx = {
       id: txId,
       ticketNo: `S1-${day}-${String(d.counters["ticket-" + day]).padStart(4, "0")}`,
-      verifyCode: sha256(txId + Math.random()).slice(0, 10).toUpperCase(),
+      verifyCode: sha256(txId + simRandom()).slice(0, 10).toUpperCase(),
       visitId: visit.id,
       siteId: "S1",
       vehicleId: vehicle.id,

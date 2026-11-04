@@ -87,6 +87,7 @@ export function liveSnapshot(d: DB) {
     revision: d.revision,
     speed: d.live.speed,
     mode: d.live.mode,
+    scene: d.live.scene,
     wanOnline: d.live.wanOnline,
     syncQueue: d.outbox.filter((m) => m.status === "PENDING").length,
     lanes: d.live.lanes,
@@ -103,6 +104,19 @@ export function liveSnapshot(d: DB) {
   };
 }
 export type LiveData = ReturnType<typeof liveSnapshot>;
+
+// One serialized snapshot per revision, shared by every open tab. Refreshed at most every 5 s
+// when nothing changed (heartbeat ages, live weight on a staged scale).
+const snapCache = globalThis as unknown as { __tozinSnap?: { db: DB; rev: number; at: number; json: string } };
+export function liveSnapshotJson(d: DB): { rev: number; json: string } {
+  const c = snapCache.__tozinSnap;
+  const now = Date.now();
+  const maxAge = d.live.scene === "LIVE" ? 1000 : 5000;
+  if (!c || c.db !== d || c.rev !== d.revision || now - c.at >= maxAge) {
+    snapCache.__tozinSnap = { db: d, rev: d.revision, at: now, json: JSON.stringify(liveSnapshot(d)) };
+  }
+  return snapCache.__tozinSnap!;
+}
 
 export function dashboard(d: DB, range: "today" | "7d" = "today") {
   const from = range === "today" ? siteMidnightUtc() : new Date(siteMidnightUtc().getTime() - 6 * 864e5);

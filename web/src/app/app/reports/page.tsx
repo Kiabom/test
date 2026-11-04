@@ -40,9 +40,9 @@ export default function ReportsPage() {
     d.setUTCHours(0, 0, 0, 0);
     return new Date(d.getTime() - 210 * 60000 - (range === "7d" ? 6 * 864e5 : 0)).toISOString();
   }, [range]);
-  const { data } = useData<Transaction>("transactions", { limit: 5000, since }, 5000);
-  const { data: visits } = useData<Visit>("visits", { limit: 5000, since }, 8000);
-  const { data: we } = useData<WeighEvent>("weighEvents", { limit: 5000, captureMethod: "MANUAL" }, 15000);
+  const { data } = useData<Transaction>("transactions", { limit: 5000, since }, 30_000);
+  const { data: visits } = useData<Visit>("visits", { limit: 5000, since }, 30_000);
+  const { data: we } = useData<WeighEvent>("weighEvents", { limit: 5000, captureMethod: "MANUAL" }, 30_000);
   const { data: closes } = useData<AuditEvent>("audit", { action: "day.closed", limit: 30 }, 5000);
   const txs = (data?.items ?? []).filter((t) => !op || t.operation === op);
   const approved = txs.filter((t) => t.state === "APPROVED");

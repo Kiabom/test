@@ -27,7 +27,7 @@ function Inner() {
   const [method, setMethod] = useState("");
   const [page, setPage] = useState(0);
   const { data } = useData<Transaction>("transactions", { limit: 2000, ...(sp.get("visit") ? { visitId: sp.get("visit")! } : {}) }, 4000);
-  const { data: we } = useData<WeighEvent>("weighEvents", { limit: 5000, captureMethod: "MANUAL" }, 10000);
+  const { data: we } = useData<WeighEvent>("weighEvents", { limit: 5000, captureMethod: "MANUAL" }, 30_000);
   const manualTx = useMemo(() => new Set((we?.items ?? []).map((w) => w.transactionId)), [we]);
   const veh = (id: string) => masters?.vehicles.find((v) => v.id === id);
   const mat = (id: string) => masters?.materials.find((m) => m.id === id);

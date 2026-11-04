@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/runtime";
-import type { CollectionName, DB } from "@/server/store";
+import type { CollectionName } from "@/server/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,18 +20,27 @@ export async function GET(req: Request, ctx: { params: Promise<{ collection: str
   }
   if (!ALLOWED.includes(collection as CollectionName)) return NextResponse.json({ error: "UNKNOWN_COLLECTION" }, { status: 404 });
   const url = new URL(req.url);
-  let items = [...(d[collection as CollectionName] as DB[CollectionName])] as unknown as Record<string, unknown>[];
-  for (const [k, v] of url.searchParams.entries()) {
-    if (["limit", "offset", "order", "q", "since"].includes(k)) continue;
-    items = items.filter((x) => String(x[k]) === v);
-  }
+  const src = d[collection as CollectionName] as unknown as Record<string, unknown>[];
+  const filters = [...url.searchParams.entries()].filter(([k]) => !["limit", "offset", "order", "q", "since"].includes(k));
   const since = url.searchParams.get("since");
-  if (since) items = items.filter((x) => String(x.at ?? x.createdAt ?? x.openedAt ?? x.arrivedAt ?? x.capturedAt ?? "") >= since);
   const q = url.searchParams.get("q")?.trim();
-  if (q) items = items.filter((x) => JSON.stringify(x).includes(q));
-  if (url.searchParams.get("order") !== "asc") items.reverse();
-  const total = items.length;
+  const asc = url.searchParams.get("order") === "asc";
   const offset = Number(url.searchParams.get("offset") ?? 0);
   const limit = Math.min(5000, Number(url.searchParams.get("limit") ?? 200));
-  return NextResponse.json({ revision: d.revision, total, items: items.slice(offset, offset + limit) });
+  const match = (x: Record<string, unknown>) => {
+    for (const [k, v] of filters) if (String(x[k]) !== v) return false;
+    if (since && String(x.at ?? x.createdAt ?? x.openedAt ?? x.arrivedAt ?? x.capturedAt ?? "") < since) return false;
+    if (q && !JSON.stringify(x).includes(q)) return false;
+    return true;
+  };
+  // walk from the newest end without copying the collection; only the requested page is materialized
+  const items: Record<string, unknown>[] = [];
+  let total = 0;
+  for (let n = 0; n < src.length; n++) {
+    const x = src[asc ? n : src.length - 1 - n];
+    if (!match(x)) continue;
+    if (total >= offset && items.length < limit) items.push(x);
+    total++;
+  }
+  return NextResponse.json({ revision: d.revision, total, items });
 }

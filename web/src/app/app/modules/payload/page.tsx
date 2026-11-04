@@ -18,8 +18,8 @@ export default function PayloadModulePage() {
   const locale = useLocale();
   const live = useLive();
   const masters = useMasters();
-  const { data } = useData<PayloadEvent>("payloadEvents", { limit: 400 }, 4000);
-  const { data: txs } = useData<Transaction>("transactions", { limit: 3000 }, 15000);
+  const { data } = useData<PayloadEvent>("payloadEvents", { limit: 400 }, 15_000);
+  const { data: txs } = useData<Transaction>("transactions", { limit: 3000 }, 30_000);
   const events = data?.items ?? [];
   const netByVisit = useMemo(() => new Map((txs?.items ?? []).map((t) => [t.visitId, t.netKg])), [txs]);
   const loading = (live?.activeIds ?? []).map((id) => live!.visits[id]).filter((v) => v?.state === "LOADING");

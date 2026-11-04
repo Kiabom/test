@@ -17,11 +17,13 @@ import {
   findVisit,
   fuseIdentity,
   gateDecide,
+  invalidateIndexes,
   lane,
   registerGuest,
   releaseLane,
   requestBarrierOpen,
 } from "./ops";
+import { simRandom } from "./rng";
 import { audit, bump, enqueueOutbox, log, nextId, nowIso, raiseAlert, shiftOf, token, type DB } from "./store";
 
 interface VisitSim {
@@ -33,15 +35,24 @@ interface VisitSim {
   exitQrAt?: number;
   scanUntil?: number;
 }
-const gs = globalThis as unknown as { __tozinSimState?: Map<string, VisitSim>; __tozinLaneTargets?: Map<string, number>; __tozinSlowTick?: number };
-const simState = (gs.__tozinSimState ??= new Map<string, VisitSim>());
-const laneTargets = (gs.__tozinLaneTargets ??= new Map<string, number>());
+const gs = globalThis as unknown as { __tozinSimState?: Map<string, VisitSim>; __tozinLaneTargets?: Map<string, number>; __tozinSlowTick?: number; __tozinPruneAt?: number };
+export const simState = (gs.__tozinSimState ??= new Map<string, VisitSim>());
+export const laneTargets = (gs.__tozinLaneTargets ??= new Map<string, number>());
 
-const rnd = Math.random;
+/** Forget per-truck simulator state (after a data reset the same visit ids come back). */
+export function resetSimState() {
+  simState.clear();
+  laneTargets.clear();
+  gs.__tozinSlowTick = 0;
+}
+
+const rnd = simRandom;
+/** Virtual operators/guards act only in live AUTO mode; the presentation scene waits for a person. */
+const auto = (d: DB) => d.live.scene === "LIVE" && d.live.mode === "AUTO";
 const between = (a: number, b: number) => a + rnd() * (b - a);
 const dur = (d: DB, seconds: number) => Date.now() + (seconds * 1000) / d.live.speed;
 
-export function initLive(d: DB) {
+export function initLive(d: DB, warm = true) {
   if (d.live.lanes.length) return;
   const mk = (code: T.Lane["code"], kind: T.LaneKind): T.LaneLive => ({
     code,
@@ -57,7 +68,7 @@ export function initLive(d: DB) {
   d.live.lanes = [mk("A", "GATE_IN"), mk("B", "SCALE"), mk("C", "SCALE"), mk("D", "SCAN"), mk("E", "GATE_OUT")];
   log(d, "info", "SIM", "Simulator started — virtual devices online");
   // warm start: a few trucks already inside the site
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < (warm ? 3 : 0); i++) {
     const v = spawnArrival(d, undefined, true);
     if (!v) continue;
     d.live.queueGateIn = d.live.queueGateIn.filter((x) => x !== v.id);
@@ -69,7 +80,7 @@ export function initLive(d: DB) {
     if (i < 2) {
       // already weighed once, loading now
       const vs = simState.get(v.id)!;
-      fakeFirstWeigh(d, v, vs.targetFirstKg);
+      fakeWeigh(d, v, "B", vs.targetFirstKg);
       v.prevState = "ON_SCALE_1";
       v.state = "LOADING";
       vs.loadingUntil = dur(d, 15 + i * 25);
@@ -81,13 +92,14 @@ export function initLive(d: DB) {
   d.live.nextArrivalAt = Date.now() + 4000;
 }
 
-function fakeFirstWeigh(d: DB, v: T.Visit, kg: number) {
-  const l = lane(d, "B");
+/** Records a sensor weighing for a truck that is not physically on the lane (warm start / staging). */
+export function fakeWeigh(d: DB, v: T.Visit, code: "B" | "C", kg: number, actorId = code === "B" ? "U-OP1" : "U-OP2") {
+  const l = lane(d, code);
   const prev = { visitId: l.visitId, weightKg: l.weightKg, stable: l.stable, positionOk: l.positionOk, lastReadingAt: l.lastReadingAt, rawFrame: l.rawFrame, indicatorOnline: l.indicatorOnline, phase: l.phase, phaseUntil: l.phaseUntil };
   Object.assign(l, { visitId: v.id, weightKg: kg, stable: true, positionOk: true, lastReadingAt: nowIso(), rawFrame: indicatorFrame(kg, true), indicatorOnline: true });
-  v.laneCode = "B";
+  v.laneCode = code;
   try {
-    captureWeigh(d, "B", "U-OP1");
+    captureWeigh(d, code, actorId);
   } finally {
     Object.assign(l, prev);
     v.laneCode = undefined;
@@ -163,7 +175,7 @@ export function spawnArrival(d: DB, scenario?: string, silent = false): T.Visit 
 
 // ---------------- Lane processors ----------------
 
-function processGateIn(d: DB, now: number) {
+export function processGateIn(d: DB, now: number) {
   const l = lane(d, "A");
   if (!l.visitId) {
     const next = d.live.queueGateIn.shift();
@@ -283,7 +295,7 @@ function scaleLaneCode(d: DB, which: "B" | "C"): "B" | "C" {
   return which;
 }
 
-function processScale(d: DB, code: "B" | "C", now: number) {
+export function processScale(d: DB, code: "B" | "C", now: number) {
   const l = lane(d, code);
   const scaleId = code === "B" ? "SC-1" : "SC-2";
   const scale = d.scales.find((s) => s.id === scaleId)!;
@@ -379,7 +391,7 @@ function processScale(d: DB, code: "B" | "C", now: number) {
       stable = true;
       l.positionOk = true;
       l.beams = [true, true, true, true];
-      if (t <= 0 && l.stable && d.live.mode === "AUTO" && l.indicatorOnline) {
+      if (t <= 0 && l.stable && auto(d) && l.indicatorOnline) {
         try {
           captureWeigh(d, code, code === "B" ? "U-OP1" : "U-OP2");
           onCaptured(d, v!, code);
@@ -445,7 +457,7 @@ function onCaptured(d: DB, v: T.Visit, code: "B" | "C") {
   void code;
   const tx = v.transactionIds.map((id) => findTx(d, id)).find((t) => t && t.state !== "VOIDED");
   if (!tx) return;
-  if (tx.state === "RECONCILED" && d.live.mode === "AUTO") {
+  if (tx.state === "RECONCILED" && auto(d)) {
     finalizeTx(d, tx.id, "U-OP2");
   }
 }
@@ -480,6 +492,20 @@ function processYard(d: DB, now: number) {
     if (!vs) continue;
     if (!vs.loadingUntil) vs.loadingUntil = dur(d, between(25, 45));
     if (vs.loadingUntil > now) continue;
+    completeLoading(d, v);
+  }
+  const dl = lane(d, "D");
+  if (dl.visitId && (dl.phaseUntil ?? 0) < now) {
+    dl.visitId = undefined;
+    dl.phase = "IDLE";
+  }
+}
+
+/** Loader payload + LiDAR gantry scan, then the truck queues for the second weighing. */
+export function completeLoading(d: DB, v: T.Visit) {
+  const vs = simState.get(v.id);
+  if (!vs) return;
+  {
     const tx = v.transactionIds.map((id) => findTx(d, id)).find((t) => t && t.state === "FIRST_CAPTURED");
     const vehicle = findVehicle(d, v.vehicleId)!;
     if (tx && v.operation !== "RECEIVE") {
@@ -513,14 +539,9 @@ function processYard(d: DB, now: number) {
     (target === "B" ? d.live.queueB : d.live.queueC).push(v.id);
     bump(d);
   }
-  const dl = lane(d, "D");
-  if (dl.visitId && (dl.phaseUntil ?? 0) < now) {
-    dl.visitId = undefined;
-    dl.phase = "IDLE";
-  }
 }
 
-function processGateOut(d: DB, now: number) {
+export function processGateOut(d: DB, now: number) {
   const l = lane(d, "E");
   if (!l.visitId) {
     const nid = d.live.queueGateOut.shift();
@@ -559,7 +580,7 @@ function processGateOut(d: DB, now: number) {
         l.phase = "QR_OK";
         return;
       }
-      if (d.live.mode === "AUTO" && ep) consumeExitPermit(d, ep.token, "U-GD2");
+      if (auto(d) && ep) consumeExitPermit(d, ep.token, "U-GD2");
       return;
     }
     case "QR_OK": {
@@ -615,7 +636,7 @@ function processGateOut(d: DB, now: number) {
 
 /** Virtual supervisors/guards in AUTO mode so the demo never deadlocks. */
 function virtualActors(d: DB, now: number) {
-  if (d.live.mode !== "AUTO") return;
+  if (!auto(d)) return;
   for (const v of d.visits) {
     if (v.state !== "HOLD") continue;
     const vs = simState.get(v.id);
@@ -667,7 +688,7 @@ function processOutbox(d: DB, now: number) {
   for (const m of d.outbox) {
     if (m.status === "PENDING" && now - new Date(m.createdAt).getTime() > 1500) {
       m.attempts++;
-      if (m.channel === "ERP" && rnd() < 0.04) {
+      if (m.channel === "ERP" && d.live.scene === "LIVE" && rnd() < 0.04) {
         m.status = "FAILED";
         m.lastError = "HTTP 503 — ERP gateway unavailable";
         m.nextRetryAt = new Date(now + 15_000).toISOString();
@@ -694,9 +715,14 @@ function processOutbox(d: DB, now: number) {
 }
 
 function slowChecks(d: DB, now: number) {
-  // heartbeats
+  // heartbeats (in place — no revision bump, so pages don't refetch)
   for (const dev of d.devices) {
     if (dev.status !== "OFFLINE") dev.lastHeartbeatAt = nowIso();
+  }
+  if (d.live.scene !== "LIVE") return;
+  if (now - (gs.__tozinPruneAt ?? 0) > 10 * 60_000) {
+    gs.__tozinPruneAt = now;
+    pruneOld(d, now);
   }
   if (rnd() < 0.02) {
     const cams = d.devices.filter((x) => x.type.startsWith("CAMERA") && x.status === "ONLINE");
@@ -726,7 +752,7 @@ function slowChecks(d: DB, now: number) {
     audit(d, "edge.sync", "Device", "EDGE-1", { actorType: "DEVICE", actorId: "EDGE-1", data: { pending } });
   }
   // QC lab auto-approves pending samples in AUTO mode
-  if (d.live.mode === "AUTO") {
+  if (auto(d)) {
     for (const tx of d.transactions) {
       if (tx.qcStatus === "PENDING" && now - new Date(tx.createdAt).getTime() > 60_000 / d.live.speed) tx.qcStatus = "APPROVED";
     }
@@ -736,7 +762,9 @@ function slowChecks(d: DB, now: number) {
 export function tick(d: DB) {
   const now = Date.now();
   initLive(d);
-  if (now >= d.live.nextArrivalAt) {
+  const live = d.live.scene === "LIVE";
+  // presentation: no new trucks unless a scenario is requested explicitly from the console
+  if (now >= d.live.nextArrivalAt && (live || d.live.pendingScenarios.length)) {
     const onSite = d.visits.filter((v) => !["EXITED", "REJECTED", "CANCELLED", "EXPECTED"].includes(v.state)).length;
     if (onSite < 11 || d.live.pendingScenarios.length) spawnArrival(d, d.live.pendingScenarios.shift());
     d.live.nextArrivalAt = now + between(40, 75) * 1000 / d.live.speed;
@@ -744,7 +772,8 @@ export function tick(d: DB) {
   processGateIn(d, now);
   processScale(d, "B", now);
   processScale(d, "C", now);
-  processYard(d, now);
+  // presentation: loaders stay mid-load so the payload screens always have something to show
+  if (live) processYard(d, now);
   processGateOut(d, now);
   virtualActors(d, now);
   processOutbox(d, now);
@@ -763,6 +792,66 @@ export function startSimulation(get: () => DB) {
       console.error("[sim]", e);
     }
   }, 1000);
+}
+
+// ---------------- Scene & retention ----------------
+
+/** Switch between the frozen presentation scene and the live simulation. */
+export function setScene(d: DB, scene: "PRESENTATION" | "LIVE") {
+  d.live.scene = scene;
+  d.live.mode = scene === "LIVE" ? "AUTO" : "MANUAL";
+  if (scene === "LIVE") {
+    // staged lanes and loaders hold far-future timers; release them so the flow continues
+    const soon = Date.now() + 60_000;
+    for (const l of d.live.lanes) if ((l.phaseUntil ?? 0) > soon) l.phaseUntil = Date.now();
+    for (const vs of simState.values()) if ((vs.loadingUntil ?? 0) > soon) vs.loadingUntil = undefined;
+    d.live.nextArrivalAt = Date.now() + 3000;
+  }
+  log(d, "info", "SIM", scene === "LIVE" ? "Live simulation ON" : "Presentation scene — frozen");
+  bump(d);
+}
+
+const RETAIN_MS = 7 * 864e5;
+const RETAIN_VISITS = 3000;
+
+/** Live-mode retention: keep 7 days and at most ~3000 finished visits so the server never slows down. */
+export function pruneOld(d: DB, now = Date.now()) {
+  const done = d.visits.filter((v) => ["EXITED", "REJECTED", "CANCELLED"].includes(v.state));
+  let cutoff = now - RETAIN_MS;
+  if (done.length > RETAIN_VISITS) cutoff = Math.max(cutoff, new Date(done[done.length - RETAIN_VISITS].arrivedAt).getTime());
+  const cut = new Date(cutoff).toISOString();
+  const gone = new Set(done.filter((v) => v.arrivedAt < cut).map((v) => v.id));
+  if (!gone.size) return 0;
+  const goneTx = new Set(d.transactions.filter((t) => gone.has(t.visitId)).map((t) => t.id));
+  const keep = <R,>(arr: R[], drop: (x: R) => boolean) => arr.filter((x) => !drop(x));
+  d.visits = keep(d.visits, (v) => gone.has(v.id));
+  d.transactions = keep(d.transactions, (t) => goneTx.has(t.id));
+  d.weighEvents = keep(d.weighEvents, (w) => goneTx.has(w.transactionId));
+  d.evidence = keep(d.evidence, (e) => gone.has(e.visitId));
+  d.plateReads = keep(d.plateReads, (p) => (p.visitId ? gone.has(p.visitId) : p.capturedAt < cut));
+  d.rfidReads = keep(d.rfidReads, (r) => r.readAt < cut);
+  d.gateEvents = keep(d.gateEvents, (g) => (g.visitId ? gone.has(g.visitId) : g.at < cut));
+  d.exitPermits = keep(d.exitPermits, (e) => gone.has(e.visitId));
+  d.lidarScans = keep(d.lidarScans, (l) => gone.has(l.visitId));
+  d.uvssScans = keep(d.uvssScans, (u) => gone.has(u.visitId));
+  d.payloadEvents = keep(d.payloadEvents, (p) => (p.visitId ? gone.has(p.visitId) : p.at < cut));
+  d.ledger = keep(d.ledger, (l) => l.at < cut);
+  d.fleetCycles = keep(d.fleetCycles, (c) => c.start < cut);
+  d.bookings = keep(d.bookings, (b) => b.slotEnd < cut);
+  d.alerts = keep(d.alerts, (a) => a.openedAt < cut && (a.status === "RESOLVED" || a.status === "DISMISSED"));
+  d.outbox = keep(d.outbox, (m) => m.createdAt < cut && (m.status === "SENT" || m.status === "DEAD"));
+  // audit: archive the oldest records but remember the last archived hash so the chain still verifies
+  const firstKept = d.audit.findIndex((a) => a.at >= cut);
+  const n = firstKept < 0 ? 0 : firstKept;
+  if (n > 0) {
+    d.auditBase = { prevHash: d.audit[n - 1].hash, archived: d.auditBase.archived + n };
+    d.audit = d.audit.slice(n);
+  }
+  for (const id of gone) simState.delete(id);
+  invalidateIndexes();
+  log(d, "info", "RETENTION", `Archived ${gone.size} visits older than ${cut.slice(0, 16)}`);
+  bump(d);
+  return gone.size;
 }
 
 // ---------------- Scenario control ----------------
@@ -803,6 +892,8 @@ export function runScenario(d: DB, code: string, actorId: string) {
       break;
     }
     default:
+      // a new truck has to drive through the site, so the frozen scene becomes a live simulation
+      if (d.live.scene !== "LIVE") setScene(d, "LIVE");
       d.live.pendingScenarios.push(code);
       d.live.nextArrivalAt = Date.now();
   }

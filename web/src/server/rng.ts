@@ -20,3 +20,11 @@ export function gauss(r: Rand, mean = 0, sd = 1): number {
   const v = r();
   return mean + sd * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
+
+// Shared random source for the simulator and operations. Seeded while the presentation scene is
+// staged so it comes out identical on every start; Math.random otherwise.
+let source: Rand = Math.random;
+export const simRandom: Rand = () => source();
+export function seedSimRandom(seed?: number) {
+  source = seed == null ? Math.random : mulberry32(seed);
+}

@@ -76,6 +76,9 @@ async function smoke(browser) {
       const want = locale === "fa" ? "rtl" : "ltr";
       await page.waitForFunction((w) => document.documentElement.dir === w, want, { timeout: 15_000 }).catch(() => {});
       const dir = await page.evaluate(() => document.documentElement.dir);
+      // no page may scroll sideways (RTL overflow pushes the sidebar off-screen)
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      if (overflow > 2) errors.push(`horizontal overflow ${overflow}px`);
       const ok = status < 400 && errors.length === 0 && dir === want;
       console.log(`${ok ? "✓" : "✗"} [${locale}] ${r} ${status} dir=${dir}${errors.length ? " — " + errors.slice(0, 2).join(" | ") : ""}`);
       if (!ok) failures.push({ locale, r, status, dir, errors });
@@ -111,13 +114,54 @@ async function operatorTick(visitId) {
   return { st, v };
 }
 
-async function flow(browser) {
-  console.log("\n— E2E S-NORMAL manual flow —");
+/** Guard scans an exit QR twice on a phone: first accepted, second rejected with R36. */
+async function guardDoubleScan(browser, token) {
+  const ctx = await newContext(browser, { locale: "en", user: "U-GD1", width: 390, height: 844 });
+  const { page, errors } = await visit(ctx, "/app/guard", 3000);
+  const input = page.getByPlaceholder(/EX-/);
+  const form = page.locator("form", { has: input });
+  const submit = async () => {
+    await input.fill(`${BASE}/x/${token}`);
+    await form.locator("button[type=submit]").click();
+  };
+  await submit();
+  await page.getByText("VALID", { exact: true }).waitFor({ timeout: 15_000 });
+  await sleep(800);
+  await submit();
+  await page.getByText("This QR was already used!").waitFor({ timeout: 15_000 });
+  return { ctx, page, errors };
+}
+
+/** Default presentation scene: every lane staged, and nothing changes while nobody acts. */
+async function scene(browser) {
+  console.log("\n— Presentation scene —");
   await act("sim.reset");
   await sleep(1500);
+  const a = await api("/api/state");
+  const phases = Object.fromEntries(a.lanes.map((l) => [l.code, l.phase]));
+  const want = { A: "HELD", B: "STABLE", C: "STABLE", D: "SCANNING", E: "AWAIT_QR" };
+  for (const [k, v] of Object.entries(want)) if (phases[k] !== v) throw new Error(`lane ${k} is ${phases[k]}, expected ${v}`);
+  console.log("  ✓ lanes staged", JSON.stringify(phases));
+  await sleep(20_000);
+  const b = await api("/api/state");
+  if (b.revision !== a.revision || b.activeIds.length !== a.activeIds.length) throw new Error(`scene changed on its own (rev ${a.revision}→${b.revision})`);
+  console.log(`  ✓ unchanged after 20 s (rev ${b.revision}, ${b.activeIds.length} trucks on site)`);
+  const refs = await api("/api/view/showcase");
+  const { ctx, errors } = await guardDoubleScan(browser, refs.exitPermitToken);
+  console.log("  ✓ staged exit QR: first scan accepted, second rejected");
+  const exited = await waitFor(async () => (await api("/api/state")).visits[refs.laneE]?.state === "EXITED", "staged truck exit", 30_000);
+  console.log("  ✓ staged truck left through lane E:", exited);
+  await ctx.close();
+  return errors;
+}
+
+async function flow(browser) {
+  console.log("\n— E2E S-NORMAL manual flow (live simulation) —");
+  await act("sim.reset");
+  await sleep(1500);
+  await act("sim.scenario", { code: "S-NORMAL" }); // switches the frozen scene to live
   await act("sim.mode", { mode: "MANUAL" });
   await act("sim.speed", { speed: 10 });
-  await act("sim.scenario", { code: "S-NORMAL" });
   const visitId = await waitFor(async () => {
     const st = await api("/api/state");
     return Object.values(st.visits).find((v) => v.scenario === "S-NORMAL")?.id;
@@ -168,8 +212,7 @@ async function flow(browser) {
   }, "EXITED", 90_000);
   console.log("  ✓ vehicle exited:", exited);
   await ctx.close();
-  await act("sim.mode", { mode: "AUTO" });
-  await act("sim.speed", { speed: 1 });
+  await act("sim.reset"); // back to the presentation scene
   return errors;
 }
 
@@ -221,6 +264,11 @@ try {
     failed ||= f.length > 0;
   }
   if (!arg("skip-flow")) {
+    const sceneErrs = await scene(browser);
+    if (sceneErrs.length) {
+      console.log("  console errors on guard page:", sceneErrs);
+      failed = true;
+    }
     const errs = await flow(browser);
     if (errs.length) {
       console.log("  console errors on guard page:", errs);

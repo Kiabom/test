@@ -230,6 +230,7 @@ export function buildSeed(): DB {
       log: [],
       speed: 1,
       mode: "AUTO",
+      scene: "LIVE",
       wanOnline: true,
       nextArrivalAt: now + 3000,
       pendingScenarios: [],
@@ -237,6 +238,7 @@ export function buildSeed(): DB {
     },
     revision: 1,
     counters: {},
+    auditBase: { prevHash: "GENESIS", archived: 0 },
   };
   const id = (p: string) => {
     d.counters[p] = (d.counters[p] ?? 0) + 1;

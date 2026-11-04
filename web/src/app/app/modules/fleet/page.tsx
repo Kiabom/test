@@ -24,9 +24,10 @@ export default function FleetModulePage() {
   const locale = useLocale();
   const now = useNow(10000);
   const masters = useMasters();
-  const { data } = useData<FleetCycle>("fleetCycles", { limit: 2000 }, 8000);
-  const since = new Date(now - 24 * 3600_000).toISOString();
-  const { data: txs } = useData<Transaction>("transactions", { limit: 3000, state: "APPROVED", since }, 8000);
+  const { data } = useData<FleetCycle>("fleetCycles", { limit: 2000 }, 30_000);
+  // rounded to the hour so the URL (and the fetch) doesn't change on every clock tick
+  const since = new Date(Math.floor((now - 24 * 3600_000) / 3600_000) * 3600_000).toISOString();
+  const { data: txs } = useData<Transaction>("transactions", { limit: 3000, state: "APPROVED", since }, 30_000);
   const cycles = useMemo(() => data?.items ?? [], [data]);
   const windowStart = now - 8 * 3600_000;
   const byVehicle = useMemo(() => {

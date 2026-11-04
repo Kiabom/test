@@ -25,8 +25,9 @@ export function appendAudit(chain: AuditEvent[], e: Omit<AuditEvent, "hash" | "p
   return full;
 }
 
-export function verifyChain(chain: AuditEvent[]): { ok: true; checked: number } | { ok: false; brokenAt: number; seq: number } {
-  let prevHash = "GENESIS";
+/** `startPrev` is the hash of the last archived record when old entries were moved out by retention. */
+export function verifyChain(chain: AuditEvent[], startPrev = "GENESIS"): { ok: true; checked: number } | { ok: false; brokenAt: number; seq: number } {
+  let prevHash = startPrev;
   for (let i = 0; i < chain.length; i++) {
     const e = chain[i];
     const { hash, prevHash: storedPrev, ...rest } = e;
