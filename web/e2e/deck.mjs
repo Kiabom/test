@@ -44,6 +44,6 @@ for (let n = 1; n <= count; n++) {
 }
 await browser.close();
 
-const pdf = `${OUT}TozinNegar-slides-${LOCALE}${TRACK === "all" ? "" : `-${TRACK}`}.pdf`;
+const pdf = `${OUT}FanapTozin-slides-${LOCALE}${TRACK === "all" ? "" : `-${TRACK}`}.pdf`;
 execFileSync("python3", ["-I", "-c", "import sys\nfrom PIL import Image\nims=[Image.open(f).convert('RGB') for f in sys.argv[2:]]\nims[0].save(sys.argv[1], save_all=True, append_images=ims[1:], resolution=144)", pdf, ...files]);
 console.log("PDF:", pdf);

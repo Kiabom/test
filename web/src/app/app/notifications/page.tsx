@@ -6,6 +6,7 @@ import type { OutboxMessage } from "@/domain/types";
 import { fmtDateTime, fmtNum, fmtTime } from "@/lib/format";
 import { useData } from "@/lib/live";
 import { useL, useLocale } from "@/lib/prefs";
+import { BRAND } from "@/config/brand";
 
 type Ch = "SMS" | "WHATSAPP" | "EMAIL";
 const ICON = { SMS: MessageSquareText, WHATSAPP: MessageCircle, EMAIL: Mail };
@@ -73,7 +74,7 @@ export default function NotificationsPage() {
                 <span>{fmtTime(Date.now(), "en")}</span>
                 <span>5G ▮▮▮</span>
               </div>
-              <div className="mt-3 border-b border-slate-300 px-4 pb-2 text-center text-sm font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200">{cur?.channel === "WHATSAPP" ? "WhatsApp · TozinNegar" : cur?.channel === "EMAIL" ? "Mail" : "TozinNegar"}</div>
+              <div className="mt-3 border-b border-slate-300 px-4 pb-2 text-center text-sm font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200">{cur?.channel === "WHATSAPP" ? `WhatsApp · ${BRAND.nameEn}` : cur?.channel === "EMAIL" ? "Mail" : BRAND.nameEn}</div>
               {cur ? (
                 <div className="p-3">
                   <div className={cx("max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm", cur.channel === "WHATSAPP" ? "bg-[#dcf8c6] text-slate-900" : "bg-white text-slate-900 dark:bg-slate-700 dark:text-slate-100")} dir="rtl">

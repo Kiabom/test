@@ -23,7 +23,7 @@ export function LaptopMock() {
         <div className="overflow-hidden rounded-md bg-[#0b1220] p-3 text-white">
           <div className="mb-2 flex items-center justify-between text-[10px] text-white/60">
             <span>● ● ●</span>
-            <span>tozinnegar · /app/weighing</span>
+            <span>fanap-tozin · /app/weighing</span>
           </div>
           <div className="grid grid-cols-5 gap-2">
             <div className="col-span-3 flex flex-col gap-2">

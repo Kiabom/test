@@ -8,6 +8,7 @@ import { DeviceArt } from "@/components/hardware/Devices";
 import { TruckSvg } from "@/components/hardware/Truck";
 import { CONTROLS } from "@/components/marketing/content";
 import { LogoMark } from "@/components/shell/Logo";
+import { BRAND } from "@/config/brand";
 import { JOURNEY_STEPS } from "@/domain/journey";
 import type { DeviceType } from "@/domain/types";
 import { DEVICE_TYPE, lbl } from "@/i18n/labels";
@@ -53,7 +54,7 @@ function Layout({ kicker, title, points, visual, c, dark }: { kicker?: string; t
 }
 
 function Footer({ c, dark }: { c: SlideCtx; dark?: boolean }) {
-  return <div className={dark ? "mt-6 text-lg text-white/50" : "mt-6 text-lg text-[#5b6b79]"}>{c.L("توزین‌نگار · نسخه نمایشی با داده و سخت‌افزار شبیه‌سازی‌شده", "TozinNegar · demo build with simulated data and hardware")}</div>;
+  return <div className={dark ? "mt-6 text-lg text-white/50" : "mt-6 text-lg text-[#5b6b79]"}>{c.L(`${BRAND.name} · نسخه نمایشی با داده و سخت‌افزار شبیه‌سازی‌شده`, `${BRAND.nameEn} · demo build with simulated data and hardware`)}</div>;
 }
 
 const tk = (c: SlideCtx, k: string) => c.refs?.driverTokens[k];
@@ -62,7 +63,7 @@ export const SLIDES: Slide[] = [
   {
     id: "cover",
     tracks: BOTH,
-    title: ["توزین‌نگار", "TozinNegar"],
+    title: [BRAND.name, BRAND.nameEn],
     notes: ["سامانه هوشمند توزین و تردد معدن: از نوبت کامیون تا تحویل بار، با کنترل ضدتقلب و دید کامل برای معدن‌دار.", "Smart mine weighbridge & gate system: from truck booking to delivery, with anti-fraud controls and full visibility for the owner."],
     render: (c) => (
       <div className="flex h-full flex-col justify-between bg-[#102A43] p-24 text-white">
@@ -71,7 +72,7 @@ export const SLIDES: Slide[] = [
           <div className="text-3xl font-semibold text-sky-300">{c.L("سامانه هوشمند توزین و تردد معدن", "Smart mine weighbridge & gate system")}</div>
         </div>
         <div>
-          <h1 className="text-[120px] font-black leading-none">{c.L("توزین‌نگار", "TozinNegar")}</h1>
+          <h1 className="text-[120px] font-black leading-none">{c.L(BRAND.name, BRAND.nameEn)}</h1>
           <p className="mt-8 max-w-[1200px] text-[40px] leading-[1.5] text-white/85">{c.L("از دروازه تا رسید — هر کیلوگرم ثبت، هر خروج کنترل‌شده، هر کامیون روی نقشه.", "From gate to receipt — every kilogram recorded, every exit controlled, every truck on the map.")}</p>
         </div>
         <div className="flex items-end justify-between">

@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { BRAND } from "@/config/brand";
 
 export const metadata: Metadata = {
-  title: { default: "توزین‌نگار — سامانه هوشمند توزین معدن", template: "%s · توزین‌نگار" },
+  title: { default: `${BRAND.name} — سامانه هوشمند توزین معدن`, template: `%s · ${BRAND.name}` },
   description: "سامانه هوشمند توزین، کنترل تردد، اسکن و پایش تولید معدن (نسخه نمایشی)",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg" },

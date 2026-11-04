@@ -1,17 +1,17 @@
 // Editable PowerPoint version of the presentation (Persian, RTL), built from the app's own
 // screenshots in docs/screenshots (run `npm run e2e -- --shots` first).
-// Usage: node e2e/build-pptx.cjs  →  docs/presentation/TozinNegar.pptx
+// Usage: node e2e/build-pptx.cjs  →  docs/presentation/FanapTozin.pptx
 const fs = require("fs");
 const path = require("path");
 const PptxGenJS = require("pptxgenjs");
 
 const ROOT = path.join(__dirname, "..", "..");
 const SHOTS = path.join(ROOT, "docs", "screenshots");
-const OUT = path.join(ROOT, "docs", "presentation", "TozinNegar.pptx");
+const OUT = path.join(ROOT, "docs", "presentation", "FanapTozin.pptx");
 const APPLY_THEME = process.env.PPTX_APPLY_THEME; // path to the pptx skill's apply_theme.js (optional)
 
 const THEME = {
-  name: "TozinNegar",
+  name: "FanapTozin",
   headFontFace: "Arial",
   bodyFontFace: "Arial",
   colors: {
@@ -33,7 +33,7 @@ const THEME = {
 const W = 13.333;
 const H = 7.5;
 const M = 0.5;
-const FOOTER = "توزین‌نگار · نسخه نمایشی با داده و سخت‌افزار شبیه‌سازی‌شده";
+const FOOTER = "فناپ توزین · نسخه نمایشی با داده و سخت‌افزار شبیه‌سازی‌شده";
 
 /** PNG size from the IHDR header. */
 function pngSize(file) {
@@ -56,8 +56,8 @@ async function main() {
   const pres = new PptxGenJS();
   pres.layout = "LAYOUT_WIDE";
   pres.rtlMode = true;
-  pres.title = "توزین‌نگار — سامانه هوشمند توزین و تردد معدن";
-  pres.author = "TozinNegar demo";
+  pres.title = "فناپ توزین — سامانه هوشمند توزین و تردد معدن";
+  pres.author = "Fanap Tozin demo";
   pres.theme = { headFontFace: THEME.headFontFace, bodyFontFace: THEME.bodyFontFace };
   const C = pres.SchemeColor;
 
@@ -123,7 +123,7 @@ async function main() {
   pres.addSection({ title: "مقدمه" });
   {
     const s = pres.addSlide({ masterName: "COVER", sectionTitle: "مقدمه" });
-    s.addText("توزین‌نگار", { placeholder: "title" });
+    s.addText("فناپ توزین", { placeholder: "title" });
     s.addText("سامانه هوشمند توزین و تردد معدن — از دروازه تا رسید: هر کیلوگرم ثبت، هر خروج کنترل‌شده، هر کامیون روی نقشه.", { placeholder: "body" });
     s.addImage({ ...fit(shot("control-room-dark"), { x: M, y: 4.9, w: 4.2, h: 2.2 }), altText: "اتاق کنترل", objectName: "cover-image" });
     s.addText("نسخه نمایشی — همه داده‌ها و دستگاه‌ها شبیه‌سازی‌شده‌اند", { x: 5.2, y: H - 0.8, w: W - 5.7, h: 0.4, fontSize: 14, color: "9FB3C8", align: "right", rtlMode: true, isTextBox: true, margin: 0 });

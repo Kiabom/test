@@ -8,6 +8,7 @@ import { fmtNum } from "@/lib/format";
 import { useMasters } from "@/lib/live";
 import { usePrefs, useL, useLocale } from "@/lib/prefs";
 import { USERS_LIST } from "@/lib/users";
+import { BRAND } from "@/config/brand";
 
 type Tab = "users" | "rbac" | "sites" | "shifts" | "settings" | "flags";
 
@@ -197,7 +198,7 @@ export default function AdminPage() {
             <Kv k={L("زبان پیش‌فرض", "Default language")} v="فارسی (RTL)" />
             <Kv k={L("تقویم", "Calendar")} v={L("شمسی؛ ذخیره UTC", "Jalali; stored in UTC")} />
             <Kv k={L("واحد وزن", "Weight unit")} v="kg (tabular, LTR)" />
-            <Kv k={L("برند", "Brand")} v="توزین‌نگار / TozinNegar" />
+            <Kv k={L("برند", "Brand")} v={`${BRAND.name} / ${BRAND.nameEn}`} />
           </Card>
           <Card className="p-4">
             <div className="mb-2 font-bold">{L("نگهداری داده", "Data")}</div>
