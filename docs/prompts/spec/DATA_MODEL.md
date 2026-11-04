@@ -150,3 +150,13 @@ Permit:       ISSUED → ACTIVE → CONSUMED | EXPIRED | REVOKED | SUSPENDED
 - `payloadVariancePct = 100×(payload − net)/net`.
 - `shiftTons = Σ netKg(APPROVED, DISPATCH)/1000`؛ سه جمع جدا: `sales_dispatched_t`، `site_dispatch_t`، `mine_moved_t` (داخلی).
 - KPI بدون داده معتبر → `null` و نمایش N/A.
+
+## ۸. صحنه ارائه، مسیر سفر و جغرافیا (فاز ۱۱)
+- **`live.scene`**: `"PRESENTATION" | "LIVE"`. **`live.showcase: ShowcaseRefs`** شامل این‌هاست: gateHold، lowConf، rejected، uvssVisit/uvssScan، laneB/C/E، exitPermitToken/Serial، overdrawVisit/Tx، qrReuseVisit، recentTx/recentVerify، lidarScan، loading[]، queued[]، inbound، exited[] و driverTokens (بر اساس مرحله).
+- **`auditBase`**: `{ prevHash, archived }`؛ آخرین hash بایگانی‌شده برای راستی‌آزمایی زنجیره بعد از بایگانی.
+- **JourneyStep** (`domain/journey.ts`): id، n، fa/en، driverDo، driverNeed، ownerWhat، controls[]، devices، role، output، place (StationKey یا destination) و page.
+- **Station** (`domain/geo.ts`): approach، A، parking، B، L-01، L-02، SH-01، unload، D، C، E، control، crusher، plant و dump. هر کدام lat/lng دارند.
+- **TripState / GeoEvent** (`domain/trips.ts`) از visit، مسیر مشتری و زمان محاسبه می‌شوند و ذخیره نمی‌شوند.
+  - رویدادها: SPEEDING، STOP، DEVIATION، GPS_LOST، DELIVERED و ARRIVING.
+  - سرعت حمل ۶۲ km/h و حد مجاز ۸۰ km/h.
+
