@@ -10,7 +10,7 @@ const seen = new Map<string, unknown>();
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { type?: string; payload?: Record<string, unknown>; idempotencyKey?: string };
-  const actor = req.headers.get("x-demo-user") || "public";
+  const actor = req.headers.get("x-user-id") || "public";
   if (!body.type) return NextResponse.json({ ok: false, error: "BAD_REQUEST" }, { status: 400 });
   if (body.idempotencyKey && seen.has(body.idempotencyKey)) return NextResponse.json({ ok: true, duplicate: true, result: seen.get(body.idempotencyKey) });
   try {

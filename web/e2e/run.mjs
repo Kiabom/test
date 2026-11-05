@@ -26,17 +26,18 @@ const api = async (path, init) => {
   return r.json();
 };
 const act = (type, payload = {}, user = "U-ADMIN") =>
-  api("/api/action", { method: "POST", headers: { "Content-Type": "application/json", "x-demo-user": user }, body: JSON.stringify({ type, payload }) });
+  api("/api/action", { method: "POST", headers: { "Content-Type": "application/json", "x-user-id": user }, body: JSON.stringify({ type, payload }) });
+const BANNED = /شبیه‌ساز|نمایشی|دمو|ماکاپ|\(ماک|ساختگی|\(نمونه\)|\bdemo\b|simulat|\bmock|fictional|illustrative/i;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const STATIC = [
-  "/", "/features", "/controls", "/connect", "/pricing",
+  "/",
   "/app", "/app/live", "/app/gate", "/app/weighing", "/app/scan", "/app/scan?tab=lidar", "/app/scan?tab=uvss", "/app/queue",
   "/app/transactions", "/app/exit-permits", "/app/guard", "/app/permits",
   "/app/alerts", "/app/fraud", "/app/audit",
   "/app/modules/lidar", "/app/modules/payload", "/app/modules/fleet",
   "/app/devices", "/app/hardware", "/app/site-map",
-  "/app/reports", "/app/billing", "/app/masters", "/app/integrations", "/app/notifications", "/app/admin", "/app/simulator",
+  "/app/reports", "/app/billing", "/app/masters", "/app/integrations", "/app/notifications", "/app/admin", "/app/console",
   "/display/B", "/display/C", "/display/queue", "/kiosk/B", "/d", "/wallboard",
   "/app/process", "/app/map", "/d/guide", "/showcase", "/present", "/present?track=driver", "/present?track=owner",
 ];
@@ -85,6 +86,10 @@ async function smoke(browser) {
       // no page may scroll sideways (RTL overflow pushes the sidebar off-screen)
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       if (overflow > 2) errors.push(`horizontal overflow ${overflow}px`);
+      // production wording: no demo / simulated / mock text anywhere on screen
+      const text = await page.evaluate(() => document.body.innerText);
+      const banned = text.match(BANNED);
+      if (banned) errors.push(`banned wording: "${banned[0]}"`);
       const ok = status < 400 && errors.length === 0 && dir === want;
       console.log(`${ok ? "✓" : "✗"} [${locale}] ${r} ${status} dir=${dir}${errors.length ? " — " + errors.slice(0, 2).join(" | ") : ""}`);
       if (!ok) failures.push({ locale, r, status, dir, errors });
@@ -223,7 +228,7 @@ async function flow(browser) {
 }
 
 const SHOT_LIST = [
-  ["/", "home", 1440, 900, "fa"],
+  ["/", "login", 1440, 900, "fa"],
   ["/app", "dashboard", 1440, 900, "fa"],
   ["/app/live", "control-room-dark", 1600, 1000, "fa", "dark"],
   ["/app/gate", "gate", 1440, 900, "fa"],
@@ -235,7 +240,7 @@ const SHOT_LIST = [
   ["/app/modules/payload", "payload", 1440, 900, "fa"],
   ["/app/modules/fleet", "fleet", 1440, 900, "fa"],
   ["/app/reports", "reports", 1440, 900, "en"],
-  ["/app/simulator", "simulator", 1440, 900, "en"],
+  ["/app/console", "simulator", 1440, 900, "en"],
   ["/app/site-map", "site-map", 1440, 900, "fa"],
   ["/app/hardware", "hardware", 1440, 900, "fa"],
   ["/display/B", "driver-display", 1920, 1080, "fa"],

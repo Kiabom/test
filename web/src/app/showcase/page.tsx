@@ -100,7 +100,7 @@ const GROUPS: Group[] = [
     items: [
       { shot: "alerts", fa: "مرکز هشدار", en: "Alerts center", dfa: "چرخه هشدار با SLA و ۴۰ قانون قابل تنظیم.", den: "Alert lifecycle with SLA and 40 configurable rules.", href: () => "/app/alerts", example: ["استفاده مجدد QR، مغایرت هویت، اضافه‌برداشت", "QR reuse, identity mismatch, overdraw"] },
       { shot: "fraud", fa: "بازبینی تقلب", en: "Fraud review", dfa: "تارای غیرعادی، سفر غیرممکن و کارنامه اپراتور.", den: "Tare outliers, impossible trips and operator scorecard.", href: () => "/app/fraud?id=FC-3", example: ["سفر غیرممکن", "Impossible trip"] },
-      { shot: "audit", fa: "زنجیره ممیزی", en: "Audit chain", dfa: "زنجیره HMAC با دمو دستکاری و کشف.", den: "HMAC chain with a tamper-and-detect demo.", href: () => "/app/audit" },
+      { shot: "audit", fa: "زنجیره ممیزی", en: "Audit chain", dfa: "زنجیره HMAC؛ هر دستکاری کشف می‌شود.", den: "HMAC chain; any tampering is detected.", href: () => "/app/audit" },
       { shot: "permits", fa: "حواله و سهمیه", en: "Permits & quota", dfa: "مصرف اتمیک سهمیه و نمودار مصرف.", den: "Atomic quota consumption and usage chart.", href: () => "/app/permits" },
     ],
   },
@@ -111,10 +111,10 @@ const GROUPS: Group[] = [
     icon: <Wrench className="size-5" />,
     items: [
       { shot: "devices", fa: "تجهیزات و سلامت", en: "Devices & health", dfa: "Heartbeat، لودسل، کالیبراسیون و Edge.", den: "Heartbeats, load cells, calibration and edge.", href: () => "/app/devices" },
-      { shot: "hardware", fa: "کاتالوگ سخت‌افزار", en: "Hardware catalog", dfa: "ماکاپ هر دستگاه و محل نصب.", den: "Mockup of every device and where it goes.", href: () => "/app/hardware" },
+      { shot: "hardware", fa: "کاتالوگ سخت‌افزار", en: "Hardware catalog", dfa: "هر دستگاه و محل نصب آن.", den: "Every device and where it goes.", href: () => "/app/hardware" },
       { shot: "site-map", fa: "نمای شماتیک سایت", en: "Schematic site view", dfa: "چیدمان لاین‌ها و دستگاه‌ها با وضعیت زنده.", den: "Lane and device layout with live status.", href: () => "/app/site-map" },
       { shot: "fleet", fa: "KPI ناوگان", en: "Fleet KPIs", dfa: "گانت چرخه، هدف/واقعی شیفت و سه جمع تولید.", den: "Cycle Gantt, shift target vs actual and three production totals.", href: () => "/app/modules/fleet" },
-      { shot: "simulator", fa: "کنسول شبیه‌ساز", en: "Simulator console", dfa: "حالت ارائه/زنده، ۱۷ سناریو و قطع/وصل دستگاه.", den: "Presentation/live mode, 17 scenarios and device toggles.", href: () => "/app/simulator" },
+      { shot: "simulator", fa: "کنسول سرویس", en: "Service console", dfa: "۱۷ سناریوی آزمون میدانی و قطع/وصل دستگاه.", den: "17 field-test scenarios and device toggles.", href: () => "/app/console" },
     ],
   },
 ];
@@ -131,7 +131,7 @@ export default function ShowcasePage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Logo locale={locale} />
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={live?.scene === "LIVE" ? "success" : "primary"}>{live?.scene === "LIVE" ? L("شبیه‌سازی زنده", "Live simulation") : L("حالت ارائه (ثابت)", "Presentation (frozen)")}</Badge>
+          <Badge tone={live?.scene === "LIVE" ? "success" : "primary"}>{live?.scene === "LIVE" ? L("جریان پیوسته", "Continuous flow") : L("ثابت", "Hold")}</Badge>
           <Button size="sm" onClick={async () => { await act("sim.reset"); toast.success(L("صحنه نمایش آماده شد", "Staged scene restored")); }}>
             <RotateCcw className="size-4" /> {L("بازگشت به صحنه نمایش", "Back to staged scene")}
           </Button>
@@ -146,7 +146,7 @@ export default function ShowcasePage() {
             <GalleryHorizontalEnd className="size-7 text-primary" /> {L("ویترین — نمونه هر بخش", "Showcase — an example of every part")}
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-7 text-muted">
-            {L("هر کارت یک بخش سامانه را با تصویر و توضیح کوتاه نشان می‌دهد؛ «باز کردن نمونه» مستقیم به یک مثال آماده در صحنه نمایش می‌رود. همه داده‌ها و دستگاه‌ها ساختگی‌اند.", "Each card shows one part of the system with a picture and a short description; “open example” jumps straight to a ready example in the staged scene. All data and devices are simulated.")}
+            {L("هر کارت یک بخش سامانه را با تصویر و توضیح کوتاه نشان می‌دهد؛ «باز کردن نمونه» مستقیم به همان صفحه در سامانه می‌رود.", "Each card shows one part of the system with a picture and a short description; “open example” goes straight to that screen.")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -294,7 +294,7 @@ function Samples({ refs }: { refs: Refs | null }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title={L("پیامک و واتس‌اپ راننده", "Driver SMS & WhatsApp")} icon={<MessageSquareText className="size-4" />} subtitle={L("ماک — هیچ پیامی واقعاً ارسال نمی‌شود", "Mock — nothing is really sent")} />
+          <CardHeader title={L("پیامک و واتس‌اپ راننده", "Driver SMS & WhatsApp")} icon={<MessageSquareText className="size-4" />} subtitle={L("متن پیام‌هایی که برای راننده فرستاده می‌شود", "Messages sent to the driver")} />
           <div className="flex flex-col gap-2 p-4">
             {phoneMsgs.map((m) => (
               <div key={m.id} className={cx("max-w-[90%] rounded-2xl px-3 py-2 text-sm shadow-sm", m.channel === "WHATSAPP" ? "self-start bg-[#dcf8c6] text-slate-900" : "self-start bg-surface-2")}>

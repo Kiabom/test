@@ -21,7 +21,7 @@ type Layer = "SITE" | "OUT" | "IN" | "FLEET" | "EQUIP" | "EVENTS" | "ROUTES";
 const SITE_BOUNDS: LatLng[] = [STATIONS.approach.at, STATIONS["SH-01"].at, STATIONS.plant.at, STATIONS.control.at, STATIONS.dump.at];
 const NUMBERS: Partial<Record<StationKey, number>> = { A: 1, parking: 2, B: 3, D: 5, C: 6, E: 8 };
 const EVENT_STYLE: Record<GeoEventKind, { tone: FleetEvent["tone"]; glyph: string }> = {
-  SPEEDING: { tone: "danger", glyph: "⚡" },
+  SPEEDING: { tone: "danger", glyph: "!" },
   STOP: { tone: "warning", glyph: "■" },
   DEVIATION: { tone: "warning", glyph: "↯" },
   GPS_LOST: { tone: "info", glyph: "?" },
@@ -194,7 +194,7 @@ export default function FleetMapPage() {
       <PageHeader
         icon={<Globe2 className="size-5" />}
         title={L("نقشه ناوگان و رویدادها", "Fleet & events map")}
-        subtitle={L("همه کامیون‌ها داخل معدن، در جاده و در راه معدن، ناوگان داخلی، تجهیزات و هشدارها روی یک نقشه. مکان معدن و مسیرها نمایشی است.", "Every truck on site, on the road and heading in, the internal fleet, equipment and alerts on one map. Mine location and routes are illustrative.")}
+        subtitle={L("همه کامیون‌ها داخل معدن، در جاده و در راه معدن، ناوگان داخلی، تجهیزات و هشدارها روی یک نقشه.", "Every truck on site, on the road and heading in, the internal fleet, equipment and alerts on one map.")}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant={focus.key === "site" ? "primary" : "secondary"} onClick={() => setFocus({ key: "site", bounds: SITE_BOUNDS })}>

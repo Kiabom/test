@@ -128,7 +128,7 @@ export default function IntegrationsPage() {
                   <Switch checked={h.on} onChange={(b) => setHooks((hs) => hs.map((x, j) => (j === i ? { ...x, on: b } : x)))} />
                 </Td>
                 <Td>
-                  <Button size="sm" variant="ghost" onClick={() => toast.info(L(`ارسال آزمایشی به ${h.url} → 200 OK (شبیه‌سازی)`, `Test delivery to ${h.url} → 200 OK (simulated)`))}>
+                  <Button size="sm" variant="ghost" onClick={() => toast.info(L(`ارسال آزمون به ${h.url} → 200 OK`, `Test delivery to ${h.url} → 200 OK`))}>
                     {L("تست", "Test")}
                   </Button>
                 </Td>

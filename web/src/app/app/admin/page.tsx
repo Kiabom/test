@@ -60,7 +60,7 @@ export default function AdminPage() {
     "billing.read": ["صورت‌حساب", "Billing"],
     "audit.read": ["ممیزی", "Audit"],
     "admin.manage": ["مدیریت سامانه", "Administration"],
-    "sim.control": ["شبیه‌ساز", "Simulator"],
+    "sim.control": ["کنسول سرویس", "Service console"],
   };
   return (
     <div>
@@ -100,7 +100,7 @@ export default function AdminPage() {
                     <Badge tone="success">{L("کاربر فعلی", "Current")}</Badge>
                   ) : (
                     <Button size="sm" variant="ghost" onClick={() => { setUser(u.id); toast.info(L(`اکنون با نقش «${roleName(u.role)}» کار می‌کنید`, `Now acting as “${roleName(u.role)}”`)); }}>
-                      {L("ورود به‌جای این کاربر (دمو)", "Act as (demo)")}
+                      {L("ورود به‌جای این کاربر", "Act as")}
                     </Button>
                   )}
                 </Td>
@@ -144,7 +144,7 @@ export default function AdminPage() {
             <Card key={s.id} className="p-4">
               <div className="flex items-center justify-between">
                 <div className="text-lg font-bold">{locale === "fa" ? s.name : s.nameEn}</div>
-                <Badge tone={s.id === "S1" ? "success" : "info"}>{s.id === "S1" ? L("فعال (شبیه‌سازی زنده)", "Active (live sim)") : L("تجمیع ستادی", "HQ roll-up")}</Badge>
+                <Badge tone={s.id === "S1" ? "success" : "info"}>{s.id === "S1" ? L("فعال", "Active") : L("تجمیع ستادی", "HQ roll-up")}</Badge>
               </div>
               <Kv k={L("کد", "Code")} v={s.code} />
               <Kv k={L("شعبه", "Branch")} v={s.branch} />
@@ -202,9 +202,9 @@ export default function AdminPage() {
           </Card>
           <Card className="p-4">
             <div className="mb-2 font-bold">{L("نگهداری داده", "Data")}</div>
-            <Kv k={L("پایگاه داده", "Database")} v={L("درون‌حافظه‌ای (دمو) — لایه Repository برای Postgres", "In-memory (demo) — repository layer for Postgres")} />
+            <Kv k={L("پایگاه داده", "Database")} v={L("PostgreSQL 16 · پشتیبان‌گیری روزانه ۰۲:۰۰", "PostgreSQL 16 · daily backup 02:00")} />
             <Kv k="Audit" v="HMAC-SHA256 chain, append-only" />
-            <Kv k={L("پشتیبان‌گیری", "Backup")} v={L("روزانه ۰۲:۰۰ (نمونه)", "Daily 02:00 (sample)")} />
+            <Kv k={L("پشتیبان‌گیری", "Backup")} v={L("روزانه ۰۲:۰۰ · نگهداری ۳۰ روز", "Daily 02:00 · 30-day retention")} />
           </Card>
         </div>
       )}

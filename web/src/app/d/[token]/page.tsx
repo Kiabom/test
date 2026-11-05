@@ -48,9 +48,9 @@ export default function DriverPortal({ params }: { params: Promise<{ token: stri
     }
     const cur = station(idx);
     const trip = data.trip;
-    const destAt: LatLng = trip ? trip.path[trip.path.length - 1] : CITIES.yazd.at;
+    const destAt: LatLng = trip ? trip.path[trip.path.length - 1] : CITIES.zarand.at;
     const targetAt = cur === "destination" ? destAt : STATIONS[idx === 0 ? "approach" : cur].at;
-    const label = cur === "destination" ? (locale === "fa" ? CITIES[trip?.to ?? "yazd"].fa : CITIES[trip?.to ?? "yazd"].en) : locale === "fa" ? STATIONS[idx === 0 ? "approach" : cur].fa : STATIONS[idx === 0 ? "approach" : cur].en;
+    const label = cur === "destination" ? (locale === "fa" ? CITIES[trip?.to ?? "zarand"].fa : CITIES[trip?.to ?? "zarand"].en) : locale === "fa" ? STATIONS[idx === 0 ? "approach" : cur].fa : STATIONS[idx === 0 ? "approach" : cur].en;
     // demo position: on the lane / at the loader when there, otherwise at the previous station
     let you: LatLng;
     if (idx === 9 && trip) you = trip.pos;
@@ -246,9 +246,9 @@ export default function DriverPortal({ params }: { params: Promise<{ token: stri
               {useGpsOn && !gps.pos && (
                 <span className="text-warning">
                   {gps.error === "INSECURE"
-                    ? L("GPS فقط روی HTTPS یا localhost کار می‌کند — موقعیت نمایشی نشان داده می‌شود.", "GPS needs HTTPS or localhost — showing the demo position.")
+                    ? L("GPS فقط روی HTTPS یا localhost کار می‌کند — موقعیت تقریبی از روی ایستگاه فعلی نشان داده می‌شود.", "GPS needs HTTPS or localhost — showing your approximate position from the current station.")
                     : gps.error === "DENIED"
-                      ? L("اجازه موقعیت داده نشد — موقعیت نمایشی نشان داده می‌شود.", "Location permission denied — showing the demo position.")
+                      ? L("اجازه موقعیت داده نشد — موقعیت تقریبی از روی ایستگاه فعلی نشان داده می‌شود.", "Location permission denied — showing your approximate position from the current station.")
                       : L("در حال گرفتن موقعیت…", "Getting your position…")}
                 </span>
               )}

@@ -17,7 +17,7 @@ const LOCALE = arg("locale", "fa");
 const OUT = new URL("../../docs/presentation/", import.meta.url).pathname;
 const DIR = `${OUT}slides-${LOCALE}${TRACK === "all" ? "" : `-${TRACK}`}/`;
 
-await fetch(`${BASE}/api/action`, { method: "POST", headers: { "Content-Type": "application/json", "x-demo-user": "U-ADMIN" }, body: JSON.stringify({ type: "sim.reset", payload: {} }) });
+await fetch(`${BASE}/api/action`, { method: "POST", headers: { "Content-Type": "application/json", "x-user-id": "U-ADMIN" }, body: JSON.stringify({ type: "sim.reset", payload: {} }) });
 await new Promise((r) => setTimeout(r, 1500));
 rmSync(DIR, { recursive: true, force: true });
 mkdirSync(DIR, { recursive: true });

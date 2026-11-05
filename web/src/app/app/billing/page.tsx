@@ -1,4 +1,5 @@
 "use client";
+import { SITE } from "@/config/brand";
 import { FileDown, Printer, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Logo } from "@/components/shell/Logo";
@@ -71,7 +72,7 @@ export default function BillingPage() {
         <div className="flex items-start justify-between border-b border-border pb-4">
           <div>
             <Logo locale={locale} />
-            <div className="mt-2 text-xs text-muted">{L("معدن نمونه — داده ساختگی", "Sample mine — demo data")}</div>
+            <div className="mt-2 text-xs text-muted">{L(SITE.name, SITE.nameEn)}</div>
           </div>
           <div className="text-end">
             <div className="text-xl font-black">{L("صورت‌حساب فروش", "Sales statement")}</div>

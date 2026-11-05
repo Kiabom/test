@@ -1,10 +1,10 @@
-// Geography of the demo mine and its customers. The mine location is FICTIONAL (open desert in
-// Yazd province); change SITE_ANCHOR to put the whole site layout somewhere else.
+// Geography of the Jalalabad iron ore mine (about 38 km NW of Zarand, Kerman province) and its
+// customers. SITE_ANCHOR is the mine reference point; the site layout is in local metres from it.
 // Client-safe: used by the fleet map, the driver portal map and the server map view.
 
 export type LatLng = [number, number];
 
-export const SITE_ANCHOR: LatLng = [32.05, 55.15];
+export const SITE_ANCHOR: LatLng = [31.0127, 56.4253];
 const M_PER_DEG_LAT = 111_320;
 
 /** Local metres (east, north) from the anchor → lat/lng. */
@@ -103,33 +103,22 @@ export const INTERNAL_ROADS: LatLng[][] = [
 export const HAUL_LOOP: LatLng[] = [STATIONS["SH-01"].at, J.pitRoad, STATIONS.crusher.at, J.pitRoad, STATIONS["SH-01"].at];
 export const DUMP_LOOP: LatLng[] = [STATIONS["SH-01"].at, local(1100, 650), STATIONS.dump.at, local(1100, 650), STATIONS["SH-01"].at];
 
-// ---------------- Region: cities and routes (approximate, for demonstration) ----------------
+// ---------------- Region: cities and main roads ----------------
 export const CITIES = {
-  junction: { fa: "تقاطع جاده اصلی", en: "Main road junction", at: local(-4200, -900) },
-  yazd: { fa: "یزد", en: "Yazd", at: [31.897, 54.367] as LatLng },
-  ardakan: { fa: "اردکان", en: "Ardakan", at: [32.31, 54.017] as LatLng },
-  bafq: { fa: "بافق", en: "Bafq", at: [31.603, 55.403] as LatLng },
-  nain: { fa: "نائین", en: "Nain", at: [32.86, 53.087] as LatLng },
-  isfahan: { fa: "اصفهان", en: "Isfahan", at: [32.654, 51.668] as LatLng },
-  kashan: { fa: "کاشان", en: "Kashan", at: [33.983, 51.437] as LatLng },
-  qom: { fa: "قم", en: "Qom", at: [34.64, 50.876] as LatLng },
-  tehran: { fa: "تهران", en: "Tehran", at: [35.689, 51.389] as LatLng },
-  karaj: { fa: "کرج", en: "Karaj", at: [35.84, 50.939] as LatLng },
-  shahrekord: { fa: "شهرکرد", en: "Shahrekord", at: [32.326, 50.864] as LatLng },
-  izeh: { fa: "ایذه", en: "Izeh", at: [31.834, 49.867] as LatLng },
-  ahvaz: { fa: "اهواز", en: "Ahvaz", at: [31.318, 48.671] as LatLng },
-  golpayegan: { fa: "گلپایگان", en: "Golpayegan", at: [33.454, 50.288] as LatLng },
-  arak: { fa: "اراک", en: "Arak", at: [34.091, 49.689] as LatLng },
-  malayer: { fa: "ملایر", en: "Malayer", at: [34.297, 48.824] as LatLng },
-  kermanshah: { fa: "کرمانشاه", en: "Kermanshah", at: [34.314, 47.065] as LatLng },
-  abarkuh: { fa: "ابرکوه", en: "Abarkuh", at: [31.13, 53.28] as LatLng },
-  abadeh: { fa: "آباده", en: "Abadeh", at: [31.161, 52.65] as LatLng },
-  shiraz: { fa: "شیراز", en: "Shiraz", at: [29.592, 52.584] as LatLng },
-  tabas: { fa: "طبس", en: "Tabas", at: [33.596, 56.924] as LatLng },
-  ferdows: { fa: "فردوس", en: "Ferdows", at: [34.019, 58.172] as LatLng },
-  gonabad: { fa: "گناباد", en: "Gonabad", at: [34.353, 58.684] as LatLng },
-  torbat: { fa: "تربت حیدریه", en: "Torbat-e Heydarieh", at: [35.274, 59.219] as LatLng },
-  mashhad: { fa: "مشهد", en: "Mashhad", at: [36.297, 59.606] as LatLng },
+  junction: { fa: "تقاطع جاده زرند–کوهبنان", en: "Zarand–Kuhbanan road junction", at: local(-4200, -900) },
+  zarand: { fa: "زرند", en: "Zarand", at: [30.8127, 56.5639] as LatLng },
+  kerman: { fa: "کرمان", en: "Kerman", at: [30.2839, 57.0834] as LatLng },
+  rafsanjan: { fa: "رفسنجان", en: "Rafsanjan", at: [30.4067, 55.9939] as LatLng },
+  sirjan: { fa: "سیرجان", en: "Sirjan", at: [29.452, 55.6814] as LatLng },
+  hajiabad: { fa: "حاجی‌آباد", en: "Hajiabad", at: [28.3091, 55.9017] as LatLng },
+  bandarabbas: { fa: "بندرعباس", en: "Bandar Abbas", at: [27.1832, 56.2666] as LatLng },
+  kuhbanan: { fa: "کوهبنان", en: "Kuhbanan", at: [31.4103, 56.2825] as LatLng },
+  behabad: { fa: "بهاباد", en: "Behabad", at: [31.8717, 56.0235] as LatLng },
+  bafq: { fa: "بافق", en: "Bafq", at: [31.6035, 55.4025] as LatLng },
+  anar: { fa: "انار", en: "Anar", at: [30.8711, 55.2709] as LatLng },
+  mehriz: { fa: "مهریز", en: "Mehriz", at: [31.5917, 54.4318] as LatLng },
+  yazd: { fa: "یزد", en: "Yazd", at: [31.8974, 54.3569] as LatLng },
+  ravar: { fa: "راور", en: "Ravar", at: [31.2656, 56.8055] as LatLng },
 } satisfies Record<string, { fa: string; en: string; at: LatLng }>;
 export type CityKey = keyof typeof CITIES;
 
@@ -141,22 +130,22 @@ export interface Route {
   to: CityKey;
   path: LatLng[];
 }
-/** Delivery route per customer (by the city in master data). Approximate polylines through main towns. */
+/** Delivery route per customer (by the city in master data), through the towns on the main roads. */
 export const CUSTOMER_ROUTES: Record<string, Route> = {
-  "C-01": { id: "R-AHV", to: "ahvaz", path: via("yazd", "isfahan", "shahrekord", "izeh", "ahvaz") },
-  "C-02": { id: "R-KRJ", to: "karaj", path: via("ardakan", "nain", "kashan", "qom", "karaj") },
-  "C-03": { id: "R-KSH", to: "kermanshah", path: via("ardakan", "nain", "isfahan", "golpayegan", "arak", "malayer", "kermanshah") },
-  "C-04": { id: "R-ISF", to: "isfahan", path: via("ardakan", "nain", "isfahan") },
-  "C-05": { id: "R-SHZ", to: "shiraz", path: via("yazd", "abarkuh", "abadeh", "shiraz") },
-  "C-06": { id: "R-THR", to: "tehran", path: via("ardakan", "nain", "kashan", "qom", "tehran") },
-  "C-07": { id: "R-MHD", to: "mashhad", path: [STATIONS.E.at, STATIONS.approach.at, CITIES.junction.at, CITIES.bafq.at, CITIES.tabas.at, CITIES.ferdows.at, CITIES.gonabad.at, CITIES.torbat.at, CITIES.mashhad.at] },
-  "C-08": { id: "R-THR2", to: "tehran", path: via("ardakan", "nain", "kashan", "qom", "tehran") },
+  "C-01": { id: "R-ZRD", to: "zarand", path: via("zarand") },
+  "C-02": { id: "R-KRM", to: "kerman", path: via("zarand", "kerman") },
+  "C-03": { id: "R-SJN", to: "sirjan", path: via("zarand", "rafsanjan", "sirjan") },
+  "C-04": { id: "R-RFS", to: "rafsanjan", path: via("zarand", "rafsanjan") },
+  "C-05": { id: "R-BFQ", to: "bafq", path: via("kuhbanan", "behabad", "bafq") },
+  "C-06": { id: "R-BND", to: "bandarabbas", path: via("zarand", "rafsanjan", "sirjan", "hajiabad", "bandarabbas") },
+  "C-07": { id: "R-YZD", to: "yazd", path: via("zarand", "rafsanjan", "anar", "mehriz", "yazd") },
+  "C-08": { id: "R-RVR", to: "ravar", path: via("zarand", "ravar") },
 };
 /** Inbound trucks come from their carrier's home town. */
-export const CARRIER_HOME: Record<string, CityKey> = { "CR-1": "tehran", "CR-2": "tehran", "CR-3": "isfahan", "CR-4": "karaj", "CR-5": "mashhad", "CR-6": "yazd" };
+export const CARRIER_HOME: Record<string, CityKey> = { "CR-1": "kerman", "CR-2": "zarand", "CR-3": "rafsanjan", "CR-4": "sirjan", "CR-5": "yazd", "CR-6": "zarand" };
 export function inboundPath(carrierId: string): LatLng[] {
-  const home = CARRIER_HOME[carrierId] ?? "yazd";
-  const out = Object.values(CUSTOMER_ROUTES).find((r) => r.to === home)?.path ?? via("yazd");
+  const home = CARRIER_HOME[carrierId] ?? "zarand";
+  const out = Object.values(CUSTOMER_ROUTES).find((r) => r.to === home)?.path ?? via("zarand");
   return [...out].reverse();
 }
 

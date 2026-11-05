@@ -117,7 +117,7 @@ export default function DevicesPage() {
                     <Button size="sm" variant="ghost" onClick={() => testRead(d)}>
                       {L("تست", "Test")}
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => run("device.toggle", { id: d.id }, L("وضعیت تغییر کرد (شبیه‌ساز)", "Toggled (simulator)"))}>
+                    <Button size="sm" variant="ghost" onClick={() => run("device.toggle", { id: d.id }, L("وضعیت دستگاه تغییر کرد", "Device state changed"))}>
                       {d.status === "OFFLINE" ? L("روشن", "On") : L("خاموش", "Off")}
                     </Button>
                   </div>
@@ -293,7 +293,7 @@ export default function DevicesPage() {
               </div>
             </div>
             <Button className="mt-4 w-full" variant={live?.wanOnline ? "danger" : "success"} onClick={() => run("sim.scenario", { code: live?.wanOnline ? "S-OFFLINE" : "S-ONLINE" }, L("سناریو اجرا شد", "Scenario started"))}>
-              {live?.wanOnline ? L("شبیه‌سازی قطع WAN", "Simulate WAN outage") : L("وصل کردن WAN", "Restore WAN")}
+              {live?.wanOnline ? L("قطع WAN (آزمون Edge)", "Cut WAN (edge drill)") : L("وصل کردن WAN", "Restore WAN")}
             </Button>
             <div className="mt-3 text-[11px] text-muted">{L("در قطعی، توزین و دروازه محلی ادامه می‌دهند؛ رویدادها با کلید idempotency بعداً بدون تکرار ارسال می‌شوند. راهبند هرگز به‌خاطر قطع شبکه باز نمی‌شود.", "During an outage, weighing and gates keep working locally; events are sent later without duplicates using idempotency keys. Barriers never open because of a network failure.")}</div>
           </Card>

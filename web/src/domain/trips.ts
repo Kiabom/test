@@ -48,7 +48,7 @@ function rand(seed: number) {
 /** Route for a visit: to the customer for dispatch/transfer, back to the carrier's town for inbound deliveries. */
 export function routeFor(operation: string, customerId: string | undefined, carrierId: string) {
   if (operation === "RECEIVE") {
-    const home = CARRIER_HOME[carrierId] ?? "yazd";
+    const home = CARRIER_HOME[carrierId] ?? "zarand";
     const r = Object.values(CUSTOMER_ROUTES).find((x) => x.to === home);
     return r ?? null;
   }
@@ -111,7 +111,7 @@ export function inboundTrip(bookingId: string, carrierId: string, slotStart: str
   const { at, heading } = pointAlong(path, progress);
   const r = rand(hashSeed(bookingId));
   const events: GeoEvent[] = progress > 0.9 ? [{ id: `${bookingId}-ARR`, kind: "ARRIVING", visitId: bookingId, at: new Date(start + 0.9 * driveMs).toISOString(), pos: pointAlong(path, 0.9).at }] : [];
-  return { routeId: `IN-${carrierId}`, to: CARRIER_HOME[carrierId] ?? "yazd", path, km: Math.round(km), progress, pos: at, heading, speedKmh: Math.round(ROAD_KMH - 6 + r() * 14), etaAt: new Date(arrive).toISOString(), delivered: false, events };
+  return { routeId: `IN-${carrierId}`, to: CARRIER_HOME[carrierId] ?? "zarand", path, km: Math.round(km), progress, pos: at, heading, speedKmh: Math.round(ROAD_KMH - 6 + r() * 14), etaAt: new Date(arrive).toISOString(), delivered: false, events };
 }
 
 export const GEO_EVENT_LABEL: Record<GeoEventKind, [string, string]> = {

@@ -73,7 +73,7 @@ export default function AuditPage() {
           </div>
         </Card>
         <Card className="p-4">
-          <div className="mb-2 text-sm font-bold">{L("دمو: دستکاری عمدی", "Demo: deliberate tampering")}</div>
+          <div className="mb-2 text-sm font-bold">{L("آزمون یکپارچگی: دستکاری عمدی", "Integrity drill: deliberate tampering")}</div>
           <div className="mb-3 text-xs text-muted">{L("یک رکورد وسط زنجیره را مستقیم در پایگاه داده تغییر می‌دهد (مثل حمله‌کننده با دسترسی DB) تا کشف آن را ببینید.", "Edits one mid-chain record directly in the DB (like an attacker with DB access) so you can watch it get detected.")}</div>
           <div className="flex gap-2">
             <Button variant="danger" size="sm" onClick={() => run("audit.tamper", L("یک رکورد دستکاری شد — حالا راستی‌آزمایی کنید", "A record was tampered — now verify"))}>

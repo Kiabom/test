@@ -57,7 +57,7 @@ export function LaneCard({ lane, live, dark }: { lane: LaneLive; live: LiveData;
           </div>
         )}
         <div className={cx("mt-auto rounded-lg px-2 py-1.5 text-xs font-medium", g.tone === "go" ? "bg-success/15 text-success" : g.tone === "stop" ? "bg-danger/15 text-danger" : g.tone === "wait" ? "bg-warning/15 text-warning" : dark ? "bg-white/5 text-white/60" : "bg-surface-2 text-muted")}>
-          📺 {locale === "fa" ? g.fa : g.en}
+          {locale === "fa" ? g.fa : g.en}
         </div>
       </div>
     </div>

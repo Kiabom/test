@@ -48,7 +48,6 @@ const PERMS: Record<string, Permission | null> = {
   "driver.callOperator": null,
   "driver.book": null,
   "kiosk.print": null,
-  "demo.request": null,
 };
 
 export function dispatch(d: DB, type: string, p: Payload, actorId: string): unknown {
@@ -225,7 +224,7 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
       const dev = d.devices.find((x) => x.id === str(p, "id"));
       if (!dev) throw new OpError("NOT_FOUND");
       dev.status = dev.status === "OFFLINE" ? "ONLINE" : "OFFLINE";
-      if (dev.status === "OFFLINE" && dev.type === "INDICATOR") raiseAlert(d, "R04", { deviceId: dev.id, detail: "خاموش شده از کنسول شبیه‌ساز" });
+      if (dev.status === "OFFLINE" && dev.type === "INDICATOR") raiseAlert(d, "R04", { deviceId: dev.id, detail: "خاموش شده از کنسول سرویس" });
       log(d, dev.status === "OFFLINE" ? "error" : "info", dev.id, `device ${dev.status}`);
       audit(d, "device.toggled", "Device", dev.id, { actorId, data: { status: dev.status } });
       bump(d);
@@ -240,7 +239,7 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
       return { speed: d.live.speed };
     case "sim.mode":
       d.live.mode = str(p, "mode") === "MANUAL" ? "MANUAL" : "AUTO";
-      log(d, "info", "SIM", `Mode → ${d.live.mode}`);
+      log(d, "info", "CORE", `Mode → ${d.live.mode}`);
       bump(d);
       return { mode: d.live.mode };
     case "sim.reset":
@@ -299,9 +298,6 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
     }
     case "kiosk.print":
       log(d, "device", "PRN", `Kiosk receipt printed for ${str(p, "txId")}`);
-      return { ok: true };
-    case "demo.request":
-      log(d, "info", "WEB", `Demo request from ${str(p, "company") || "visitor"}`);
       return { ok: true };
   }
   throw new OpError("UNKNOWN_ACTION");

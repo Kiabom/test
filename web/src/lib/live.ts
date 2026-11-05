@@ -168,7 +168,7 @@ export async function act<R = unknown>(type: string, payload: Record<string, unk
   const userId = usePrefs.getState().userId;
   const r = await fetch("/api/action", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-demo-user": userId },
+    headers: { "Content-Type": "application/json", "x-user-id": userId },
     body: JSON.stringify({ type, payload, idempotencyKey: `${type}-${Date.now()}-${Math.random().toString(36).slice(2)}` }),
   });
   const j = await r.json();

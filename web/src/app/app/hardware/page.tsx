@@ -45,7 +45,7 @@ export default function HardwarePage() {
   const devices = useMemo(() => (masters?.devices ?? []).filter((d) => lane === "all" || d.laneId === lane || (lane === "site" && !d.laneId)), [masters, lane]);
   return (
     <div>
-      <PageHeader icon={<Camera className="size-5" />} title={L("کاتالوگ سخت‌افزار و ماکاپ تجهیزات", "Hardware catalog & equipment mockups")} subtitle={L("همه تجهیزات شبیه‌سازی‌شده با ماکاپ اختصاصی، محل نصب، خروجی داده و وضعیت زنده", "Every simulated device with original mockup, location, data output and live status")} />
+      <PageHeader icon={<Camera className="size-5" />} title={L("کاتالوگ سخت‌افزار", "Hardware catalog")} subtitle={L("همه تجهیزات نصب‌شده با محل نصب، خروجی داده و وضعیت زنده", "Every installed device with location, data output and live status")} />
       <div className="mb-4 grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader title={L("دکل دروازه (ANPR جلو/عقب، RFID، UVSS، راهبند، تابلو)", "Gate portal (ANPR F/R, RFID, UVSS, barrier, sign)")} />
@@ -76,7 +76,7 @@ export default function HardwarePage() {
           <div className="grid grid-cols-2 gap-3 p-3 md:grid-cols-4">
             <TruckSvg view="side" width={260} loaded color="#e8590c" />
             <TruckSvg view="top" width={260} loaded color="#1971c2" />
-            <CameraFeed view="front" seed={5} plate={{ d2: "12", letter: "ب", d3: "345", region: "67" }} color="#c92a2a" label="CAM-ANPR" confidence={0.96} at={live?.now} />
+            <CameraFeed view="front" seed={5} plate={{ d2: "12", letter: "ب", d3: "345", region: "65" }} color="#c92a2a" label="CAM-ANPR" confidence={0.96} at={live?.now} />
             <CameraFeed view="top" seed={6} color="#2f9e44" loaded label="CAM-TOP · ROI" roi="ok" at={live?.now} />
           </div>
         </Card>

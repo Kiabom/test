@@ -61,7 +61,7 @@ describe("geo", () => {
   it("starts every delivery route at the exit gate", () => {
     for (const r of Object.values(CUSTOMER_ROUTES)) {
       expect(r.path[0]).toEqual(STATIONS.E.at);
-      expect(pathKm(r.path)).toBeGreaterThan(50);
+      expect(pathKm(r.path)).toBeGreaterThan(20);
     }
   });
 });

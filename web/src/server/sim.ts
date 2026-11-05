@@ -66,7 +66,7 @@ export function initLive(d: DB, warm = true) {
       : {}),
   });
   d.live.lanes = [mk("A", "GATE_IN"), mk("B", "SCALE"), mk("C", "SCALE"), mk("D", "SCAN"), mk("E", "GATE_OUT")];
-  log(d, "info", "SIM", "Simulator started — virtual devices online");
+  log(d, "info", "CORE", "Edge services started — devices online");
   // warm start: a few trucks already inside the site
   for (let i = 0; i < (warm ? 3 : 0); i++) {
     const v = spawnArrival(d, undefined, true);
@@ -131,7 +131,7 @@ export function spawnArrival(d: DB, scenario?: string, silent = false): T.Visit 
   if (scenario === "S-PERMIT-EXP") permit = d.permits.find((p) => p.status === "EXPIRED");
   else if (scenario === "S-OVERDRAW") {
     const base = d.permits.find((p) => p.type === "SALE" && p.status === "ACTIVE")!;
-    permit = { ...base, id: nextId(d, "PM"), permitNo: `SO-DEMO-${String(d.counters.PM).slice(-3)}`, allowedKg: 6000, consumedKg: 0, reservedKg: 0, tripsUsed: 0, validFrom: new Date(Date.now() - 864e5).toISOString() };
+    permit = { ...base, id: nextId(d, "PM"), permitNo: `SO-1405-T${String(d.counters.PM).slice(-3)}`, allowedKg: 6000, consumedKg: 0, reservedKg: 0, tripsUsed: 0, validFrom: new Date(Date.now() - 864e5).toISOString() };
     d.permits.push(permit);
   } else {
     const pool = d.permits.filter((p) => p.status === "ACTIVE" && new Date(p.validTo) > now && (inbound ? p.type === "PURCHASE" : p.type === "SALE" || p.type === "HAUL") && p.allowedKg - p.consumedKg > 60000);
@@ -665,7 +665,7 @@ function virtualActors(d: DB, now: number) {
         audit(d, "uvss.cleared", "UvssScan", uv?.id ?? "-", { actorId: "U-GD1" });
       }
     } catch (e) {
-      log(d, "warn", "SIM", `virtual actor: ${(e as Error).message}`);
+      log(d, "warn", "CORE", `auto-decision: ${(e as Error).message}`);
     }
   }
   // finalize reconciled transactions waiting for docs
@@ -807,7 +807,7 @@ export function setScene(d: DB, scene: "PRESENTATION" | "LIVE") {
     for (const vs of simState.values()) if ((vs.loadingUntil ?? 0) > soon) vs.loadingUntil = undefined;
     d.live.nextArrivalAt = Date.now() + 3000;
   }
-  log(d, "info", "SIM", scene === "LIVE" ? "Live simulation ON" : "Presentation scene — frozen");
+  log(d, "info", "CORE", scene === "LIVE" ? "Continuous flow ON" : "Hold — lanes waiting for operators");
   bump(d);
 }
 
@@ -857,8 +857,8 @@ export function pruneOld(d: DB, now = Date.now()) {
 // ---------------- Scenario control ----------------
 
 export function runScenario(d: DB, code: string, actorId: string) {
-  audit(d, "sim.scenario", "Simulator", code, { actorId });
-  log(d, "info", "SIM", `Scenario ${code} triggered`);
+  audit(d, "sim.scenario", "ServiceConsole", code, { actorId });
+  log(d, "info", "CORE", `Field test ${code} triggered`);
   switch (code) {
     case "S-OFFLINE":
       d.live.wanOnline = false;

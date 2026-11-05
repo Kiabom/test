@@ -6,7 +6,6 @@ import {
   Cable,
   Camera,
   ClipboardCheck,
-  Cpu,
   FileText,
   Gauge,
   HardDrive,
@@ -23,7 +22,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   Smartphone,
-  Truck,
   Users,
   Wallet,
   Wrench,
@@ -33,8 +31,6 @@ import {
   Box,
   DoorOpen,
   Globe2,
-  Presentation,
-  GalleryHorizontalEnd,
   Workflow,
   BookOpen,
 } from "lucide-react";
@@ -114,21 +110,17 @@ export const NAV: NavGroup[] = [
       { href: "/app/integrations", fa: "یکپارچه‌سازی ERP", en: "Integrations", icon: Cable },
       { href: "/app/notifications", fa: "پیامک و اعلان‌ها", en: "SMS & notifications", icon: BellRing },
       { href: "/app/admin", fa: "مدیریت سامانه", en: "Administration", icon: Settings },
-      { href: "/app/simulator", fa: "کنسول شبیه‌ساز", en: "Simulator console", icon: Cpu },
     ],
   },
 ];
 
 export const DISPLAY_LINKS = [
-  { href: "/showcase", fa: "ویترین نمونه‌ها", en: "Showcase", icon: GalleryHorizontalEnd },
-  { href: "/present", fa: "ارائه اسلایدی", en: "Slide presentation", icon: Presentation },
   { href: "/d/guide", fa: "راهنمای راننده", en: "Driver guide", icon: BookOpen },
   { href: "/display/B", fa: "مانیتور راننده — باسکول ۱", en: "Driver display — scale 1", icon: MonitorPlay },
   { href: "/display/queue", fa: "تابلو فراخوان صف", en: "Queue call board", icon: ListOrdered },
   { href: "/kiosk/B", fa: "کیوسک راننده", en: "Driver kiosk", icon: HardDrive },
   { href: "/d", fa: "پورتال موبایل راننده", en: "Driver mobile portal", icon: Smartphone },
   { href: "/wallboard", fa: "Wallboard", en: "Wallboard", icon: Gauge },
-  { href: "/", fa: "سایت معرفی", en: "Marketing site", icon: Truck },
 ];
 
 export const EXTRA_ICONS = { Users, FlaskConical };

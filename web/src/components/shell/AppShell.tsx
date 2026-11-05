@@ -1,17 +1,18 @@
 "use client";
-import { Bell, ChevronsLeft, ChevronsRight, ExternalLink, Languages, Menu, Moon, Pause, Play, RotateCcw, Search, Sun, Wifi, WifiOff, X } from "lucide-react";
+import { Bell, ChevronsLeft, ChevronsRight, ExternalLink, Languages, LogOut, Menu, Moon, Search, Sun, Wifi, WifiOff, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { cx } from "@/components/ui";
-import { BRAND } from "@/config/brand";
+import { BRAND, SITE } from "@/config/brand";
 import { ROLES } from "@/domain/rbac";
 import { USERS_LIST } from "@/lib/users";
 import { fmtNum, fmtTime } from "@/lib/format";
-import { act, useLive, useLiveConnection, useLiveStore, useNow } from "@/lib/live";
+import { useLive, useLiveConnection, useLiveStore, useNow } from "@/lib/live";
 import { useL, usePrefs } from "@/lib/prefs";
 import { Logo, LogoMark } from "./Logo";
 import { DISPLAY_LINKS, NAV } from "./nav";
+import { PresenterPanel } from "./PresenterPanel";
 
 function SideNav({ onNavigate }: { onNavigate?: () => void }) {
   const path = usePathname();
@@ -81,8 +82,8 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
       </button>
       <div className="hidden items-center gap-2 md:flex">
         <select className="h-9 rounded-lg border border-border bg-surface px-2 text-sm" defaultValue="S1" aria-label="site">
-          <option value="S1">{L("سایت مرکزی معدن", "Central mine site")}</option>
-          <option value="S2">{L("کارخانه فرآوری", "Processing plant")}</option>
+          <option value="S1">{L(SITE.name, SITE.nameEn)}</option>
+          <option value="S2">{L(SITE.plant, SITE.plantEn)}</option>
         </select>
         <span className="hidden rounded-lg bg-surface-2 px-2.5 py-1.5 text-xs font-medium xl:inline">
           {shiftName} · <span className="num">{fmtTime(now, locale, true)}</span>
@@ -99,7 +100,6 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("جست‌وجوی پلاک، تیکت، حواله…", "Search plate, ticket, permit…")} className="h-9 w-full rounded-lg border border-border bg-surface-2 ps-8 pe-2 text-sm outline-none focus:border-primary" />
       </form>
       <div className="ms-auto flex items-center gap-1.5">
-        <SceneToggle />
         <span className={cx("hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium sm:inline-flex", live?.wanOnline && connected ? "bg-success/10 text-success" : "bg-danger/10 text-danger")} title={L("وضعیت اتصال Edge و صف همگام‌سازی", "Edge link & sync queue")}>
           {live?.wanOnline && connected ? <Wifi className="size-4" /> : <WifiOff className="size-4" />}
           {live?.wanOnline && connected ? L("آنلاین", "Online") : L("آفلاین", "Offline")}
@@ -117,7 +117,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         </button>
         <label className="flex items-center gap-2 rounded-lg border border-border px-2 py-1">
           <span className="grid size-7 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">{(locale === "fa" ? user.name : user.nameEn).slice(0, 1)}</span>
-          <select value={userId} onChange={(e) => setUser(e.target.value)} className="max-w-[9.5rem] bg-transparent text-xs outline-none" aria-label={L("کاربر دمو", "Demo user")}>
+          <select value={userId} onChange={(e) => setUser(e.target.value)} className="max-w-[9.5rem] bg-transparent text-xs outline-none" aria-label={L("کاربر", "User")}>
             {USERS_LIST.map((u) => {
               const r = ROLES.find((x) => x.code === u.role);
               return (
@@ -128,6 +128,9 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
             })}
           </select>
         </label>
+        <Link href="/" className="rounded-lg p-2 text-muted hover:bg-surface-2 hover:text-text" aria-label={L("خروج", "Sign out")} title={L("خروج", "Sign out")}>
+          <LogOut className="size-5 rtl:rotate-180" />
+        </Link>
       </div>
     </header>
   );
@@ -170,41 +173,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenu={() => setMobileOpen(true)} />
         <main className="flex-1 p-3 md:p-5">{children}</main>
-        <footer className="border-t border-border px-5 py-2 text-center text-[11px] text-muted">{locale === "fa" ? BRAND.demoNotice : BRAND.demoNoticeEn}</footer>
+        <footer className="flex justify-between gap-2 border-t border-border px-5 py-2 text-[11px] text-muted">
+          <span>{locale === "fa" ? `${SITE.name} · ${SITE.place}` : `${SITE.nameEn} · ${SITE.placeEn}`}</span>
+          <span className="ltr">{BRAND.nameEn} {BRAND.version}</span>
+        </footer>
+        <PresenterPanel />
       </div>
-    </div>
-  );
-}
-
-/** Presentation scene (frozen, staged examples) vs live simulation, plus "back to the staged scene". */
-function SceneToggle() {
-  const L = useL();
-  const live = useLive();
-  const [busy, setBusy] = useState(false);
-  if (!live) return null;
-  const isLive = live.scene === "LIVE";
-  const run = async (type: string, payload: Record<string, unknown> = {}) => {
-    setBusy(true);
-    try {
-      await act(type, payload);
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <div className="hidden items-center rounded-lg border border-border md:inline-flex">
-      <button
-        disabled={busy}
-        onClick={() => run("sim.scene", { scene: isLive ? "PRESENTATION" : "LIVE" })}
-        className={cx("inline-flex items-center gap-1.5 rounded-s-lg px-2 py-1.5 text-xs font-semibold", isLive ? "bg-success/10 text-success" : "bg-primary/10 text-primary")}
-        title={isLive ? L("شبیه‌سازی زنده روشن است — برای ثابت کردن کلیک کنید", "Live simulation is on — click to freeze") : L("صحنه ارائه ثابت است — برای شبیه‌سازی زنده کلیک کنید", "Presentation scene is frozen — click for the live simulation")}
-      >
-        {isLive ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-        {isLive ? L("زنده", "Live") : L("حالت ارائه", "Presentation")}
-      </button>
-      <button disabled={busy} onClick={() => run("sim.reset")} className="rounded-e-lg border-s border-border px-2 py-1.5 text-muted hover:text-text" title={L("بازگشت به صحنه نمایش آماده", "Back to the staged scene")} aria-label="reset scene">
-        <RotateCcw className={cx("size-3.5", busy && "animate-spin")} />
-      </button>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import type { AuditEvent } from "./types";
 
-const DEMO_KEY = "fanap-tozin-demo-audit-key";
+const DEMO_KEY = "fanap-tozin-audit-key";
 
 export function sha256(data: string): string {
   return createHash("sha256").update(data).digest("hex");

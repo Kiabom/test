@@ -88,31 +88,31 @@ function masters(r: Rand, now: number) {
     dev("EDGE-1", undefined, "EDGE_GATEWAY", "Edge Gateway سایت", "Fanless IPC + UPS", "HTTPS/mTLS", "10.10.0.2"),
   ];
   const materials: T.Material[] = [
-    { id: "M-FEL", code: "FE-LUMP", name: "سنگ آهن دانه‌بندی", nameEn: "Iron ore lump", grade: "Fe 62%", densityKgM3: 2400, pricePerTon: 4_200_000, color: "#8c2f1b", requiresQc: false, internalOnly: false },
-    { id: "M-FEC", code: "FE-CON", name: "کنسانتره آهن", nameEn: "Iron concentrate", grade: "Fe 67%", densityKgM3: 2200, pricePerTon: 6_800_000, color: "#343a40", requiresQc: false, internalOnly: false },
-    { id: "M-PEL", code: "PELLET", name: "گندله", nameEn: "Pellet", grade: "Fe 65%", densityKgM3: 2100, pricePerTon: 8_500_000, color: "#5c4033", requiresQc: false, internalOnly: false },
+    { id: "M-FEL", code: "FE-LUMP", name: "سنگ آهن هماتیت دانه‌بندی", nameEn: "Hematite lump ore", grade: "Fe 54%", densityKgM3: 2400, pricePerTon: 4_200_000, color: "#8c2f1b", requiresQc: false, internalOnly: false },
+    { id: "M-FEC", code: "FE-CON", name: "کنسانتره هماتیت", nameEn: "Hematite concentrate", grade: "Fe 64%", densityKgM3: 2200, pricePerTon: 6_800_000, color: "#343a40", requiresQc: false, internalOnly: false },
+    { id: "M-PEL", code: "FE-FINE", name: "سنگ آهن نرمه", nameEn: "Iron ore fines", grade: "Fe 50%", densityKgM3: 2300, pricePerTon: 3_100_000, color: "#5c4033", requiresQc: false, internalOnly: false },
     { id: "M-WST", code: "WASTE", name: "باطله", nameEn: "Waste rock", grade: "—", densityKgM3: 1800, pricePerTon: 0, color: "#868e96", requiresQc: false, internalOnly: true },
     { id: "M-LIM", code: "LIME", name: "سنگ آهک", nameEn: "Limestone", grade: "CaO 52%", densityKgM3: 1600, pricePerTon: 1_100_000, color: "#ced4da", requiresQc: false, internalOnly: false },
     { id: "M-SND", code: "SAND", name: "شن و ماسه", nameEn: "Sand & gravel", grade: "0-25mm", densityKgM3: 1550, pricePerTon: 650_000, color: "#e9c46a", requiresQc: false, internalOnly: false },
     { id: "M-COL", code: "COAL", name: "زغال‌سنگ", nameEn: "Coal", grade: "Coking", densityKgM3: 850, pricePerTon: 5_400_000, color: "#212529", requiresQc: false, internalOnly: false },
-    { id: "M-CUS", code: "CU-SUL", name: "مس سولفیدی", nameEn: "Copper sulphide", grade: "Cu 0.8%", densityKgM3: 2000, pricePerTon: 3_900_000, color: "#2a9d8f", requiresQc: true, internalOnly: false },
+    { id: "M-CUS", code: "BENT", name: "بنتونیت", nameEn: "Bentonite", grade: "Na-B", densityKgM3: 2000, pricePerTon: 3_900_000, color: "#2a9d8f", requiresQc: true, internalOnly: false },
   ];
   const customers: T.Customer[] = [
-    { id: "C-01", name: "فولاد کاوه (نمونه)", nameEn: "Kaveh Steel (demo)", type: "CUSTOMER", erpCode: "CUS-1001", city: "اهواز", creditLimit: 9e10 },
-    { id: "C-02", name: "ذوب‌آهن البرز (نمونه)", nameEn: "Alborz Smelting (demo)", type: "CUSTOMER", erpCode: "CUS-1002", city: "کرج", creditLimit: 7e10 },
-    { id: "C-03", name: "فولاد زاگرس (نمونه)", nameEn: "Zagros Steel (demo)", type: "CUSTOMER", erpCode: "CUS-1003", city: "کرمانشاه", creditLimit: 5e10 },
-    { id: "C-04", name: "سیمان کوهستان (نمونه)", nameEn: "Kouhestan Cement (demo)", type: "CUSTOMER", erpCode: "CUS-1004", city: "اصفهان", creditLimit: 2e10 },
-    { id: "C-05", name: "کنسانتره پارس (نمونه)", nameEn: "Pars Concentrate (demo)", type: "CUSTOMER", erpCode: "CUS-1005", city: "شیراز", creditLimit: 4e10 },
-    { id: "C-06", name: "بازرگانی آریا (نمونه)", nameEn: "Aria Trading (demo)", type: "CUSTOMER", erpCode: "CUS-1006", city: "تهران", creditLimit: 3e10 },
-    { id: "C-07", name: "ریخته‌گری شرق (نمونه)", nameEn: "East Foundry (demo)", type: "CUSTOMER", erpCode: "CUS-1007", city: "مشهد", creditLimit: 2e10 },
-    { id: "C-08", name: "تأمین مواد دماوند (نمونه)", nameEn: "Damavand Supply (demo)", type: "SUPPLIER", erpCode: "SUP-2001", city: "تهران", creditLimit: 0 },
+    { id: "C-01", name: "مجتمع فولاد آرین زرند", nameEn: "Arian Zarand Steel Complex", type: "CUSTOMER", erpCode: "CUS-1001", city: "زرند", creditLimit: 9e10 },
+    { id: "C-02", name: "فولاد کویر کرمان", nameEn: "Kavir Kerman Steel", type: "CUSTOMER", erpCode: "CUS-1002", city: "کرمان", creditLimit: 7e10 },
+    { id: "C-03", name: "گندله‌سازی کوهپایه سیرجان", nameEn: "Kuhpayeh Sirjan Pelletizing", type: "CUSTOMER", erpCode: "CUS-1003", city: "سیرجان", creditLimit: 5e10 },
+    { id: "C-04", name: "فرآوری مواد معدنی رفسنجان", nameEn: "Rafsanjan Mineral Processing", type: "CUSTOMER", erpCode: "CUS-1004", city: "رفسنجان", creditLimit: 2e10 },
+    { id: "C-05", name: "پایانه ریلی بافق — بارانداز ۲", nameEn: "Bafq rail terminal — siding 2", type: "CUSTOMER", erpCode: "CUS-1005", city: "بافق", creditLimit: 4e10 },
+    { id: "C-06", name: "بازرگانی صادراتی خلیج", nameEn: "Khalij Export Trading", type: "CUSTOMER", erpCode: "CUS-1006", city: "بندرعباس", creditLimit: 3e10 },
+    { id: "C-07", name: "ذوب و ریخته‌گری یزد", nameEn: "Yazd Smelting & Casting", type: "CUSTOMER", erpCode: "CUS-1007", city: "یزد", creditLimit: 2e10 },
+    { id: "C-08", name: "تأمین مواد اولیه راور", nameEn: "Ravar Raw Materials Supply", type: "SUPPLIER", erpCode: "SUP-2001", city: "راور", creditLimit: 0 },
   ];
   const carriers: T.Carrier[] = [
-    { id: "CR-1", name: "ترابر کویر", nameEn: "Kavir Haulage", regNo: "TR-4410", phone: "021-6612****", status: "ACTIVE" },
-    { id: "CR-2", name: "حمل و نقل سپهر", nameEn: "Sepehr Transport", regNo: "TR-4411", phone: "021-6613****", status: "ACTIVE" },
-    { id: "CR-3", name: "باربری آسیا", nameEn: "Asia Freight", regNo: "TR-4412", phone: "031-3345****", status: "ACTIVE" },
-    { id: "CR-4", name: "ترانزیت البرز", nameEn: "Alborz Transit", regNo: "TR-4413", phone: "026-3420****", status: "ACTIVE" },
-    { id: "CR-5", name: "حمل جاده‌ای امید", nameEn: "Omid Road Haul", regNo: "TR-4414", phone: "051-3870****", status: "ACTIVE" },
+    { id: "CR-1", name: "ترابر کویر", nameEn: "Kavir Haulage", regNo: "TR-4410", phone: "034-3242****", status: "ACTIVE" },
+    { id: "CR-2", name: "حمل و نقل سپهر", nameEn: "Sepehr Transport", regNo: "TR-4411", phone: "034-3243****", status: "ACTIVE" },
+    { id: "CR-3", name: "باربری آسیا", nameEn: "Asia Freight", regNo: "TR-4412", phone: "034-3423****", status: "ACTIVE" },
+    { id: "CR-4", name: "ترانزیت سیرجان", nameEn: "Sirjan Transit", regNo: "TR-4413", phone: "034-4122****", status: "ACTIVE" },
+    { id: "CR-5", name: "حمل جاده‌ای امید یزد", nameEn: "Omid Yazd Road Haul", regNo: "TR-4414", phone: "035-3524****", status: "ACTIVE" },
     { id: "CR-6", name: "ناوگان داخلی معدن", nameEn: "Mine internal fleet", regNo: "INT-01", phone: "داخلی ۲۲۰", status: "ACTIVE" },
   ];
   const locations: T.Location[] = [
@@ -295,9 +295,9 @@ export function buildSeed(): DB {
 
   // calibrations & load cells
   d.calibrations.push(
-    { id: "CAL-1", scaleId: "SC-1", certificateNo: "CAL-1405-0711", issuer: "آزمایشگاه مرجع اوزان (نمونه)", calibratedAt: iso(now - 150 * DAY), validUntil: iso(now + 215 * DAY), testPoints: [0, 10000, 20000, 40000, 60000, 80000].map((ref) => ({ refKg: ref, readKg: ref + int(r, -1, 1) * 20, errorKg: 0 })).map((p) => ({ ...p, errorKg: p.readKg - p.refKg })), maxErrorKg: 20, documentHash: sha256("cal-1") },
-    { id: "CAL-2", scaleId: "SC-2", certificateNo: "CAL-1404-1290", issuer: "آزمایشگاه مرجع اوزان (نمونه)", calibratedAt: iso(now - 345 * DAY), validUntil: iso(now + 20 * DAY), testPoints: [0, 10000, 20000, 40000, 60000, 80000].map((ref) => ({ refKg: ref, readKg: ref + int(r, -2, 2) * 20, errorKg: 0 })).map((p) => ({ ...p, errorKg: p.readKg - p.refKg })), maxErrorKg: 40, documentHash: sha256("cal-2") },
-    { id: "CAL-0", scaleId: "SC-1", certificateNo: "CAL-1404-0533", issuer: "آزمایشگاه مرجع اوزان (نمونه)", calibratedAt: iso(now - 515 * DAY), validUntil: iso(now - 150 * DAY), testPoints: [], maxErrorKg: 20, documentHash: sha256("cal-0") },
+    { id: "CAL-1", scaleId: "SC-1", certificateNo: "CAL-1405-0711", issuer: "آزمایشگاه مرجع اوزان و مقیاس‌ها — کرمان", calibratedAt: iso(now - 150 * DAY), validUntil: iso(now + 215 * DAY), testPoints: [0, 10000, 20000, 40000, 60000, 80000].map((ref) => ({ refKg: ref, readKg: ref + int(r, -1, 1) * 20, errorKg: 0 })).map((p) => ({ ...p, errorKg: p.readKg - p.refKg })), maxErrorKg: 20, documentHash: sha256("cal-1") },
+    { id: "CAL-2", scaleId: "SC-2", certificateNo: "CAL-1404-1290", issuer: "آزمایشگاه مرجع اوزان و مقیاس‌ها — کرمان", calibratedAt: iso(now - 345 * DAY), validUntil: iso(now + 20 * DAY), testPoints: [0, 10000, 20000, 40000, 60000, 80000].map((ref) => ({ refKg: ref, readKg: ref + int(r, -2, 2) * 20, errorKg: 0 })).map((p) => ({ ...p, errorKg: p.readKg - p.refKg })), maxErrorKg: 40, documentHash: sha256("cal-2") },
+    { id: "CAL-0", scaleId: "SC-1", certificateNo: "CAL-1404-0533", issuer: "آزمایشگاه مرجع اوزان و مقیاس‌ها — کرمان", calibratedAt: iso(now - 515 * DAY), validUntil: iso(now - 150 * DAY), testPoints: [], maxErrorKg: 20, documentHash: sha256("cal-0") },
   );
   for (const sc of d.scales) {
     for (let c = 1; c <= sc.loadCells; c++) {

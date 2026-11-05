@@ -29,7 +29,7 @@ const SCENARIOS: { code: string; fa: string; en: string; dfa: string; den: strin
   { code: "S-INDICATOR-DOWN", fa: "قطع indicator", en: "Indicator down", dfa: "فریم RS-232 قطع → فقط وزن دستی با دو امضا", den: "No RS-232 frames → manual weight with two signatures only", tone: "danger" },
 ];
 
-export default function SimulatorPage() {
+export default function ConsolePage() {
   const L = useL();
   const locale = useLocale();
   const live = useLive();
@@ -49,36 +49,36 @@ export default function SimulatorPage() {
     <div>
       <PageHeader
         icon={<Cpu className="size-5" />}
-        title={L("کنسول شبیه‌ساز", "Simulator console")}
-        subtitle={L("همه سخت‌افزارها شبیه‌سازی‌اند؛ هیچ فرمان واقعی به PLC ارسال نمی‌شود. سناریوها روی کامیون بعدی اعمال می‌شوند.", "All hardware is simulated; no real PLC command is ever sent. Scenarios apply to the next arriving truck.")}
+        title={L("کنسول سرویس", "Service console")}
+        subtitle={L("ابزار تیم راه‌اندازی: سناریوهای آزمون میدانی روی کامیون بعدی اعمال می‌شوند.", "Commissioning tools: field-test scenarios apply to the next arriving truck.")}
         actions={
           <Button variant="danger" onClick={() => setReset(true)}>
-            <RotateCcw className="size-4" /> {L("بازگشت به صحنه نمایش", "Back to staged scene")}
+            <RotateCcw className="size-4" /> {L("بازنشانی وضعیت سایت", "Reset site state")}
           </Button>
         }
       />
       <Card className="mb-4 flex flex-wrap items-center gap-4 p-4">
         <div className="flex-1">
-          <div className="text-sm font-semibold">{L("صحنه", "Scene")}</div>
+          <div className="text-sm font-semibold">{L("جریان تردد", "Traffic flow")}</div>
           <div className="text-xs text-muted">
             {live?.scene === "LIVE"
-              ? L("شبیه‌سازی زنده: کامیون‌ها پشت سر هم می‌رسند و بازیگران مجازی تصمیم می‌گیرند. داده‌های قدیمی‌تر از ۷ روز بایگانی می‌شوند.", "Live simulation: trucks keep arriving and virtual actors decide. Data older than 7 days is archived.")
-              : L("حالت ارائه: یک صحنه آماده با نمونه در هر ایستگاه. هیچ چیز خودبه‌خود عوض نمی‌شود؛ فقط اقدام شما (Capture، اسکن QR، تصمیم دروازه) صحنه را جلو می‌برد. اجرای سناریو حالت زنده را روشن می‌کند.", "Presentation: a staged scene with an example at every station. Nothing changes on its own — only your actions (capture, QR scan, gate decision) move it. Running a scenario switches to live.")}
+              ? L("جریان پیوسته: کامیون‌ها پشت سر هم می‌رسند و تصمیم‌های عادی خودکار گرفته می‌شود. داده‌های قدیمی‌تر از ۷ روز بایگانی می‌شوند.", "Continuous flow: trucks keep arriving and routine decisions are automatic. Data older than 7 days is archived.")
+              : L("وضعیت ثابت: در هر ایستگاه یک کامیون منتظر است و چیزی خودبه‌خود عوض نمی‌شود؛ فقط اقدام شما (Capture، اسکن QR، تصمیم دروازه) کار را جلو می‌برد. اجرای سناریو جریان پیوسته را روشن می‌کند.", "Hold: a truck waits at every station and nothing changes on its own — only your actions (capture, QR scan, gate decision) move work forward. Running a scenario switches to continuous flow.")}
           </div>
         </div>
         <Segmented
           size="md"
           options={[
-            { id: "PRESENTATION", label: L("حالت ارائه (ثابت)", "Presentation (frozen)") },
-            { id: "LIVE", label: L("شبیه‌سازی زنده", "Live simulation") },
+            { id: "PRESENTATION", label: L("ثابت", "Hold") },
+            { id: "LIVE", label: L("جریان پیوسته", "Continuous") },
           ]}
           value={live?.scene ?? "PRESENTATION"}
-          onChange={(sc) => run("sim.scene", { scene: sc }, sc === "LIVE" ? L("شبیه‌سازی زنده روشن شد", "Live simulation on") : L("صحنه ثابت شد", "Scene frozen"))}
+          onChange={(sc) => run("sim.scene", { scene: sc }, sc === "LIVE" ? L("جریان پیوسته روشن شد", "Continuous flow on") : L("وضعیت ثابت شد", "Held"))}
         />
       </Card>
       <div className="mb-4 grid gap-4 md:grid-cols-3">
         <Card className="p-4">
-          <div className="mb-2 text-sm font-semibold">{L("سرعت شبیه‌سازی", "Simulation speed")}</div>
+          <div className="mb-2 text-sm font-semibold">{L("ضریب زمان", "Time factor")}</div>
           <div className="flex items-center gap-3">
             <input type="range" min={1} max={20} value={live?.speed ?? 1} onChange={(e) => run("sim.speed", { speed: Number(e.target.value) }, L("سرعت تغییر کرد", "Speed changed"))} className="flex-1 accent-[var(--primary)]" />
             <span className="num w-12 text-center text-2xl font-black">{fmtNum(live?.speed ?? 1, locale)}×</span>
@@ -96,8 +96,8 @@ export default function SimulatorPage() {
           <Segmented
             size="md"
             options={[
-              { id: "AUTO", label: L("خودکار (بازیگران مجازی)", "Auto (virtual actors)") },
-              { id: "MANUAL", label: L("دستی (شما تصمیم می‌گیرید)", "Manual (you decide)") },
+              { id: "AUTO", label: L("خودکار", "Automatic") },
+              { id: "MANUAL", label: L("دستی", "Manual") },
             ]}
             value={live?.mode ?? "AUTO"}
             onChange={(m) => run("sim.mode", { mode: m }, m)}
@@ -174,7 +174,7 @@ export default function SimulatorPage() {
           </div>
         </Card>
       </div>
-      <ConfirmDialog open={reset} onClose={() => setReset(false)} needReason={false} danger title={L("بازگشت به صحنه نمایش؟", "Back to the staged scene?")} description={L("داده از seed قطعی از نو ساخته و صحنه ارائه دوباره چیده می‌شود؛ تغییرات فعلی از بین می‌رود.", "Data is rebuilt from the deterministic seed and the presentation scene is staged again; current changes are lost.")} onConfirm={() => run("sim.reset", {}, L("صحنه نمایش آماده شد", "Staged scene restored"))} />
+      <ConfirmDialog open={reset} onClose={() => setReset(false)} needReason={false} danger title={L("بازنشانی وضعیت سایت؟", "Reset site state?")} description={L("وضعیت همه لاین‌ها به حالت شروع شیفت برمی‌گردد و تغییرات فعلی از بین می‌رود.", "Every lane returns to its start-of-shift state; current changes are lost.")} onConfirm={() => run("sim.reset", {}, L("وضعیت سایت بازنشانی شد", "Site state reset"))} />
     </div>
   );
 }

@@ -32,7 +32,7 @@ export default function DriverMap({ locale, numbers, target, path, you, youIsGps
         </Marker>
         {you && (
           <Marker position={you} icon={youIsGps ? youIcon() : truckIcon("#2563eb", 0, "#2563eb")} zIndexOffset={600}>
-            <Tooltip direction="bottom" offset={[0, 12]}>{locale === "fa" ? (youIsGps ? "موقعیت GPS شما" : "موقعیت شما (نمایشی)") : youIsGps ? "Your GPS position" : "You (demo position)"}</Tooltip>
+            <Tooltip direction="bottom" offset={[0, 12]}>{locale === "fa" ? (youIsGps ? "موقعیت GPS شما" : "موقعیت تقریبی شما") : youIsGps ? "Your GPS position" : "Your approximate position"}</Tooltip>
           </Marker>
         )}
         <FitTo bounds={bounds} trigger={`${region}-${target.label}`} maxZoom={16} />

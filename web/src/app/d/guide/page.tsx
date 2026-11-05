@@ -1,4 +1,5 @@
 "use client";
+import { SITE } from "@/config/brand";
 import { AlertTriangle, BadgeCheck, BookOpen, FileCheck2, HelpCircle, MapPin, Printer, ShieldAlert } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -88,7 +89,7 @@ export default function DriverGuide() {
             <div className="flex items-center gap-1.5 font-semibold">
               <MapPin className="size-4 text-success" /> {L("مسیریابی تا ورودی معدن", "Navigate to the mine entrance")}
             </div>
-            <div className="text-xs text-muted">{L("مکان معدن در این نمونه ساختگی است.", "The mine location in this demo is fictional.")}</div>
+            <div className="text-xs text-muted">{L(`${SITE.name} · ${SITE.place}`, `${SITE.nameEn} · ${SITE.placeEn}`)}</div>
           </div>
           <div className="sm:w-80">
             <NavButtons at={STATIONS.approach.at} label={L(STATIONS.approach.fa, STATIONS.approach.en)} compact />

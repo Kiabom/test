@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
-import { BRAND } from "@/config/brand";
+import { BRAND, SITE } from "@/config/brand";
 
 export const metadata: Metadata = {
-  title: { default: `${BRAND.name} — سامانه هوشمند توزین معدن`, template: `%s · ${BRAND.name}` },
-  description: "سامانه هوشمند توزین، کنترل تردد، اسکن و پایش تولید معدن (نسخه نمایشی)",
+  title: { default: `${BRAND.name} — ${SITE.name}`, template: `%s · ${BRAND.name}` },
+  description: "سامانه توزین، کنترل تردد، اسکن بار و پایش تولید معدن",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg" },
 };

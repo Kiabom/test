@@ -31,7 +31,7 @@ export default function NotificationsPage() {
   const [enabled, setEnabled] = useState<Record<string, boolean>>(() => Object.fromEntries(TEMPLATES.map((t) => [t.code, true])));
   return (
     <div>
-      <PageHeader icon={<BellRing className="size-5" />} title={L("پیامک و اعلان‌ها", "SMS & notifications")} subtitle={L("Outbox پیامک، واتس‌اپ و ایمیل (ماک — هیچ پیام واقعی ارسال نمی‌شود)، قالب‌ها و پیش‌نمایش روی گوشی", "SMS, WhatsApp and e-mail outbox (mock — nothing is really sent), templates and phone preview")} />
+      <PageHeader icon={<BellRing className="size-5" />} title={L("پیامک و اعلان‌ها", "SMS & notifications")} subtitle={L("صف ارسال پیامک، واتس‌اپ و ایمیل، قالب‌ها و پیش‌نمایش روی گوشی", "SMS, WhatsApp and e-mail send queue, templates and phone preview")} />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <Card>
           <CardHeader

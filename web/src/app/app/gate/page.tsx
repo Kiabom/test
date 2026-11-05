@@ -108,7 +108,7 @@ export default function GatePage() {
         <div className="flex flex-col gap-3">
           {!d ? (
             <Card>
-              <EmptyState icon={<DoorOpen className="size-10" />} title={L("خودرویی در دروازه نیست", "No vehicle at the gate")} hint={L("خودروی بعدی به‌زودی از شبیه‌ساز می‌رسد", "The next truck will arrive from the simulator shortly")} />
+              <EmptyState icon={<DoorOpen className="size-10" />} title={L("خودرویی در دروازه نیست", "No vehicle at the gate")} hint={L("با رسیدن خودروی بعدی، پلاک و تگ آن اینجا نمایش داده می‌شود", "The next truck’s plate and tag appear here when it arrives")} />
             </Card>
           ) : (
             <>

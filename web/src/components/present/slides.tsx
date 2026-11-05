@@ -8,7 +8,7 @@ import { DeviceArt } from "@/components/hardware/Devices";
 import { TruckSvg } from "@/components/hardware/Truck";
 import { CONTROLS } from "@/components/marketing/content";
 import { LogoMark } from "@/components/shell/Logo";
-import { BRAND } from "@/config/brand";
+import { BRAND, SITE } from "@/config/brand";
 import { JOURNEY_STEPS } from "@/domain/journey";
 import type { DeviceType } from "@/domain/types";
 import { DEVICE_TYPE, lbl } from "@/i18n/labels";
@@ -54,7 +54,7 @@ function Layout({ kicker, title, points, visual, c, dark }: { kicker?: string; t
 }
 
 function Footer({ c, dark }: { c: SlideCtx; dark?: boolean }) {
-  return <div className={dark ? "mt-6 text-lg text-white/50" : "mt-6 text-lg text-[#5b6b79]"}>{c.L(`${BRAND.name} · نسخه نمایشی با داده و سخت‌افزار شبیه‌سازی‌شده`, `${BRAND.nameEn} · demo build with simulated data and hardware`)}</div>;
+  return <div className={dark ? "mt-6 text-lg text-white/50" : "mt-6 text-lg text-[#5b6b79]"}>{c.L(`${BRAND.name} · ${SITE.name}`, `${BRAND.nameEn} · ${SITE.nameEn}`)}</div>;
 }
 
 const tk = (c: SlideCtx, k: string) => c.refs?.driverTokens[k];
@@ -76,7 +76,7 @@ export const SLIDES: Slide[] = [
           <p className="mt-8 max-w-[1200px] text-[40px] leading-[1.5] text-white/85">{c.L("از دروازه تا رسید — هر کیلوگرم ثبت، هر خروج کنترل‌شده، هر کامیون روی نقشه.", "From gate to receipt — every kilogram recorded, every exit controlled, every truck on the map.")}</p>
         </div>
         <div className="flex items-end justify-between">
-          <div className="text-2xl text-white/60">{c.L("نسخه نمایشی — همه داده‌ها و دستگاه‌ها شبیه‌سازی‌شده‌اند", "Demo build — all data and devices are simulated")}</div>
+          <div className="text-2xl text-white/60">{c.L(`${SITE.name} · ${SITE.place}`, `${SITE.nameEn} · ${SITE.placeEn}`)}</div>
           <TruckSvg view="side" width={560} color="#d9480f" loaded />
         </div>
       </div>

@@ -7,7 +7,7 @@ import { IranPlate } from "@/components/domain/IranPlate";
 import { CameraFeed } from "@/components/hardware/CameraFeed";
 import { LogoMark } from "@/components/shell/Logo";
 import { Button, cx, Segmented, Skeleton } from "@/components/ui";
-import { BRAND } from "@/config/brand";
+import { BRAND, SITE } from "@/config/brand";
 import { lbl, OPERATION } from "@/i18n/labels";
 import { fmtDateTime, fmtNum } from "@/lib/format";
 import { useMasters, useView } from "@/lib/live";
@@ -60,7 +60,7 @@ function Ticket({ id }: { id: string }) {
             <LogoMark size={tpl === "thermal" ? 28 : 40} />
             <div>
               <div className="font-extrabold">{locale === "fa" ? BRAND.name : BRAND.nameEn}</div>
-              <div className="text-[10px] text-zinc-600">{L("شرکت معدنی نمونه — سایت مرکزی", "Demo Mining Co. — central site")}</div>
+              <div className="text-[10px] text-zinc-600">{L(`${SITE.name} — ${SITE.place}`, `${SITE.nameEn} — ${SITE.placeEn}`)}</div>
             </div>
           </div>
           <div className={cx("text-end", tpl === "thermal" && "text-center")}>
@@ -109,7 +109,7 @@ function Ticket({ id }: { id: string }) {
           )}
         </div>
         <div className="mt-3 border-t border-zinc-300 pt-2 text-center text-[9px] text-zinc-500">
-          {L("وزن از نمایشگر کالیبره (گواهی معتبر) ثبت شده است. حجم LiDAR و payload فقط اطلاعاتی‌اند.", "Weight recorded from a calibrated indicator. LiDAR volume and payload are informational only.")} · v{tx.version} · {L("نسخه نمایشی", "DEMO")}
+          {L("وزن از نمایشگر کالیبره (گواهی معتبر) ثبت شده است. حجم LiDAR و payload فقط اطلاعاتی‌اند.", "Weight recorded from a calibrated indicator. LiDAR volume and payload are informational only.")} · v{tx.version}
         </div>
       </div>
     </div>

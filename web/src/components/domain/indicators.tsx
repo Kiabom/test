@@ -51,7 +51,7 @@ export function WeightDisplay({ kg, stable, motion, zero, online = true, ageMs, 
             {L("زنده", "LIVE")}
           </span>
         ) : (
-          <span className="font-semibold text-wn">🔒 {L("ثبت‌شده", "Recorded")}</span>
+          <span className="font-semibold text-wn">{L("ثبت‌شده", "Recorded")}</span>
         )}
         {online ? (
           <>

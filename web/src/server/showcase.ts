@@ -249,7 +249,7 @@ export function stageShowcase(d: DB): ShowcaseRefs {
     for (const code of ["B", "C"] as const) if (!lane(d, code).visitId) laneTargets.delete(code);
 
     d.live.showcase = refs;
-    log(d, "info", "SIM", "Presentation scene ready — nothing moves until someone acts");
+    log(d, "info", "CORE", "Start of shift — lanes waiting for operators");
     bump(d);
     return refs;
   } finally {

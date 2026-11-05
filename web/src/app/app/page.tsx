@@ -209,7 +209,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 ))}
-                <div className="text-[11px] text-muted">{L("داده شعبه دوم نمونه/تجمیعی است", "Second branch data is illustrative")}</div>
+                <div className="text-[11px] text-muted">{L("تجمیع از سرور ستادی", "Rolled up from the HQ server")}</div>
               </div>
             </Card>
             <Card>

@@ -1,7 +1,8 @@
 import type { Plate } from "./types";
 
 export const PLATE_LETTERS = ["ب", "ج", "د", "س", "ص", "ط", "ق", "ل", "م", "ن", "و", "ه", "ی", "ع"] as const;
-export const PLATE_REGIONS = ["11", "22", "33", "44", "55", "65", "67", "82", "85", "13", "15", "25"] as const;
+// Weighted toward Kerman province (45, 65, 75), then Yazd (54, 64, 74) and Hormozgan (84).
+export const PLATE_REGIONS = ["65", "45", "75", "65", "45", "75", "65", "54", "64", "74", "84", "11"] as const;
 
 const FA_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
 
