@@ -50,10 +50,10 @@ export default function DashboardPage() {
       ) : (
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
-            <KpiTile label={L("خروجی (فروش)", "Outbound")} value={fmtT(k!.outboundT, locale)} unit="t" icon={<ArrowUpFromLine className="size-4" />} spark={hourly.map((h) => h.outT)} />
+            <KpiTile label={L("خروجی (فروش)", "Outbound")} value={fmtT(k!.outboundT, locale)} unit="t" icon={<ArrowUpFromLine className="size-4" />} />
             <KpiTile label={L("ورودی (خرید)", "Inbound")} value={fmtT(k!.inboundT, locale)} unit="t" icon={<ArrowDownToLine className="size-4" />} tone="info" />
             <KpiTile label={L("خالص تأییدشده", "Net approved")} value={fmtT(k!.netApprovedT, locale)} unit="t" icon={<Scale className="size-4" />} tone="success" />
-            <KpiTile label={L("سفرهای کامل", "Completed trips")} value={fmtNum(k!.tripsCompleted, locale)} icon={<Truck className="size-4" />} tone="primary" spark={hourly.map((h) => h.trucksOut)} />
+            <KpiTile label={L("سفرهای کامل", "Completed trips")} value={fmtNum(k!.tripsCompleted, locale)} icon={<Truck className="size-4" />} tone="primary" />
             <KpiTile label={L("داخل سایت", "On site")} value={fmtNum(live?.activeIds.length ?? k!.onSite, locale)} icon={<Activity className="size-4" />} tone="info" />
             <KpiTile label={L("تیکت معلق", "Pending tickets")} value={fmtNum(k!.pendingTickets, locale)} icon={<Receipt className="size-4" />} tone="warning" />
             <KpiTile label={L("هشدار باز", "Open alerts")} value={fmtNum(live?.openAlerts ?? k!.openAlerts, locale)} icon={<AlertTriangle className="size-4" />} tone={live?.criticalAlerts ? "danger" : "warning"} />

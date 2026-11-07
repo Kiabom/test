@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { IranPlate } from "@/components/domain/IranPlate";
-import { Badge, Button, Card, Input, PageHeader, Select, Skeleton, StatusPill, Table, Td } from "@/components/ui";
+import { FilterBar } from "@/components/reports/FilterBar";
+import { Badge, Button, Card, Input, PageHeader, Skeleton, StatusPill, Table, Td } from "@/components/ui";
+import { clockNow } from "@/domain/clock";
+import { applyFilter, emptyFilter, filterToQuery, type ReportFilter } from "@/domain/reportFilter";
 import type { Transaction, WeighEvent } from "@/domain/types";
 import { lbl, OPERATION, TX_STATE } from "@/i18n/labels";
 import { fmtDateTime, fmtNum } from "@/lib/format";
@@ -20,11 +23,7 @@ function Inner() {
   const sp = useSearchParams();
   const masters = useMasters();
   const [q, setQ] = useState(sp.get("q") ?? "");
-  const [state, setState] = useState("");
-  const [material, setMaterial] = useState("");
-  const [op, setOp] = useState("");
-  const [shift, setShift] = useState("");
-  const [method, setMethod] = useState("");
+  const [filter, setFilter] = useState<ReportFilter>(() => emptyFilter(clockNow(), "7d"));
   const [page, setPage] = useState(0);
   const { data } = useData<Transaction>("transactions", { limit: 2000, ...(sp.get("visit") ? { visitId: sp.get("visit")! } : {}) }, 4000);
   const { data: we } = useData<WeighEvent>("weighEvents", { limit: 5000, captureMethod: "MANUAL" }, 30_000);
@@ -35,19 +34,14 @@ function Inner() {
 
   const rows = useMemo(() => {
     let r = data?.items ?? [];
-    if (state) r = r.filter((t) => t.state === state);
-    if (material) r = r.filter((t) => t.materialId === material);
-    if (op) r = r.filter((t) => t.operation === op);
-    if (shift) r = r.filter((t) => t.shiftCode === shift);
-    if (method === "MANUAL") r = r.filter((t) => manualTx.has(t.id));
-    if (method === "STORED") r = r.filter((t) => t.tareSource === "STORED");
+    if (!sp.get("visit")) r = applyFilter(r, filter, { manualTxIds: manualTx });
     if (q.trim()) {
       const s = q.trim();
       r = r.filter((t) => t.ticketNo.includes(s) || veh(t.vehicleId)?.plateNormalized.includes(s) || masters?.permits.find((p) => p.id === t.permitId)?.permitNo.includes(s) || cus(t.customerId)?.name.includes(s));
     }
     return r;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, state, material, op, shift, method, q, masters, manualTx]);
+  }, [data, filter, q, masters, manualTx]);
   const pageRows = rows.slice(page * 25, page * 25 + 25);
   const totalNet = rows.filter((t) => t.state === "APPROVED").reduce((a, t) => a + (t.netKg ?? 0), 0);
 
@@ -60,7 +54,6 @@ function Inner() {
 
   return (
     <div>
-      <style media="print">{"@page { size: A4 landscape; }"}</style>
       <PageHeader
         icon={<Receipt className="size-5" />}
         title={L("تراکنش‌ها و تیکت‌ها", "Transactions & tickets")}
@@ -73,52 +66,28 @@ function Inner() {
             <Button size="sm" onClick={() => exportCsv("xls")}>
               <FileSpreadsheet className="size-4" /> Excel
             </Button>
-            <Button size="sm" onClick={() => window.print()}>
-              <Printer className="size-4" /> PDF
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => {
+                const qs = filterToQuery(filter);
+                qs.set("tpl", "daily");
+                qs.set("cols", "ticket,time,plate,customer,material,operation,gross,tare,net,state");
+                qs.set("auto", "1");
+                window.open(`/print/report?${qs.toString()}`, "_blank");
+              }}
+            >
+              <Printer className="size-4" /> {L("چاپ / PDF", "Print / PDF")}
             </Button>
           </>
         }
       />
-      <Card className="mb-3 flex flex-wrap items-center gap-2 p-3 no-print">
-        <div className="relative min-w-56 flex-1">
+      <Card className="mb-3 flex flex-col gap-3 p-3 no-print">
+        <div className="relative">
           <Search className="pointer-events-none absolute start-2.5 top-3 size-4 text-muted" />
-          <Input className="ps-8" placeholder={L("تیکت، پلاک، حواله، مشتری…", "Ticket, plate, permit, customer…")} value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
+          <Input className="ps-8" placeholder={L("جست‌وجوی تیکت، پلاک، حواله، مشتری…", "Ticket, plate, permit, customer…")} value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
         </div>
-        <Select value={state} onChange={(e) => setState(e.target.value)}>
-          <option value="">{L("همه وضعیت‌ها", "All states")}</option>
-          {Object.keys(TX_STATE).map((s) => (
-            <option key={s} value={s}>
-              {lbl(TX_STATE, s, locale)}
-            </option>
-          ))}
-        </Select>
-        <Select value={op} onChange={(e) => setOp(e.target.value)}>
-          <option value="">{L("همه عملیات", "All operations")}</option>
-          {Object.keys(OPERATION).map((s) => (
-            <option key={s} value={s}>
-              {lbl(OPERATION, s, locale)}
-            </option>
-          ))}
-        </Select>
-        <Select value={material} onChange={(e) => setMaterial(e.target.value)}>
-          <option value="">{L("همه مواد", "All materials")}</option>
-          {masters?.materials.map((m) => (
-            <option key={m.id} value={m.id}>
-              {locale === "fa" ? m.name : m.nameEn}
-            </option>
-          ))}
-        </Select>
-        <Select value={shift} onChange={(e) => setShift(e.target.value)}>
-          <option value="">{L("همه شیفت‌ها", "All shifts")}</option>
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-        </Select>
-        <Select value={method} onChange={(e) => setMethod(e.target.value)}>
-          <option value="">{L("همه روش‌های وزن", "All weigh methods")}</option>
-          <option value="MANUAL">{L("دارای وزن دستی", "Has manual weight")}</option>
-          <option value="STORED">{L("تارای ذخیره", "Stored tare")}</option>
-        </Select>
+        <FilterBar value={filter} onChange={(f) => { setFilter(f); setPage(0); }} masters={masters} count={data ? rows.length : undefined} />
       </Card>
       <Card>
         {!data ? (

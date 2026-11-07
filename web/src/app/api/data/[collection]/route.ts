@@ -21,15 +21,18 @@ export async function GET(req: Request, ctx: { params: Promise<{ collection: str
   if (!ALLOWED.includes(collection as CollectionName)) return NextResponse.json({ error: "UNKNOWN_COLLECTION" }, { status: 404 });
   const url = new URL(req.url);
   const src = d[collection as CollectionName] as unknown as Record<string, unknown>[];
-  const filters = [...url.searchParams.entries()].filter(([k]) => !["limit", "offset", "order", "q", "since"].includes(k));
+  const filters = [...url.searchParams.entries()].filter(([k]) => !["limit", "offset", "order", "q", "since", "until"].includes(k));
   const since = url.searchParams.get("since");
+  const until = url.searchParams.get("until");
   const q = url.searchParams.get("q")?.trim();
   const asc = url.searchParams.get("order") === "asc";
   const offset = Number(url.searchParams.get("offset") ?? 0);
   const limit = Math.min(5000, Number(url.searchParams.get("limit") ?? 200));
   const match = (x: Record<string, unknown>) => {
     for (const [k, v] of filters) if (String(x[k]) !== v) return false;
-    if (since && String(x.at ?? x.createdAt ?? x.openedAt ?? x.arrivedAt ?? x.capturedAt ?? "") < since) return false;
+    const at = String(x.at ?? x.createdAt ?? x.openedAt ?? x.arrivedAt ?? x.capturedAt ?? "");
+    if (since && at < since) return false;
+    if (until && at >= until) return false;
     if (q && !JSON.stringify(x).includes(q)) return false;
     return true;
   };

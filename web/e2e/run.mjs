@@ -31,7 +31,7 @@ const BANNED = /شبیه‌ساز|نمایشی|دمو|ماکاپ|\(ماک|ساخ
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const STATIC = [
-  "/",
+  "/", "/print/report?preset=7d&tpl=daily&g=day", "/print/report?preset=month&tpl=customer",
   "/app", "/app/live", "/app/gate", "/app/weighing", "/app/scan", "/app/scan?tab=lidar", "/app/scan?tab=uvss", "/app/queue",
   "/app/transactions", "/app/exit-permits", "/app/guard", "/app/permits",
   "/app/alerts", "/app/fraud", "/app/audit",

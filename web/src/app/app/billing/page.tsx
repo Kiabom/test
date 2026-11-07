@@ -4,10 +4,12 @@ import { SITE } from "@/config/brand";
 import { FileDown, Printer, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Logo } from "@/components/shell/Logo";
-import { Badge, Button, Card, CardHeader, KpiTile, PageHeader, Segmented, Select, Skeleton, Table, Td } from "@/components/ui";
+import { Badge, Button, Card, CardHeader, KpiTile, PageHeader, Select, Skeleton, Table, Td } from "@/components/ui";
+import { DateRange, describeRange, type DateRangeValue } from "@/components/ui/DateRange";
+import { jKey, presetRange, toJDate } from "@/domain/reportFilter";
 import type { Transaction } from "@/domain/types";
 import { downloadCsv } from "@/lib/export";
-import { fmtDate, fmtDateTime, fmtKg, fmtNum } from "@/lib/format";
+import { fmtDateTime, fmtKg, fmtNum } from "@/lib/format";
 import { useData, useMasters } from "@/lib/live";
 import { useL, useLocale } from "@/lib/prefs";
 
@@ -17,26 +19,26 @@ export default function BillingPage() {
   const L = useL();
   const locale = useLocale();
   const masters = useMasters();
-  const [range, setRange] = useState<"7d" | "30d">("7d");
-  const since = useMemo(() => new Date(clockNow() - (range === "7d" ? 7 : 30) * 864e5).toISOString(), [range]);
-  const { data } = useData<Transaction>("transactions", { limit: 5000, state: "APPROVED", since }, 30_000);
+  const [range, setRange] = useState<DateRangeValue>(() => ({ ...presetRange("month", clockNow()), preset: "month" }));
+  const since = new Date(new Date(range.from).getTime() - 864e5).toISOString();
+  const { data } = useData<Transaction>("transactions", { limit: 5000, state: "APPROVED", since, until: range.to }, 30_000);
   const [cust, setCust] = useState("");
   const customers = (masters?.customers ?? []).filter((c) => c.type !== "SUPPLIER");
   const customerId = cust || customers[0]?.id;
   const customer = customers.find((c) => c.id === customerId);
   const lines = useMemo(() => {
     return (data?.items ?? [])
-      .filter((t) => t.customerId === customerId && t.operation === "DISPATCH")
+      .filter((t) => t.customerId === customerId && t.operation === "DISPATCH" && (t.approvedAt ?? t.createdAt) >= range.from && (t.approvedAt ?? t.createdAt) < range.to)
       .map((t) => {
         const contract = masters?.contracts.find((c) => c.customerId === t.customerId && c.materialId === t.materialId);
         const price = contract?.pricePerTon ?? masters?.materials.find((m) => m.id === t.materialId)?.pricePerTon ?? 0;
         const kg = t.billableKg ?? t.netKg ?? 0;
         return { t, price, kg, amount: Math.round((kg / 1000) * price), contract };
       });
-  }, [data, customerId, masters]);
+  }, [data, customerId, masters, range]);
   const subtotal = lines.reduce((a, l) => a + l.amount, 0);
   const tons = lines.reduce((a, l) => a + l.kg, 0) / 1000;
-  const invoiceNo = `INV-1403-${(customerId ?? "0").replace(/\D/g, "").padStart(3, "0")}-${range === "7d" ? "W" : "M"}`;
+  const invoiceNo = `INV-1403-${(customerId ?? "0").replace(/\D/g, "").padStart(3, "0")}-${jKey(toJDate(new Date(range.from).getTime())).replace(/\//g, "").slice(2)}`;
   const nm = (x?: { name: string; nameEn?: string }) => (x ? (locale === "fa" ? x.name : x.nameEn ?? x.name) : "—");
   return (
     <div>
@@ -46,7 +48,6 @@ export default function BillingPage() {
         subtitle={L("افزونه: صورت‌حساب از تیکت‌های تأییدشده با وزن قابل محاسبه (خالص − کسر) و نرخ قرارداد", "Add-on: statements from approved tickets using billable weight (net − deduction) and contract price")}
         actions={
           <div className="flex gap-2 print:hidden">
-            <Segmented options={[{ id: "7d", label: L("هفتگی", "Weekly") }, { id: "30d", label: L("ماهانه", "Monthly") }]} value={range} onChange={setRange} />
             <Select value={customerId ?? ""} onChange={(e) => setCust(e.target.value)}>
               {customers.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -63,6 +64,10 @@ export default function BillingPage() {
           </div>
         }
       />
+      <Card className="mb-4 p-4 print:hidden">
+        <div className="mb-2 text-xs font-semibold text-muted">{L("دوره صورت‌حساب", "Statement period")}</div>
+        <DateRange value={range} onChange={setRange} />
+      </Card>
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4 print:hidden">
         <KpiTile label={L("تیکت‌ها", "Tickets")} value={fmtNum(lines.length, locale)} />
         <KpiTile label={L("تناژ قابل محاسبه", "Billable tons")} value={fmtNum(tons, locale, { maximumFractionDigits: 1 })} unit="t" tone="info" />
@@ -79,7 +84,7 @@ export default function BillingPage() {
             <div className="text-xl font-black">{L("صورت‌حساب فروش", "Sales statement")}</div>
             <div className="font-mono text-sm">{invoiceNo}</div>
             <div className="text-xs text-muted">
-              {fmtDate(since, locale)} — {fmtDate(clockNow(), locale)}
+              {describeRange(range, locale)}
             </div>
             <Badge tone="warning">{L("پیش‌نویس", "Draft")}</Badge>
           </div>
