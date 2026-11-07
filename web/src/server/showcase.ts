@@ -105,6 +105,7 @@ export function stageShowcase(d: DB): ShowcaseRefs {
   resetSimState();
   try {
     d.live.scene = "PRESENTATION";
+    d.live.frozenAt = clockNow();
     d.live.mode = "MANUAL";
     d.live.speed = 1;
     initLive(d, false);

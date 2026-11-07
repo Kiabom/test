@@ -52,6 +52,8 @@ export interface DB {
     mode: "AUTO" | "MANUAL";
     /** PRESENTATION = staged, nothing changes on its own; LIVE = trucks keep arriving. */
     scene: "PRESENTATION" | "LIVE";
+    /** While held: the moment the scene was frozen; every display reads this instead of the clock. */
+    frozenAt?: number;
     showcase?: ShowcaseRefs;
     wanOnline: boolean;
     wanOfflineUntil?: number;
@@ -96,6 +98,9 @@ export interface ShowcaseRefs {
 export type CollectionName = Exclude<keyof DB, "live" | "revision" | "counters" | "auditBase">;
 
 export const globalRef = globalThis as unknown as { __tozinDb?: DB; __tozinSimTimer?: ReturnType<typeof setInterval> };
+
+/** Display time: fixed while the scene is held, the running clock otherwise. */
+export const sceneNow = (d: DB): number => (d.live.scene === "PRESENTATION" && d.live.frozenAt ? d.live.frozenAt : clockNow());
 
 export const nowIso = () => new Date(clockNow()).toISOString();
 

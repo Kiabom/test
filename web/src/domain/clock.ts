@@ -19,5 +19,11 @@ export function resetClock(): void {
 export function setClockOffset(ms: number): void {
   if (Number.isFinite(ms)) g.__tozinClockOffset = ms;
 }
+const f = globalThis as { __tozinClockFrozen?: number | null };
+/** Browser only: while the scene is held, every display shows this one moment. */
+export function setClockFrozen(ms: number | null | undefined): void {
+  f.__tozinClockFrozen = ms ?? null;
+}
+export const clockFrozen = (): boolean => f.__tozinClockFrozen != null;
 /** Current site time in ms (use instead of Date.now()). */
-export const clockNow = (): number => Date.now() + clockOffset();
+export const clockNow = (): number => f.__tozinClockFrozen ?? Date.now() + clockOffset();

@@ -1,5 +1,5 @@
 "use client";
-import { clockNow, setClockOffset } from "@/domain/clock";
+import { clockNow, setClockFrozen, setClockOffset } from "@/domain/clock";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 import type * as T from "@/domain/types";
@@ -23,6 +23,7 @@ export const useLiveStore = create<LiveStore>((set) => ({
   actNonce: 0,
   set: (data) => {
     setClockOffset(data.clockOffset);
+    setClockFrozen(data.frozenAt);
     set({ data, lastAt: clockNow(), connected: true });
   },
   setConnected: (connected) => set({ connected }),
@@ -182,10 +183,12 @@ export async function act<R = unknown>(type: string, payload: Record<string, unk
 }
 
 export function useNow(intervalMs = 1000) {
+  const frozenAt = useLiveStore((s) => s.data?.frozenAt ?? null);
   const [now, setNow] = useState(() => clockNow());
   useEffect(() => {
+    if (frozenAt != null) return; // held scene: time stands still
     const t = setInterval(() => setNow(clockNow()), intervalMs);
     return () => clearInterval(t);
-  }, [intervalMs]);
-  return now;
+  }, [intervalMs, frozenAt]);
+  return frozenAt ?? now;
 }

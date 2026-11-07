@@ -136,17 +136,23 @@ body {
   animation: blink 1.2s steps(2, start) infinite;
 }
 
+/* driver display ticker: travels left → right across the screen */
 @keyframes marquee {
   from {
-    transform: translateX(100%);
-  }
-  to {
     transform: translateX(-100%);
   }
+  to {
+    transform: translateX(100vw);
+  }
+}
+.marquee {
+  direction: ltr;
 }
 .marquee > span {
   display: inline-block;
   white-space: nowrap;
+  direction: rtl;
+  unicode-bidi: isolate;
   animation: marquee 22s linear infinite;
 }
 

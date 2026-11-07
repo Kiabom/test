@@ -688,7 +688,7 @@ function virtualActors(d: DB, now: number) {
 }
 
 function processOutbox(d: DB, now: number) {
-  if (!d.live.wanOnline) return;
+  if (!d.live.wanOnline || d.live.scene !== "LIVE") return;
   for (const m of d.outbox) {
     if (m.status === "PENDING" && now - new Date(m.createdAt).getTime() > 1500) {
       m.attempts++;
@@ -803,6 +803,7 @@ export function startSimulation(get: () => DB) {
 /** Switch between the frozen presentation scene and the live simulation. */
 export function setScene(d: DB, scene: "PRESENTATION" | "LIVE") {
   d.live.scene = scene;
+  d.live.frozenAt = scene === "PRESENTATION" ? clockNow() : undefined;
   d.live.mode = scene === "LIVE" ? "AUTO" : "MANUAL";
   if (scene === "LIVE") {
     // staged lanes and loaders hold far-future timers; release them so the flow continues

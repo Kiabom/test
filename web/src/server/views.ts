@@ -10,7 +10,7 @@ import { remainingKg } from "@/domain/permits";
 import { SEVERITY_ORDER } from "@/domain/rules";
 import type * as T from "@/domain/types";
 import { findPermit, findTx, findVehicle, findVisit } from "./ops";
-import { shiftOf, siteHour, siteMidnightUtc, type DB } from "./store";
+import { sceneNow, shiftOf, siteHour, siteMidnightUtc, type DB } from "./store";
 
 export const TERMINAL: T.VisitState[] = ["EXITED", "REJECTED", "CANCELLED", "EXPECTED"];
 
@@ -87,8 +87,9 @@ export function liveSnapshot(d: DB) {
   const recentExited = d.visits.filter((v) => v.state === "EXITED" || v.state === "REJECTED").slice(-8).reverse();
   const openAlerts = d.alerts.filter((a) => a.status === "OPEN" || a.status === "ACK" || a.status === "INVESTIGATING");
   return {
-    now: new Date(clockNow()).toISOString(),
+    now: new Date(sceneNow(d)).toISOString(),
     clockOffset: clockOffset(),
+    frozenAt: d.live.scene === "PRESENTATION" ? (d.live.frozenAt ?? null) : null,
     revision: d.revision,
     speed: d.live.speed,
     mode: d.live.mode,
@@ -194,7 +195,7 @@ export function dashboard(d: DB, range: "today" | "7d" = "today") {
   return {
     range,
     from: fromIso,
-    currentShift: shiftOf(new Date(clockNow())),
+    currentShift: shiftOf(new Date(sceneNow(d))),
     kpis: { ...kpis, scalesReady, scalesTotal: d.scales.length, openAlerts: d.alerts.filter((a) => a.status === "OPEN" || a.status === "ACK").length, unmatchedRfid, manualSharePct: manualShare, coveragePct },
     hourly,
     daily,
@@ -262,7 +263,7 @@ export function driverView(d: DB, tokenValue: string) {
   const weighAt = (pass: string) => det.weighEvents.find((w) => w.pass === pass)?.capturedAt;
   const vehicle = det.vehicle;
   const route = routeFor(v.operation, det.permit?.customerId, vehicle.carrierId);
-  const trip = v.exitedAt && route ? outboundTrip(v.id, v.exitedAt, route, clockNow()) : null;
+  const trip = v.exitedAt && route ? outboundTrip(v.id, v.exitedAt, route, sceneNow(d)) : null;
   const times: Partial<Record<StepId, string>> = {
     BOOK: d.bookings.find((b) => b.id === v.bookingId)?.slotStart,
     GATE_IN: v.enteredAt ?? (index > 1 ? v.arrivedAt : undefined),
@@ -360,7 +361,7 @@ export interface MapAlert {
 }
 
 export function mapView(d: DB) {
-  const now = clockNow();
+  const now = sceneNow(d);
   const active = d.visits.filter((v) => !TERMINAL.includes(v.state));
   const qB = d.live.queueB;
   const qC = d.live.queueC;
@@ -456,7 +457,7 @@ const RULE_STEP: Record<string, StepId> = {
 };
 
 export function processView(d: DB) {
-  const now = clockNow();
+  const now = sceneNow(d);
   const from = siteMidnightUtc().toISOString();
   const minutes = (a?: string, b?: string) => (a && b ? (new Date(b).getTime() - new Date(a).getTime()) / 60_000 : null);
   const avg = (xs: (number | null)[]) => {
