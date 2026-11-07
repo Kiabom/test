@@ -1,3 +1,4 @@
+import { clockNow } from "@/domain/clock";
 // Live hardware simulator: trucks, indicator, ANPR/RFID, position sensors, barriers, virtual operators.
 import { sha256 } from "@/domain/audit";
 import { misreadPlate, normalizePlate, randomPlate } from "@/domain/plate";
@@ -50,7 +51,7 @@ const rnd = simRandom;
 /** Virtual operators/guards act only in live AUTO mode; the presentation scene waits for a person. */
 const auto = (d: DB) => d.live.scene === "LIVE" && d.live.mode === "AUTO";
 const between = (a: number, b: number) => a + rnd() * (b - a);
-const dur = (d: DB, seconds: number) => Date.now() + (seconds * 1000) / d.live.speed;
+const dur = (d: DB, seconds: number) => clockNow() + (seconds * 1000) / d.live.speed;
 
 export function initLive(d: DB, warm = true) {
   if (d.live.lanes.length) return;
@@ -89,7 +90,7 @@ export function initLive(d: DB, warm = true) {
       d.live.queueB.push(v.id);
     }
   }
-  d.live.nextArrivalAt = Date.now() + 4000;
+  d.live.nextArrivalAt = clockNow() + 4000;
 }
 
 /** Records a sensor weighing for a truck that is not physically on the lane (warm start / staging). */
@@ -112,26 +113,28 @@ function onSiteVehicleIds(d: DB) {
 
 export function spawnArrival(d: DB, scenario?: string, silent = false): T.Visit | undefined {
   const busy = onSiteVehicleIds(d);
-  const now = new Date();
+  const now = new Date(clockNow());
   let vehicle: T.Vehicle | undefined;
   if (scenario === "S-UNKNOWN") {
     const plate = randomPlate(rnd);
-    vehicle = { id: nextId(d, "VH"), plate, plateNormalized: normalizePlate(plate), type: "TRAILER", axles: 5, ratedPayloadKg: 30000, maxGvwKg: 48000, storedTareKg: undefined, carrierId: "CR-3", insuranceUntil: new Date(Date.now() + 90 * 864e5).toISOString(), inspectionUntil: new Date(Date.now() + 90 * 864e5).toISOString(), status: "GUEST", internal: false, color: "#868e96" };
+    vehicle = { id: nextId(d, "VH"), plate, plateNormalized: normalizePlate(plate), type: "TRAILER", axles: 5, ratedPayloadKg: 30000, maxGvwKg: 48000, storedTareKg: undefined, carrierId: "CR-3", insuranceUntil: new Date(clockNow() + 90 * 864e5).toISOString(), inspectionUntil: new Date(clockNow() + 90 * 864e5).toISOString(), status: "GUEST", internal: false, color: "#868e96", authorizedDriverIds: [] };
     d.vehicles.push(vehicle);
   } else {
     const pool = d.vehicles.filter(
-      (v) => !v.internal && v.status === "ACTIVE" && !busy.has(v.id) && new Date(v.insuranceUntil) > now && d.drivers.some((x) => x.carrierId === v.carrierId && x.status === "ACTIVE" && new Date(x.licenseUntil) > now),
+      (v) => !v.internal && v.status === "ACTIVE" && !busy.has(v.id) && new Date(v.insuranceUntil) > now && d.drivers.some((x) => v.authorizedDriverIds?.includes(x.id) && x.status === "ACTIVE" && new Date(x.licenseUntil) > now),
     );
     vehicle = pool[Math.floor(rnd() * pool.length)];
   }
   if (!vehicle) return;
-  const driver = d.drivers.find((x) => x.carrierId === vehicle!.carrierId && x.status === "ACTIVE" && new Date(x.licenseUntil) > now) ?? d.drivers[0];
+  const okDriver = (x: T.Driver) => x.status === "ACTIVE" && new Date(x.licenseUntil) > now;
+  const authorized = d.drivers.filter((x) => vehicle!.authorizedDriverIds?.includes(x.id) && okDriver(x));
+  const driver = authorized[Math.floor(rnd() * authorized.length)] ?? d.drivers.find((x) => x.carrierId === vehicle!.carrierId && okDriver(x)) ?? d.drivers[0];
   const inbound = scenario === "S-INBOUND" || (!scenario && rnd() < 0.08);
   let permit: T.Permit | undefined;
   if (scenario === "S-PERMIT-EXP") permit = d.permits.find((p) => p.status === "EXPIRED");
   else if (scenario === "S-OVERDRAW") {
     const base = d.permits.find((p) => p.type === "SALE" && p.status === "ACTIVE")!;
-    permit = { ...base, id: nextId(d, "PM"), permitNo: `SO-1405-T${String(d.counters.PM).slice(-3)}`, allowedKg: 6000, consumedKg: 0, reservedKg: 0, tripsUsed: 0, validFrom: new Date(Date.now() - 864e5).toISOString() };
+    permit = { ...base, id: nextId(d, "PM"), permitNo: `SO-1403-T${String(d.counters.PM).slice(-3)}`, allowedKg: 6000, consumedKg: 0, reservedKg: 0, tripsUsed: 0, validFrom: new Date(clockNow() - 864e5).toISOString() };
     d.permits.push(permit);
   } else {
     const pool = d.permits.filter((p) => p.status === "ACTIVE" && new Date(p.validTo) > now && (inbound ? p.type === "PURCHASE" : p.type === "SALE" || p.type === "HAUL") && p.allowedKg - p.consumedKg > 60000);
@@ -251,6 +254,7 @@ export function processGateIn(d: DB, now: number) {
       if (v.identity.anpr && v.identity.anpr.confidence < 0.85) raiseAlert(d, "R06", { visitId: v.id, laneCode: "A", observed: `${(v.identity.anpr.confidence * 100).toFixed(0)}%`, threshold: "85%" });
       if (res.code === "UNKNOWN_VEHICLE") raiseAlert(d, "R07", { visitId: v.id, laneCode: "A", detail: v.identity.anpr?.plate });
       if (res.code === "ANTI_PASSBACK") raiseAlert(d, "R08", { visitId: v.id, laneCode: "A" });
+      if (res.code === "DRIVER_NOT_AUTHORIZED") raiseAlert(d, "R41", { visitId: v.id, laneCode: "A", detail: d.drivers.find((x) => x.id === v.driverId)?.name });
       if (res.code.startsWith("PERMIT")) raiseAlert(d, "R11", { visitId: v.id, laneCode: "A", detail: res.code });
       if (v.uvssScanId && d.uvssScans.find((u) => u.id === v.uvssScanId)?.status === "SUSPECT") raiseAlert(d, "R35", { visitId: v.id, laneCode: "A", detail: "ناهنجاری زیر شاسی — بازرسی حراست" });
       if (res.decision === "PASS") {
@@ -480,7 +484,7 @@ function afterLeavingScale(d: DB, v: T.Visit, code: "B" | "C") {
   } else if (v.state === "READY_TO_EXIT") {
     if (!d.live.queueGateOut.includes(v.id)) d.live.queueGateOut.push(v.id);
   } else if (vs) {
-    vs.awaitingDocsSince = Date.now();
+    vs.awaitingDocsSince = clockNow();
   }
   bump(d);
 }
@@ -647,7 +651,7 @@ function virtualActors(d: DB, now: number) {
     try {
       if (["LOW_ANPR_CONFIDENCE"].includes(reason) && age > 35_000) gateDecide(d, v.id, true, "U-GD1", "پلاک توسط نگهبان با تصویر تأیید شد");
       else if (reason === "UNKNOWN_VEHICLE" && age > 40_000) registerGuest(d, v.id, "U-GD1", "ثبت مهمان با بارنامه کاغذی");
-      else if ((reason === "IDENTITY_MISMATCH" || reason?.startsWith("PERMIT") || reason === "BLACKLIST" || reason === "DOCUMENT_EXPIRED" || reason === "ANTI_PASSBACK") && age > 90_000) gateDecide(d, v.id, false, "U-GD1", "عدم تطابق — ارجاع به حراست");
+      else if ((reason === "IDENTITY_MISMATCH" || reason?.startsWith("PERMIT") || reason === "BLACKLIST" || reason === "DOCUMENT_EXPIRED" || reason === "ANTI_PASSBACK" || reason === "DRIVER_NOT_AUTHORIZED") && age > 90_000) gateDecide(d, v.id, false, "U-GD1", "عدم تطابق — ارجاع به حراست");
       else if (["R14", "R12", "R40", "R16"].some((r) => v.holdReasons.includes(r)) && age > 45_000) {
         const tx = v.transactionIds.map((id) => findTx(d, id)).find((t) => t?.state === "EXCEPTION");
         if (tx) finalizeTx(d, tx.id, "U-OP2", { reason: v.holdReasons.includes("R14") ? "تخلیه مازاد و تأیید سرپرست" : v.holdReasons.includes("R40") ? "نتیجه آزمایشگاه: مطابق" : "تأیید سرپرست شیفت", signer: "U-MGR" });
@@ -760,7 +764,7 @@ function slowChecks(d: DB, now: number) {
 }
 
 export function tick(d: DB) {
-  const now = Date.now();
+  const now = clockNow();
   initLive(d);
   const live = d.live.scene === "LIVE";
   // presentation: no new trucks unless a scenario is requested explicitly from the console
@@ -802,10 +806,10 @@ export function setScene(d: DB, scene: "PRESENTATION" | "LIVE") {
   d.live.mode = scene === "LIVE" ? "AUTO" : "MANUAL";
   if (scene === "LIVE") {
     // staged lanes and loaders hold far-future timers; release them so the flow continues
-    const soon = Date.now() + 60_000;
-    for (const l of d.live.lanes) if ((l.phaseUntil ?? 0) > soon) l.phaseUntil = Date.now();
+    const soon = clockNow() + 60_000;
+    for (const l of d.live.lanes) if ((l.phaseUntil ?? 0) > soon) l.phaseUntil = clockNow();
     for (const vs of simState.values()) if ((vs.loadingUntil ?? 0) > soon) vs.loadingUntil = undefined;
-    d.live.nextArrivalAt = Date.now() + 3000;
+    d.live.nextArrivalAt = clockNow() + 3000;
   }
   log(d, "info", "CORE", scene === "LIVE" ? "Continuous flow ON" : "Hold — lanes waiting for operators");
   bump(d);
@@ -815,7 +819,7 @@ const RETAIN_MS = 7 * 864e5;
 const RETAIN_VISITS = 3000;
 
 /** Live-mode retention: keep 7 days and at most ~3000 finished visits so the server never slows down. */
-export function pruneOld(d: DB, now = Date.now()) {
+export function pruneOld(d: DB, now = clockNow()) {
   const done = d.visits.filter((v) => ["EXITED", "REJECTED", "CANCELLED"].includes(v.state));
   let cutoff = now - RETAIN_MS;
   if (done.length > RETAIN_VISITS) cutoff = Math.max(cutoff, new Date(done[done.length - RETAIN_VISITS].arrivedAt).getTime());
@@ -862,22 +866,22 @@ export function runScenario(d: DB, code: string, actorId: string) {
   switch (code) {
     case "S-OFFLINE":
       d.live.wanOnline = false;
-      d.live.wanOfflineUntil = Date.now() + 60_000;
+      d.live.wanOfflineUntil = clockNow() + 60_000;
       raiseAlert(d, "R37", { deviceId: "EDGE-1", detail: "قطع WAN — صف محلی فعال" });
       log(d, "warn", "EDGE-1", "WAN link down — local queue engaged; gates keep operating with cached permits");
       break;
     case "S-ONLINE":
       // recovery itself (alert resolve + sync flush) runs in slowChecks on the next tick
-      if (!d.live.wanOnline) d.live.wanOfflineUntil = Date.now() - 1;
+      if (!d.live.wanOnline) d.live.wanOfflineUntil = clockNow() - 1;
       break;
     case "S-CAL-EXP": {
       const cal = d.calibrations.find((c) => c.id === "CAL-2")!;
-      cal.validUntil = new Date(Date.now() - 3600_000).toISOString();
+      cal.validUntil = new Date(clockNow() - 3600_000).toISOString();
       break;
     }
     case "S-CAL-RESTORE": {
       const cal = d.calibrations.find((c) => c.id === "CAL-2")!;
-      cal.validUntil = new Date(Date.now() + 365 * 864e5).toISOString();
+      cal.validUntil = new Date(clockNow() + 365 * 864e5).toISOString();
       d.scales.find((s) => s.id === "SC-2")!.status = "READY";
       break;
     }
@@ -895,7 +899,7 @@ export function runScenario(d: DB, code: string, actorId: string) {
       // a new truck has to drive through the site, so the frozen scene becomes a live simulation
       if (d.live.scene !== "LIVE") setScene(d, "LIVE");
       d.live.pendingScenarios.push(code);
-      d.live.nextArrivalAt = Date.now();
+      d.live.nextArrivalAt = clockNow();
   }
   bump(d);
 }
@@ -908,5 +912,5 @@ export function enqueueDemoSms(d: DB, visitId: string) {
   const v = findVisit(d, visitId);
   if (!v) return;
   const dr = d.drivers.find((x) => x.id === v.driverId);
-  enqueueOutbox(d, "SMS", "driver.call", `${visitId}-${Date.now()}`, `راننده گرامی، نوبت شما (${v.queueNo}) فرا رسید. لطفاً به باسکول مراجعه کنید.`, dr?.phone);
+  enqueueOutbox(d, "SMS", "driver.call", `${visitId}-${clockNow()}`, `راننده گرامی، نوبت شما (${v.queueNo}) فرا رسید. لطفاً به باسکول مراجعه کنید.`, dr?.phone);
 }

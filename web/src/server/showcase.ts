@@ -1,3 +1,4 @@
+import { clockNow } from "@/domain/clock";
 // Presentation scene: a fixed, fully consistent snapshot with an example at every station.
 // Built by driving the real gate/scale/exit logic (so tickets, evidence, alerts and audit all
 // line up), then every lane is parked at a point that waits for a person.
@@ -8,8 +9,8 @@ import { completeLoading, fakeWeigh, initLive, laneTargets, processGateIn, proce
 import { bump, log, type DB, type ShowcaseRefs } from "./store";
 
 const SCENE_SEED = 20261104;
-const far = () => Date.now() + 365 * 864e5;
-const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
+const far = () => clockNow() + 365 * 864e5;
+const ago = (min: number) => new Date(clockNow() - min * 60_000).toISOString();
 
 function arrive(d: DB, scenario?: string): T.Visit {
   const v = spawnArrival(d, scenario, true);
@@ -22,7 +23,7 @@ function throughGate(d: DB, v: T.Visit, park = false) {
   d.live.queueGateIn = [v.id, ...d.live.queueGateIn.filter((x) => x !== v.id)];
   const l = lane(d, "A");
   for (let i = 0; i < 12; i++) {
-    processGateIn(d, Date.now());
+    processGateIn(d, clockNow());
     if (park && l.visitId === v.id && l.phase === "HELD") {
       l.phaseUntil = far();
       return;
@@ -68,7 +69,7 @@ function exitThrough(d: DB, v: T.Visit) {
   const l = lane(d, "E");
   for (let i = 0; i < 12 && v.state !== "EXITED"; i++) {
     l.phaseUntil = 0;
-    processGateOut(d, Date.now());
+    processGateOut(d, clockNow());
   }
   return ep;
 }
@@ -81,10 +82,10 @@ function parkOnScale(d: DB, code: "B" | "C", v: T.Visit) {
   q.push(v.id, ...rest);
   const l = lane(d, code);
   for (let i = 0; i < 12; i++) {
-    processScale(d, code, Date.now());
+    processScale(d, code, clockNow());
     if (l.visitId === v.id && l.phase === "STABLE") {
       l.phaseUntil = far();
-      processScale(d, code, Date.now()); // one reading at the settled weight
+      processScale(d, code, clockNow()); // one reading at the settled weight
       return;
     }
     l.phaseUntil = 0;
@@ -107,7 +108,7 @@ export function stageShowcase(d: DB): ShowcaseRefs {
     d.live.mode = "MANUAL";
     d.live.speed = 1;
     initLive(d, false);
-    const refs: ShowcaseRefs = { builtAt: new Date().toISOString(), loading: [], queued: [], exited: [], driverTokens: {} };
+    const refs: ShowcaseRefs = { builtAt: new Date(clockNow()).toISOString(), loading: [], queued: [], exited: [], driverTokens: {} };
 
     // 1. trucks that left a few minutes ago (they are on the road on the map)
     for (const [i, min] of [12, 26, 41].entries()) {
@@ -187,7 +188,7 @@ export function stageShowcase(d: DB): ShowcaseRefs {
     backdate(ex, 63);
     const lE = lane(d, "E");
     for (let i = 0; i < 6 && lE.phase !== "AWAIT_QR"; i++) {
-      processGateOut(d, Date.now());
+      processGateOut(d, clockNow());
       lE.phaseUntil = 0;
     }
     const exEp = d.exitPermits.find((e) => e.id === ex.exitPermitId)!;

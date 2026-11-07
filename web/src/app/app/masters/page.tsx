@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { Boxes, Pencil, UserRound } from "lucide-react";
 import { useState } from "react";
 import { IranPlate } from "@/components/domain/IranPlate";
@@ -20,7 +21,7 @@ export default function MastersPage() {
   const [q, setQ] = useState("");
   const [editV, setEditV] = useState<Vehicle | null>(null);
   const [editD, setEditD] = useState<Driver | null>(null);
-  const now = Date.now();
+  const now = clockNow();
   const expired = (iso?: string) => !!iso && new Date(iso).getTime() < now;
   const save = async (collection: string, id: string, patch: Record<string, unknown>) => {
     try {
@@ -251,7 +252,7 @@ function VehicleForm({ v, onSave }: { v: Vehicle; onSave: (p: Record<string, unk
           <option value="GUEST">GUEST</option>
         </Select>
       </Field>
-      <Button variant="primary" onClick={() => onSave({ storedTareKg: Number(tare), tareValidUntil: new Date(Date.now() + 30 * 864e5).toISOString(), rfidEpc: epc, status })}>
+      <Button variant="primary" onClick={() => onSave({ storedTareKg: Number(tare), tareValidUntil: new Date(clockNow() + 30 * 864e5).toISOString(), rfidEpc: epc, status })}>
         {L("ذخیره", "Save")}
       </Button>
     </div>

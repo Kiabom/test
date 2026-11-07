@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { clsx } from "clsx";
 import { AlertTriangle, Ban, CheckCircle2, HelpCircle, Hand, Info, Loader2, PauseCircle, Sigma, WifiOff, X } from "lucide-react";
 import { useEffect, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
@@ -376,7 +377,7 @@ interface ToastItem {
 const useToastStore = create<{ items: ToastItem[]; push: (t: Omit<ToastItem, "id">) => void; remove: (id: number) => void }>((set) => ({
   items: [],
   push: (t) => {
-    const id = Date.now() + Math.random();
+    const id = clockNow() + Math.random();
     set((s) => ({ items: [...s.items, { ...t, id }] }));
     setTimeout(() => set((s) => ({ items: s.items.filter((x) => x.id !== id) })), 4200);
   },

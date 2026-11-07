@@ -1,4 +1,5 @@
 "use client";
+import { clockNow, setClockOffset } from "@/domain/clock";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 import type * as T from "@/domain/types";
@@ -20,7 +21,10 @@ export const useLiveStore = create<LiveStore>((set) => ({
   connected: false,
   lastAt: 0,
   actNonce: 0,
-  set: (data) => set({ data, lastAt: Date.now(), connected: true }),
+  set: (data) => {
+    setClockOffset(data.clockOffset);
+    set({ data, lastAt: clockNow(), connected: true });
+  },
   setConnected: (connected) => set({ connected }),
 }));
 
@@ -76,7 +80,7 @@ export function useFetch<R>(url: string | null, throttleMs = 1500): { data: R | 
 
   const load = useCallback(async () => {
     if (!url) return;
-    last.current = Date.now();
+    last.current = clockNow();
     try {
       const r = await fetch(url, { cache: "no-store" });
       if (!r.ok) {
@@ -100,7 +104,7 @@ export function useFetch<R>(url: string | null, throttleMs = 1500): { data: R | 
 
   useEffect(() => {
     if (!url) return;
-    const since = Date.now() - last.current;
+    const since = clockNow() - last.current;
     if (since >= throttleMs) load();
     else if (!pending.current) {
       pending.current = setTimeout(() => {
@@ -169,7 +173,7 @@ export async function act<R = unknown>(type: string, payload: Record<string, unk
   const r = await fetch("/api/action", {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-user-id": userId },
-    body: JSON.stringify({ type, payload, idempotencyKey: `${type}-${Date.now()}-${Math.random().toString(36).slice(2)}` }),
+    body: JSON.stringify({ type, payload, idempotencyKey: `${type}-${clockNow()}-${Math.random().toString(36).slice(2)}` }),
   });
   const j = await r.json();
   if (!j.ok) throw new ActionError(j.error, j.message);
@@ -178,9 +182,9 @@ export async function act<R = unknown>(type: string, payload: Record<string, unk
 }
 
 export function useNow(intervalMs = 1000) {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => clockNow());
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), intervalMs);
+    const t = setInterval(() => setNow(clockNow()), intervalMs);
     return () => clearInterval(t);
   }, [intervalMs]);
   return now;

@@ -42,6 +42,7 @@ const RULES: R[] = [
   { code: "R37", name: "صف همگام‌سازی کهنه", nameEn: "Stale sync queue", condition: "oldest outbox > maxAge", severity: "HIGH", action: "NOTIFY", params: { maxAgeMin: 30 }, source: "All" },
   { code: "R38", name: "اختلاف ساعت دستگاه", nameEn: "Device clock skew", condition: "|device − server| > limit", severity: "WARNING", action: "NOTIFY", params: { limitS: 5 }, source: "STAIN" },
   { code: "R39", name: "Override بدون امضای دوم", nameEn: "Override without 2nd signature", condition: "manual change w/o approval", severity: "CRITICAL", action: "REVIEW", params: {}, source: "All" },
+  { code: "R41", name: "راننده غیرمجاز برای خودرو", nameEn: "Driver not authorized for vehicle", condition: "driver tag ∉ vehicle.authorizedDrivers", severity: "HIGH", action: "HOLD_ENTRY", params: {}, source: "—" },
   { code: "R40", name: "قرنطینه ماده (QC)", nameEn: "Material quarantine (QC)", condition: "QC result missing", severity: "HIGH", action: "HOLD_EXIT", params: {}, source: "STAIN" },
 ];
 

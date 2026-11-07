@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { Ban, CheckCircle2, DoorOpen, FileWarning, QrCode, ShieldAlert, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -160,7 +161,7 @@ export default function GatePage() {
                     </div>
                     <div className="rounded-lg border border-border p-3">
                       <div className="mb-1 text-xs font-semibold text-muted">{L("مدارک", "Documents")}</div>
-                      <Kv k={L("بیمه خودرو", "Insurance")} v={<span className={new Date(d.vehicle.insuranceUntil) < new Date() ? "text-danger" : ""}>{fmtDate(d.vehicle.insuranceUntil, locale)}</span>} />
+                      <Kv k={L("بیمه خودرو", "Insurance")} v={<span className={new Date(d.vehicle.insuranceUntil) < new Date(clockNow()) ? "text-danger" : ""}>{fmtDate(d.vehicle.insuranceUntil, locale)}</span>} />
                       <Kv k={L("معاینه فنی", "Inspection")} v={fmtDate(d.vehicle.inspectionUntil, locale)} />
                       <Kv k={L("گواهینامه راننده", "Driver licence")} v={d.driver ? fmtDate(d.driver.licenseUntil, locale) : "—"} />
                     </div>

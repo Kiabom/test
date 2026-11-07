@@ -1,5 +1,6 @@
 "use client";
-import { Building2, Check, Clock, Flag, Settings, ShieldCheck, Users } from "lucide-react";
+import { Building2, Check, Clock, Flag, IdCard, Settings, ShieldCheck, Users } from "lucide-react";
+import { DriverAssign } from "@/components/admin/DriverAssign";
 import { useState } from "react";
 import { PLANS } from "@/components/marketing/content";
 import { Badge, Button, Card, CardHeader, cx, Kv, PageHeader, Switch, Table, Tabs, Td, toast } from "@/components/ui";
@@ -10,7 +11,7 @@ import { usePrefs, useL, useLocale } from "@/lib/prefs";
 import { USERS_LIST } from "@/lib/users";
 import { BRAND } from "@/config/brand";
 
-type Tab = "users" | "rbac" | "sites" | "shifts" | "settings" | "flags";
+type Tab = "users" | "drivers" | "rbac" | "sites" | "shifts" | "settings" | "flags";
 
 const FLAGS: { key: string; fa: string; en: string; tier: "basic" | "pro" | "ent" }[] = [
   { key: "anpr", fa: "پلاک‌خوان ANPR", en: "ANPR", tier: "pro" },
@@ -34,7 +35,10 @@ export default function AdminPage() {
   const masters = useMasters();
   const setUser = usePrefs((s) => s.setUser);
   const userId = usePrefs((s) => s.userId);
-  const [tab, setTab] = useState<Tab>("users");
+  const me = USERS_LIST.find((u) => u.id === userId);
+  const isAdmin = !!me && can(me.role, "admin.manage");
+  const canAssign = !!me && can(me.role, "driver.assign");
+  const [tab, setTab] = useState<Tab>(isAdmin ? "users" : "drivers");
   const [tier, setTier] = useState<"basic" | "pro" | "ent">("ent");
   const [flags, setFlags] = useState<Record<string, boolean>>(() => Object.fromEntries(FLAGS.map((f) => [f.key, true])));
   const roleName = (code: string) => {
@@ -60,6 +64,7 @@ export default function AdminPage() {
     "billing.read": ["صورت‌حساب", "Billing"],
     "audit.read": ["ممیزی", "Audit"],
     "admin.manage": ["مدیریت سامانه", "Administration"],
+    "driver.assign": ["تعریف راننده مجاز خودرو", "Assign drivers to vehicles"],
     "sim.control": ["کنسول سرویس", "Service console"],
   };
   return (
@@ -69,18 +74,22 @@ export default function AdminPage() {
         className="mb-3"
         value={tab}
         onChange={setTab}
-        tabs={[
-          { id: "users", label: L("کاربران", "Users"), icon: <Users className="size-4" /> },
-          { id: "rbac", label: L("ماتریس دسترسی", "RBAC matrix"), icon: <ShieldCheck className="size-4" /> },
-          { id: "sites", label: L("شعب", "Sites"), icon: <Building2 className="size-4" /> },
-          { id: "shifts", label: L("شیفت‌ها", "Shifts"), icon: <Clock className="size-4" /> },
-          { id: "settings", label: L("تنظیمات", "Settings"), icon: <Settings className="size-4" /> },
-          { id: "flags", label: L("اشتراک و قابلیت‌ها", "Plan & features"), icon: <Flag className="size-4" /> },
-        ]}
+        tabs={(
+          [
+            { id: "users", label: L("کاربران", "Users"), icon: <Users className="size-4" /> },
+            { id: "drivers", label: L("راننده و خودرو (RFID)", "Drivers & vehicles (RFID)"), icon: <IdCard className="size-4" /> },
+            { id: "rbac", label: L("ماتریس دسترسی", "RBAC matrix"), icon: <ShieldCheck className="size-4" /> },
+            { id: "sites", label: L("شعب", "Sites"), icon: <Building2 className="size-4" /> },
+            { id: "shifts", label: L("شیفت‌ها", "Shifts"), icon: <Clock className="size-4" /> },
+            { id: "settings", label: L("تنظیمات", "Settings"), icon: <Settings className="size-4" /> },
+            { id: "flags", label: L("اشتراک و قابلیت‌ها", "Plan & features"), icon: <Flag className="size-4" /> },
+          ] as { id: Tab; label: string; icon: React.ReactNode }[]
+        ).filter((t) => (t.id === "drivers" ? canAssign : isAdmin))}
       />
-      {tab === "users" && (
+      {tab === "drivers" && canAssign && <DriverAssign />}
+      {tab === "users" && isAdmin && (
         <Card>
-          <Table head={[L("کاربر", "User"), L("شناسه", "ID"), L("نقش", "Role"), L("دسترسی‌ها", "Permissions"), "MFA", ""]}>
+          <Table head={[L("کاربر", "User"), L("شماره پرسنلی", "Personnel no."), L("شناسه", "ID"), L("نقش", "Role"), L("دسترسی‌ها", "Permissions"), "MFA", ""]}>
             {USERS_LIST.map((u) => (
               <tr key={u.id} className={cx(u.id === userId && "bg-primary/5")}>
                 <Td>
@@ -89,6 +98,7 @@ export default function AdminPage() {
                     {locale === "fa" ? u.name : u.nameEn}
                   </span>
                 </Td>
+                <Td className="num text-xs">{fmtNum(Number(u.personnelNo), locale, { useGrouping: false })}</Td>
                 <Td className="font-mono text-xs">{u.id}</Td>
                 <Td>
                   <Badge tone="primary">{roleName(u.role)}</Badge>
@@ -109,7 +119,7 @@ export default function AdminPage() {
           </Table>
         </Card>
       )}
-      {tab === "rbac" && (
+      {tab === "rbac" && isAdmin && (
         <Card className="overflow-x-auto">
           <CardHeader title={L("ماتریس نقش × دسترسی", "Role × permission matrix")} subtitle={L("سمت سرور اعمال می‌شود؛ اقدام غیرمجاز = FORBIDDEN و ثبت در audit", "Enforced server-side; unauthorised action = FORBIDDEN and audited")} />
           <table className="w-full text-xs">
@@ -138,7 +148,7 @@ export default function AdminPage() {
           </table>
         </Card>
       )}
-      {tab === "sites" && (
+      {tab === "sites" && isAdmin && (
         <div className="grid gap-4 md:grid-cols-2">
           {(masters?.sites ?? []).map((s) => (
             <Card key={s.id} className="p-4">
@@ -155,7 +165,7 @@ export default function AdminPage() {
           ))}
         </div>
       )}
-      {tab === "shifts" && (
+      {tab === "shifts" && isAdmin && (
         <Card>
           <Table head={[L("کد", "Code"), L("نام", "Name"), L("شروع", "Start"), L("پایان", "End"), L("هدف تناژ", "Target tons"), L("انتقال Visit باز", "Carry open visits")]}>
             {(masters?.shifts ?? []).map((s) => (
@@ -173,7 +183,7 @@ export default function AdminPage() {
           </Table>
         </Card>
       )}
-      {tab === "settings" && (
+      {tab === "settings" && isAdmin && (
         <div className="grid gap-4 md:grid-cols-2">
           <Card className="p-4">
             <div className="mb-2 font-bold">{L("قواعد توزین", "Weighing rules")}</div>
@@ -208,7 +218,7 @@ export default function AdminPage() {
           </Card>
         </div>
       )}
-      {tab === "flags" && (
+      {tab === "flags" && isAdmin && (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <div className="grid gap-3">
             {PLANS.map((p) => (

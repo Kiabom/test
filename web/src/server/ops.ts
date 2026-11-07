@@ -1,3 +1,4 @@
+import { clockNow } from "@/domain/clock";
 // Core operations shared by the simulator's virtual actors and the HTTP actions.
 import { sha256 } from "@/domain/audit";
 import { evaluateGate, resolveIdentity, type GateContext } from "@/domain/gate";
@@ -42,7 +43,7 @@ export function ledger(d: DB) {
   return new PermitLedger(new Map(d.permits.map((p) => [p.id, p])), d.ledger, () => nextId(d, "PL"), nowIso);
 }
 
-export function calibrationValid(d: DB, scaleId: string, now = new Date()): boolean {
+export function calibrationValid(d: DB, scaleId: string, now = new Date(clockNow())): boolean {
   const sc = d.scales.find((s) => s.id === scaleId);
   const cal = d.calibrations.find((c) => c.id === sc?.calibrationId);
   return !!cal && new Date(cal.validUntil) > now;
@@ -79,7 +80,7 @@ export function captureGateEvidence(d: DB, visit: T.Visit, laneCode: "A" | "E") 
 // ---------------- Gate ----------------
 
 export function gateContextFor(d: DB, visit: T.Visit, direction: "IN" | "OUT"): GateContext {
-  const now = new Date();
+  const now = new Date(clockNow());
   const vehicle = findVehicle(d, visit.vehicleId)!;
   const driver = d.drivers.find((x) => x.id === visit.driverId);
   const permit = findPermit(d, visit.permitId);
@@ -99,6 +100,7 @@ export function gateContextFor(d: DB, visit: T.Visit, direction: "IN" | "OUT"): 
     lowConfidence: !!visit.identity.anpr && visit.identity.anpr.confidence < minConfidence(d) && !visit.identity.rfid,
     vehicleBlocked: vehicle.status === "BLOCKED",
     driverBlocked: driver?.status === "BLOCKED",
+    driverNotAuthorized: direction === "IN" && vehicle.status !== "GUEST" && !!driver && !(vehicle.authorizedDriverIds ?? []).includes(driver.id),
     documentsExpired: docsExpired,
     hasOpenVisit: others.length > 0,
     permit: direction === "IN" ? (visit.internal && !permit ? { ok: true } : validatePermit(permit, { vehicle, now })) : { ok: true },
@@ -237,7 +239,7 @@ export function captureWeigh(
   const scaleId = laneCode === "B" ? "SC-1" : "SC-2";
   const scale = d.scales.find((s) => s.id === scaleId)!;
   const vehicle = findVehicle(d, visit.vehicleId)!;
-  const ageMs = l.lastReadingAt ? Date.now() - new Date(l.lastReadingAt).getTime() : Infinity;
+  const ageMs = l.lastReadingAt ? clockNow() - new Date(l.lastReadingAt).getTime() : Infinity;
   if (!opts.manual) {
     const guard = captureGuard({
       reading: { weightKg: l.weightKg ?? 0, stable: !!l.stable, ageMs, online: !!l.indicatorOnline },
@@ -263,7 +265,7 @@ export function captureWeigh(
 
   if (!tx) {
     const permit = findPermit(d, visit.permitId);
-    const day = new Date(Date.now() + 210 * 60000).toISOString().slice(2, 10).replace(/-/g, "");
+    const day = new Date(clockNow() + 210 * 60000).toISOString().slice(2, 10).replace(/-/g, "");
     d.counters["ticket-" + day] = (d.counters["ticket-" + day] ?? d.transactions.filter((t) => t.ticketNo.includes(day)).length) + 1;
     const txId = nextId(d, "TX");
     tx = {
@@ -293,7 +295,7 @@ export function captureWeigh(
       erpStatus: visit.operation === "INTERNAL" ? "N/A" : "PENDING",
       lidarScanIds: [],
       qcStatus: d.materials.find((m) => m.id === permit?.materialId)?.requiresQc ? "PENDING" : "NOT_REQUIRED",
-      shiftCode: shiftOf(new Date()),
+      shiftCode: shiftOf(new Date(clockNow())),
     };
     d.transactions.push(tx);
     visit.transactionIds.push(tx.id);
@@ -332,7 +334,7 @@ export function captureWeigh(
     tx.firstWeighId = we.id;
     // one-pass with stored tare (quick weigh)
     if (opts.useStoredTare) {
-      if (!storedTareUsable(vehicle, new Date())) {
+      if (!storedTareUsable(vehicle, new Date(clockNow()))) {
         raiseAlert(d, "R17", { visitId: visit.id, transactionId: tx.id, laneCode });
         throw new OpError("STORED_TARE_EXPIRED");
       }
@@ -349,7 +351,7 @@ export function captureWeigh(
     completeSecond(d, visit, tx, first, we, actorId, laneCode);
   }
   l.phase = "CAPTURED";
-  l.phaseUntil = Date.now() + 3000 / d.live.speed;
+  l.phaseUntil = clockNow() + 3000 / d.live.speed;
   bump(d);
   return we;
 }
@@ -555,10 +557,10 @@ export function consumeExitPermit(d: DB, tokenValue: string, actorId: string): S
     l.visitId = visit.id;
     visit.laneCode = "E";
     l.phase = "QR_OK";
-    l.phaseUntil = Date.now() + 1000 / d.live.speed;
+    l.phaseUntil = clockNow() + 1000 / d.live.speed;
   } else if (l.visitId === visit.id) {
     l.phase = "QR_OK";
-    l.phaseUntil = Date.now() + 1000 / d.live.speed;
+    l.phaseUntil = clockNow() + 1000 / d.live.speed;
   }
   bump(d);
   return { ok: true, kind: "EXIT_PERMIT", permit: ep, visit };
@@ -577,7 +579,7 @@ export function scanAny(d: DB, raw: string, actorId: string): ScanResult {
   }
   if (p.kind === "PERMIT") {
     const permit = findPermit(d, p.value)!;
-    const res = permit.status === "ACTIVE" && new Date(permit.validTo) > new Date() ? null : permit.status !== "ACTIVE" ? `PERMIT_${permit.status}` : "PERMIT_EXPIRED";
+    const res = permit.status === "ACTIVE" && new Date(permit.validTo) > new Date(clockNow()) ? null : permit.status !== "ACTIVE" ? `PERMIT_${permit.status}` : "PERMIT_EXPIRED";
     return res ? { ok: false, kind: "PERMIT", reason: res, permit } : { ok: true, kind: "PERMIT", permit };
   }
   return { ok: false, kind: "UNKNOWN", reason: "INVALID" };

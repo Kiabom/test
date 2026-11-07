@@ -1,3 +1,4 @@
+import { clockNow, clockOffset } from "@/domain/clock";
 // Read models assembled on the server so clients don't need to download the whole store.
 import { guidanceFor } from "@/domain/driverGuidance";
 import { LANE_STATION, LOADER_STATION, type StationKey } from "@/domain/geo";
@@ -86,7 +87,8 @@ export function liveSnapshot(d: DB) {
   const recentExited = d.visits.filter((v) => v.state === "EXITED" || v.state === "REJECTED").slice(-8).reverse();
   const openAlerts = d.alerts.filter((a) => a.status === "OPEN" || a.status === "ACK" || a.status === "INVESTIGATING");
   return {
-    now: new Date().toISOString(),
+    now: new Date(clockNow()).toISOString(),
+    clockOffset: clockOffset(),
     revision: d.revision,
     speed: d.live.speed,
     mode: d.live.mode,
@@ -113,7 +115,7 @@ export type LiveData = ReturnType<typeof liveSnapshot>;
 const snapCache = globalThis as unknown as { __tozinSnap?: { db: DB; rev: number; at: number; json: string } };
 export function liveSnapshotJson(d: DB): { rev: number; json: string } {
   const c = snapCache.__tozinSnap;
-  const now = Date.now();
+  const now = clockNow();
   const maxAge = d.live.scene === "LIVE" ? 1000 : 5000;
   if (!c || c.db !== d || c.rev !== d.revision || now - c.at >= maxAge) {
     snapCache.__tozinSnap = { db: d, rev: d.revision, at: now, json: JSON.stringify(liveSnapshot(d)) };
@@ -192,7 +194,7 @@ export function dashboard(d: DB, range: "today" | "7d" = "today") {
   return {
     range,
     from: fromIso,
-    currentShift: shiftOf(new Date()),
+    currentShift: shiftOf(new Date(clockNow())),
     kpis: { ...kpis, scalesReady, scalesTotal: d.scales.length, openAlerts: d.alerts.filter((a) => a.status === "OPEN" || a.status === "ACK").length, unmatchedRfid, manualSharePct: manualShare, coveragePct },
     hourly,
     daily,
@@ -260,7 +262,7 @@ export function driverView(d: DB, tokenValue: string) {
   const weighAt = (pass: string) => det.weighEvents.find((w) => w.pass === pass)?.capturedAt;
   const vehicle = det.vehicle;
   const route = routeFor(v.operation, det.permit?.customerId, vehicle.carrierId);
-  const trip = v.exitedAt && route ? outboundTrip(v.id, v.exitedAt, route, Date.now()) : null;
+  const trip = v.exitedAt && route ? outboundTrip(v.id, v.exitedAt, route, clockNow()) : null;
   const times: Partial<Record<StepId, string>> = {
     BOOK: d.bookings.find((b) => b.id === v.bookingId)?.slotStart,
     GATE_IN: v.enteredAt ?? (index > 1 ? v.arrivedAt : undefined),
@@ -358,7 +360,7 @@ export interface MapAlert {
 }
 
 export function mapView(d: DB) {
-  const now = Date.now();
+  const now = clockNow();
   const active = d.visits.filter((v) => !TERMINAL.includes(v.state));
   const qB = d.live.queueB;
   const qC = d.live.queueC;
@@ -454,7 +456,7 @@ const RULE_STEP: Record<string, StepId> = {
 };
 
 export function processView(d: DB) {
-  const now = Date.now();
+  const now = clockNow();
   const from = siteMidnightUtc().toISOString();
   const minutes = (a?: string, b?: string) => (a && b ? (new Date(b).getTime() - new Date(a).getTime()) / 60_000 : null);
   const avg = (xs: (number | null)[]) => {

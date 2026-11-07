@@ -1,8 +1,9 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { BarChart3, CalendarCheck2, FileDown, FileSpreadsheet, Mail, Printer } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Bars } from "@/components/charts";
-import { Badge, Button, Card, CardHeader, ConfirmDialog, cx, Dialog, Field, Input, KpiTile, PageHeader, Segmented, Select, Skeleton, Table, Td, toast } from "@/components/ui";
+import { Button, Card, CardHeader, ConfirmDialog, cx, Dialog, Field, Input, KpiTile, PageHeader, Segmented, Select, Skeleton, Table, Td, toast } from "@/components/ui";
 import type { AuditEvent, Transaction, Visit, WeighEvent } from "@/domain/types";
 import { ERRORS, lbl, OPERATION } from "@/i18n/labels";
 import { downloadCsv } from "@/lib/export";
@@ -12,16 +13,16 @@ import { useL, useLocale } from "@/lib/prefs";
 import { userName } from "@/lib/users";
 
 type TplId = "daily" | "customer" | "material" | "vehicle" | "trips" | "exceptions" | "manual" | "shift" | "permit";
-const TEMPLATES: { id: TplId; fa: string; en: string; src: string }[] = [
-  { id: "daily", fa: "خلاصه روزانه تیکت‌ها", en: "Daily ticket summary", src: "WeighHub" },
-  { id: "customer", fa: "به تفکیک مشتری", en: "By customer", src: "WeighHub" },
-  { id: "material", fa: "به تفکیک ماده", en: "By material", src: "Metrici" },
-  { id: "vehicle", fa: "سفرهای هر خودرو", en: "Trips per vehicle", src: "Punit" },
-  { id: "trips", fa: "سفرهای کامل / ناقص", en: "Complete / incomplete trips", src: "Punit" },
-  { id: "exceptions", fa: "استثناها و override", en: "Exceptions & overrides", src: "WIS" },
-  { id: "manual", fa: "توزین‌های دستی", en: "Manual weighings", src: "STAIN PESA" },
-  { id: "shift", fa: "گزارش شیفت", en: "Shift report", src: "Smart Traffic" },
-  { id: "permit", fa: "مصرف حواله‌ها", en: "Permit consumption", src: "WeighHub" },
+const TEMPLATES: { id: TplId; fa: string; en: string }[] = [
+  { id: "daily", fa: "خلاصه روزانه تیکت‌ها", en: "Daily ticket summary" },
+  { id: "customer", fa: "به تفکیک مشتری", en: "By customer" },
+  { id: "material", fa: "به تفکیک ماده", en: "By material" },
+  { id: "vehicle", fa: "سفرهای هر خودرو", en: "Trips per vehicle" },
+  { id: "trips", fa: "سفرهای کامل / ناقص", en: "Complete / incomplete trips" },
+  { id: "exceptions", fa: "استثناها و override", en: "Exceptions & overrides" },
+  { id: "manual", fa: "توزین‌های دستی", en: "Manual weighings" },
+  { id: "shift", fa: "گزارش شیفت", en: "Shift report" },
+  { id: "permit", fa: "مصرف حواله‌ها", en: "Permit consumption" },
 ];
 
 export default function ReportsPage() {
@@ -36,7 +37,7 @@ export default function ReportsPage() {
   const [time, setTime] = useState("07:00");
   const [closeDlg, setCloseDlg] = useState(false);
   const since = useMemo(() => {
-    const d = new Date(Date.now() + 210 * 60000);
+    const d = new Date(clockNow() + 210 * 60000);
     d.setUTCHours(0, 0, 0, 0);
     return new Date(d.getTime() - 210 * 60000 - (range === "7d" ? 6 * 864e5 : 0)).toISOString();
   }, [range]);
@@ -130,7 +131,7 @@ export default function ReportsPage() {
     }
   };
   const t = TEMPLATES.find((x) => x.id === tpl)!;
-  const today = new Date(Date.now() + 210 * 60000).toISOString().slice(0, 10);
+  const today = new Date(clockNow() + 210 * 60000).toISOString().slice(0, 10);
   const closedToday = (closes?.items ?? []).some((a) => a.entityId === today);
   return (
     <div>
@@ -143,7 +144,6 @@ export default function ReportsPage() {
               {TEMPLATES.map((x) => (
                 <button key={x.id} onClick={() => setTpl(x.id)} className={cx("flex w-full items-center justify-between rounded-lg px-3 py-2 text-start text-sm hover:bg-surface-2", tpl === x.id && "bg-primary/10 font-semibold text-primary")}>
                   {L(x.fa, x.en)}
-                  <span className="text-[10px] text-muted">{x.src}</span>
                 </button>
               ))}
             </div>
@@ -208,7 +208,7 @@ export default function ReportsPage() {
             <KpiTile label={L("ارسال‌نشده به ERP", "Not synced to ERP")} value={fmtNum(txs.filter((x) => x.erpStatus === "PENDING" || x.erpStatus === "FAILED").length, locale)} tone="danger" />
           </div>
           <Card>
-            <CardHeader title={L(t.fa, t.en)} subtitle={`${range === "today" ? L("امروز", "Today") : L("۷ روز اخیر", "Last 7 days")} · ${fmtNum(report.rows.length, locale)} ${L("ردیف", "rows")}`} actions={<Badge>{L("الهام از", "Inspired by")} {t.src}</Badge>} />
+            <CardHeader title={L(t.fa, t.en)} subtitle={`${range === "today" ? L("امروز", "Today") : L("۷ روز اخیر", "Last 7 days")} · ${fmtNum(report.rows.length, locale)} ${L("ردیف", "rows")}`} />
             {report.chart && report.chart.length > 0 && (
               <div className="border-b border-border p-3">
                 <Bars data={report.chart.slice(0, 14)} x="k" series={[{ key: "v", name: L("مقدار", "Value"), color: "#1273a6" }]} height={200} />

@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { CheckCircle2, DoorOpen, Keyboard, ScanQrCode, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IranPlate } from "@/components/domain/IranPlate";
@@ -39,7 +40,7 @@ export default function GuardPage() {
       try {
         const r = await act<ScanRes>("scan", { code: raw });
         setRes(r);
-        setHistory((h) => [{ at: Date.now(), code: raw.slice(-24), ok: r.ok, kind: r.kind }, ...h].slice(0, 12));
+        setHistory((h) => [{ at: clockNow(), code: raw.slice(-24), ok: r.ok, kind: r.kind }, ...h].slice(0, 12));
         if (r.ok) {
           navigator.vibrate?.([60, 40, 60]);
         } else navigator.vibrate?.(400);
@@ -72,7 +73,7 @@ export default function GuardPage() {
                 if (code.trim()) scan(code.trim());
               }}
             >
-              <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="EX-261027-0012 / S1-… / SO-1405-…" className="font-mono ltr" />
+              <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="EX-261027-0012 / S1-… / SO-1403-…" className="font-mono ltr" />
               <Button variant="primary" type="submit">
                 {L("بررسی", "Check")}
               </Button>

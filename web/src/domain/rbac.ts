@@ -19,6 +19,7 @@ export type Permission =
   | "billing.read"
   | "audit.read"
   | "admin.manage"
+  | "driver.assign"
   | "sim.control";
 
 export const ROLES: { code: RoleCode; name: string; nameEn: string }[] = [
@@ -37,9 +38,9 @@ export const ROLES: { code: RoleCode; name: string; nameEn: string }[] = [
 ];
 
 export const MATRIX: Record<RoleCode, Permission[]> = {
-  system_admin: ["gate.decide", "gate.guest", "weigh.capture", "weigh.manual", "tx.finalize", "tx.void", "tx.print", "exit.issue", "exit.scan", "permit.manage", "master.edit", "alert.manage", "fraud.review", "calibration.edit", "report.read", "billing.read", "audit.read", "admin.manage", "sim.control"],
-  site_manager: ["gate.decide", "gate.guest", "weigh.capture", "weigh.manual", "tx.finalize", "tx.void", "tx.print", "exit.issue", "exit.scan", "permit.manage", "alert.manage", "fraud.review", "report.read", "billing.read", "audit.read", "sim.control"],
-  scale_operator: ["weigh.capture", "tx.finalize", "tx.print", "exit.issue", "alert.manage", "report.read"],
+  system_admin: ["gate.decide", "gate.guest", "weigh.capture", "weigh.manual", "tx.finalize", "tx.void", "tx.print", "exit.issue", "exit.scan", "permit.manage", "master.edit", "alert.manage", "fraud.review", "calibration.edit", "report.read", "billing.read", "audit.read", "admin.manage", "driver.assign", "sim.control"],
+  site_manager: ["gate.decide", "gate.guest", "weigh.capture", "weigh.manual", "tx.finalize", "tx.void", "tx.print", "exit.issue", "exit.scan", "permit.manage", "alert.manage", "fraud.review", "report.read", "billing.read", "audit.read", "driver.assign", "sim.control"],
+  scale_operator: ["weigh.capture", "tx.finalize", "tx.print", "exit.issue", "alert.manage", "report.read", "driver.assign"],
   gate_guard: ["gate.decide", "gate.guest", "exit.scan", "alert.manage"],
   logistics: ["permit.manage", "report.read"],
   sales: ["permit.manage", "report.read", "billing.read"],

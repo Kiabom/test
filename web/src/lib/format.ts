@@ -1,3 +1,4 @@
+import { clockNow } from "@/domain/clock";
 import { format as jFormat } from "date-fns-jalali";
 import type { Locale } from "./prefs";
 
@@ -55,7 +56,7 @@ export function fmtDuration(ms: number | null | undefined, locale: Locale): stri
   return h ? digits(s, locale) + (locale === "fa" ? " ساعت" : " h") : digits(s, locale);
 }
 
-export function fmtRelative(iso: string | number | Date | null | undefined, locale: Locale, now = Date.now()): string {
+export function fmtRelative(iso: string | number | Date | null | undefined, locale: Locale, now = clockNow()): string {
   if (iso == null) return "—";
   const diff = Math.max(0, now - new Date(iso).getTime());
   const s = Math.floor(diff / 1000);

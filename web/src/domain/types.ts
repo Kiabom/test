@@ -105,6 +105,8 @@ export interface Vehicle {
   status: "ACTIVE" | "BLOCKED" | "GUEST";
   internal: boolean;
   color: string;
+  /** Drivers allowed to drive this vehicle (gate checks the driver card against this list) */
+  authorizedDriverIds: ID[];
 }
 
 export interface Driver {
@@ -117,6 +119,8 @@ export interface Driver {
   phone: string;
   carrierId: ID;
   status: "ACTIVE" | "BLOCKED";
+  /** Driver card RFID tag (EPC) */
+  rfidTag?: string;
 }
 
 export interface Carrier {
@@ -188,6 +192,7 @@ export interface User {
   name: string;
   nameEn: string;
   role: RoleCode;
+  personnelNo: string;
 }
 
 export interface Equipment {

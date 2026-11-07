@@ -1,3 +1,4 @@
+import { CLOCK_ANCHOR } from "@/domain/clock";
 import { appendAudit, sha256 } from "@/domain/audit";
 import { normalizePlate, randomPlate } from "@/domain/plate";
 import { defaultRules, SLA_MINUTES } from "@/domain/rules";
@@ -92,20 +93,12 @@ function masters(r: Rand, now: number) {
     { id: "M-FEC", code: "FE-CON", name: "کنسانتره هماتیت", nameEn: "Hematite concentrate", grade: "Fe 64%", densityKgM3: 2200, pricePerTon: 6_800_000, color: "#343a40", requiresQc: false, internalOnly: false },
     { id: "M-PEL", code: "FE-FINE", name: "سنگ آهن نرمه", nameEn: "Iron ore fines", grade: "Fe 50%", densityKgM3: 2300, pricePerTon: 3_100_000, color: "#5c4033", requiresQc: false, internalOnly: false },
     { id: "M-WST", code: "WASTE", name: "باطله", nameEn: "Waste rock", grade: "—", densityKgM3: 1800, pricePerTon: 0, color: "#868e96", requiresQc: false, internalOnly: true },
-    { id: "M-LIM", code: "LIME", name: "سنگ آهک", nameEn: "Limestone", grade: "CaO 52%", densityKgM3: 1600, pricePerTon: 1_100_000, color: "#ced4da", requiresQc: false, internalOnly: false },
-    { id: "M-SND", code: "SAND", name: "شن و ماسه", nameEn: "Sand & gravel", grade: "0-25mm", densityKgM3: 1550, pricePerTon: 650_000, color: "#e9c46a", requiresQc: false, internalOnly: false },
-    { id: "M-COL", code: "COAL", name: "زغال‌سنگ", nameEn: "Coal", grade: "Coking", densityKgM3: 850, pricePerTon: 5_400_000, color: "#212529", requiresQc: false, internalOnly: false },
-    { id: "M-CUS", code: "BENT", name: "بنتونیت", nameEn: "Bentonite", grade: "Na-B", densityKgM3: 2000, pricePerTon: 3_900_000, color: "#2a9d8f", requiresQc: true, internalOnly: false },
   ];
   const customers: T.Customer[] = [
-    { id: "C-01", name: "مجتمع فولاد آرین زرند", nameEn: "Arian Zarand Steel Complex", type: "CUSTOMER", erpCode: "CUS-1001", city: "زرند", creditLimit: 9e10 },
+    { id: "C-01", name: "فولاد زرند", nameEn: "Zarand Steel", type: "CUSTOMER", erpCode: "CUS-1001", city: "زرند", creditLimit: 9e10 },
     { id: "C-02", name: "فولاد کویر کرمان", nameEn: "Kavir Kerman Steel", type: "CUSTOMER", erpCode: "CUS-1002", city: "کرمان", creditLimit: 7e10 },
     { id: "C-03", name: "گندله‌سازی کوهپایه سیرجان", nameEn: "Kuhpayeh Sirjan Pelletizing", type: "CUSTOMER", erpCode: "CUS-1003", city: "سیرجان", creditLimit: 5e10 },
-    { id: "C-04", name: "فرآوری مواد معدنی رفسنجان", nameEn: "Rafsanjan Mineral Processing", type: "CUSTOMER", erpCode: "CUS-1004", city: "رفسنجان", creditLimit: 2e10 },
-    { id: "C-05", name: "پایانه ریلی بافق — بارانداز ۲", nameEn: "Bafq rail terminal — siding 2", type: "CUSTOMER", erpCode: "CUS-1005", city: "بافق", creditLimit: 4e10 },
-    { id: "C-06", name: "بازرگانی صادراتی خلیج", nameEn: "Khalij Export Trading", type: "CUSTOMER", erpCode: "CUS-1006", city: "بندرعباس", creditLimit: 3e10 },
-    { id: "C-07", name: "ذوب و ریخته‌گری یزد", nameEn: "Yazd Smelting & Casting", type: "CUSTOMER", erpCode: "CUS-1007", city: "یزد", creditLimit: 2e10 },
-    { id: "C-08", name: "تأمین مواد اولیه راور", nameEn: "Ravar Raw Materials Supply", type: "SUPPLIER", erpCode: "SUP-2001", city: "راور", creditLimit: 0 },
+    { id: "C-04", name: "تأمین سنگ آهن راور", nameEn: "Ravar Iron Ore Supply", type: "SUPPLIER", erpCode: "SUP-2001", city: "راور", creditLimit: 0 },
   ];
   const carriers: T.Carrier[] = [
     { id: "CR-1", name: "ترابر کویر", nameEn: "Kavir Haulage", regNo: "TR-4410", phone: "034-3242****", status: "ACTIVE" },
@@ -150,20 +143,21 @@ function masters(r: Rand, now: number) {
       nationalIdMasked: `00${int(r, 10, 99)}****${int(r, 10, 99)}`,
       licenseNo: `${int(r, 1000, 9999)}${int(r, 1000, 9999)}`,
       licenseUntil: iso(now + int(r, -20, 900) * DAY),
-      phone: `0912***${int(r, 1000, 9999)}`,
+      phone: `0913***${int(r, 1000, 9999)}`,
       carrierId: i < 48 ? `CR-${(i % 5) + 1}` : "CR-6",
       status: i === 13 ? "BLOCKED" : "ACTIVE",
+      rfidTag: `E280-1170-2000-${String(4100 + i * 37).padStart(4, "0")}`,
     });
   }
   // vehicles
   const vehicles: T.Vehicle[] = [];
   const usedPlates = new Set<string>();
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 40; i++) {
     let plate = randomPlate(r);
     while (usedPlates.has(normalizePlate(plate))) plate = randomPlate(r);
     usedPlates.add(normalizePlate(plate));
-    const internal = i >= 52;
-    const type: T.VehicleType = i < 46 ? "TRAILER" : "TIPPER";
+    const internal = i >= 34;
+    const type: T.VehicleType = i < 30 ? "TRAILER" : "TIPPER";
     const baseTare = type === "TRAILER" ? 16500 : 11200;
     const tare = Math.round((baseTare + gauss(r, 0, 500)) / 20) * 20;
     vehicles.push({
@@ -181,17 +175,30 @@ function masters(r: Rand, now: number) {
       trailerPlate: type === "TRAILER" ? `${int(r, 10, 99)}-${int(r, 100, 999)}` : undefined,
       insuranceUntil: iso(now + (i === 7 || i === 21 ? -int(r, 2, 30) : int(r, 20, 300)) * DAY),
       inspectionUntil: iso(now + int(r, 5, 200) * DAY),
-      status: i === 5 || i === 33 || i === 40 ? "BLOCKED" : "ACTIVE",
+      status: i === 5 || i === 17 || i === 26 ? "BLOCKED" : "ACTIVE",
       internal,
       color: pick(r, TRUCK_COLORS),
+      authorizedDriverIds: [],
     });
   }
+  // authorized drivers: 1–3 active drivers of the vehicle's own carrier, rotating so the load is spread
+  const cursor: Record<string, number> = {};
+  vehicles.forEach((v, i) => {
+    const pool = drivers.filter((x) => x.carrierId === v.carrierId && x.status === "ACTIVE");
+    const n = Math.min(pool.length, (i % 3) + 1);
+    for (let k = 0; k < n; k++) {
+      const c = cursor[v.carrierId] ?? 0;
+      cursor[v.carrierId] = c + 1;
+      const dr = pool[c % pool.length];
+      if (!v.authorizedDriverIds.includes(dr.id)) v.authorizedDriverIds.push(dr.id);
+    }
+  });
   return { sites, lanes, scales, devices, materials, customers, carriers, locations, shifts, equipment, drivers, vehicles };
 }
 
 export function buildSeed(): DB {
   const r = mulberry32(20261027);
-  const now = Date.now();
+  const now = CLOCK_ANCHOR; // fixed operating day → identical data on every start
   const iso = (t: number) => new Date(t).toISOString();
   const m = masters(r, now);
 
@@ -248,13 +255,14 @@ export function buildSeed(): DB {
     appendAudit(d.audit, { id: id("AU"), at: iso(at), actorId, actorType: actorId === "system" ? "SYSTEM" : actorId.startsWith("U-") ? "HUMAN" : "DEVICE", action, entityType, entityId, data });
 
   // contracts & permits
-  const sellable = d.materials.filter((x) => !x.internalOnly && x.id !== "M-CUS");
-  for (let i = 0; i < 6; i++) {
+  const sellable = d.materials.filter((x) => !x.internalOnly);
+  const buyers = d.customers.filter((c) => c.type === "CUSTOMER");
+  for (let i = 0; i < buyers.length; i++) {
     const mat = sellable[i % sellable.length];
     d.contracts.push({
       id: `CT-${i + 1}`,
-      no: `CNT-1405-${String(100 + i)}`,
-      customerId: d.customers[i].id,
+      no: `CNT-1403-${String(100 + i)}`,
+      customerId: buyers[i].id,
       materialId: mat.id,
       totalKg: int(r, 8, 50) * 1_000_000,
       deliveredKg: 0,
@@ -267,13 +275,13 @@ export function buildSeed(): DB {
   permitTypes.forEach((type, i) => {
     const contract = type === "SALE" || type === "HAUL" ? d.contracts[i % d.contracts.length] : undefined;
     const material =
-      type === "PURCHASE" ? d.materials.find((x) => x.id === (i % 2 ? "M-LIM" : "M-CUS"))! : type === "TRANSFER" ? d.materials.find((x) => x.id === "M-WST")! : d.materials.find((x) => x.id === contract!.materialId)!;
+      type === "PURCHASE" ? d.materials.find((x) => x.id === "M-FEL")! : type === "TRANSFER" ? d.materials.find((x) => x.id === "M-WST")! : d.materials.find((x) => x.id === contract!.materialId)!;
     const validTo = i === 4 || i === 15 ? now - int(r, 1, 6) * DAY : now + int(r, 10, 90) * DAY;
     d.permits.push({
       id: `PM-${String(i + 1).padStart(3, "0")}`,
-      permitNo: `${type === "PURCHASE" ? "PO" : type === "TRANSFER" ? "TR" : type === "HAUL" ? "HV" : "SO"}-1405-${String(1000 + i * 7)}`,
+      permitNo: `${type === "PURCHASE" ? "PO" : type === "TRANSFER" ? "TR" : type === "HAUL" ? "HV" : "SO"}-1403-${String(1000 + i * 7)}`,
       type,
-      customerId: type === "PURCHASE" ? "C-08" : type === "TRANSFER" ? "C-01" : contract!.customerId,
+      customerId: type === "PURCHASE" ? "C-04" : type === "TRANSFER" ? "C-01" : contract!.customerId,
       materialId: material.id,
       contractId: contract?.id,
       originId: type === "PURCHASE" ? "LOC-EXT" : type === "TRANSFER" ? "LOC-PN" : pick(r, ["LOC-SP1", "LOC-SP2", "LOC-CR"]),
@@ -295,9 +303,9 @@ export function buildSeed(): DB {
 
   // calibrations & load cells
   d.calibrations.push(
-    { id: "CAL-1", scaleId: "SC-1", certificateNo: "CAL-1405-0711", issuer: "آزمایشگاه مرجع اوزان و مقیاس‌ها — کرمان", calibratedAt: iso(now - 150 * DAY), validUntil: iso(now + 215 * DAY), testPoints: [0, 10000, 20000, 40000, 60000, 80000].map((ref) => ({ refKg: ref, readKg: ref + int(r, -1, 1) * 20, errorKg: 0 })).map((p) => ({ ...p, errorKg: p.readKg - p.refKg })), maxErrorKg: 20, documentHash: sha256("cal-1") },
-    { id: "CAL-2", scaleId: "SC-2", certificateNo: "CAL-1404-1290", issuer: "آزمایشگاه مرجع اوزان و مقیاس‌ها — کرمان", calibratedAt: iso(now - 345 * DAY), validUntil: iso(now + 20 * DAY), testPoints: [0, 10000, 20000, 40000, 60000, 80000].map((ref) => ({ refKg: ref, readKg: ref + int(r, -2, 2) * 20, errorKg: 0 })).map((p) => ({ ...p, errorKg: p.readKg - p.refKg })), maxErrorKg: 40, documentHash: sha256("cal-2") },
-    { id: "CAL-0", scaleId: "SC-1", certificateNo: "CAL-1404-0533", issuer: "آزمایشگاه مرجع اوزان و مقیاس‌ها — کرمان", calibratedAt: iso(now - 515 * DAY), validUntil: iso(now - 150 * DAY), testPoints: [], maxErrorKg: 20, documentHash: sha256("cal-0") },
+    { id: "CAL-1", scaleId: "SC-1", certificateNo: "CAL-1403-0711", issuer: "آزمایشگاه مرجع اوزان و مقیاس‌ها — کرمان", calibratedAt: iso(now - 150 * DAY), validUntil: iso(now + 215 * DAY), testPoints: [0, 10000, 20000, 40000, 60000, 80000].map((ref) => ({ refKg: ref, readKg: ref + int(r, -1, 1) * 20, errorKg: 0 })).map((p) => ({ ...p, errorKg: p.readKg - p.refKg })), maxErrorKg: 20, documentHash: sha256("cal-1") },
+    { id: "CAL-2", scaleId: "SC-2", certificateNo: "CAL-1402-1290", issuer: "آزمایشگاه مرجع اوزان و مقیاس‌ها — کرمان", calibratedAt: iso(now - 345 * DAY), validUntil: iso(now + 20 * DAY), testPoints: [0, 10000, 20000, 40000, 60000, 80000].map((ref) => ({ refKg: ref, readKg: ref + int(r, -2, 2) * 20, errorKg: 0 })).map((p) => ({ ...p, errorKg: p.readKg - p.refKg })), maxErrorKg: 40, documentHash: sha256("cal-2") },
+    { id: "CAL-0", scaleId: "SC-1", certificateNo: "CAL-1402-0533", issuer: "آزمایشگاه مرجع اوزان و مقیاس‌ها — کرمان", calibratedAt: iso(now - 515 * DAY), validUntil: iso(now - 150 * DAY), testPoints: [], maxErrorKg: 20, documentHash: sha256("cal-0") },
   );
   for (const sc of d.scales) {
     for (let c = 1; c <= sc.loadCells; c++) {
@@ -354,7 +362,7 @@ export function buildSeed(): DB {
     // haul permits move ore to the plant/another site — a transfer, not a sale
     const operation: T.Operation = kind === "DISPATCH" && permit.type === "HAUL" ? "TRANSFER" : kind;
     const material = d.materials.find((x) => x.id === permit.materialId)!;
-    const driver = d.drivers.find((x) => x.carrierId === vehicle.carrierId && x.status === "ACTIVE") ?? d.drivers[0];
+    const driver = d.drivers.find((x) => vehicle.authorizedDriverIds.includes(x.id) && x.status === "ACTIVE") ?? d.drivers[0];
     const vid = id("VS");
     const operator = pick(r, ["U-OP1", "U-OP2"]);
     const guard = pick(r, ["U-GD1", "U-GD2"]);

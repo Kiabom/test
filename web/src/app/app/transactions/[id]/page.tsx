@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { ArrowRight, Ban, FileJson, History, Printer, Receipt, Send, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { use, useState } from "react";
@@ -74,7 +75,7 @@ export default function TxDetail({ params }: { params: Promise<{ id: string }> }
                 </Button>
               </>
             )}
-            <Button size="sm" onClick={() => downloadJson(`evidence-${tx.ticketNo}.json`, { exportedAt: new Date().toISOString(), transaction: tx, visit: data.visit, weighEvents: data.weighEvents, evidence: data.evidence, gateEvents: data.gateEvents, plateReads: data.plateReads, lidar: data.lidarScans, uvss: data.uvss, audit: data.audit })}>
+            <Button size="sm" onClick={() => downloadJson(`evidence-${tx.ticketNo}.json`, { exportedAt: new Date(clockNow()).toISOString(), transaction: tx, visit: data.visit, weighEvents: data.weighEvents, evidence: data.evidence, gateEvents: data.gateEvents, plateReads: data.plateReads, lidar: data.lidarScans, uvss: data.uvss, audit: data.audit })}>
               <FileJson className="size-4" /> {L("بسته شواهد", "Evidence bundle")}
             </Button>
             {tx.state !== "VOIDED" && (

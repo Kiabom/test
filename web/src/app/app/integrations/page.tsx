@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { ArrowLeftRight, Cable, Copy, KeyRound, RefreshCw, Webhook } from "lucide-react";
 import { useState } from "react";
 import { Badge, Button, Card, CardHeader, cx, PageHeader, Segmented, Skeleton, Switch, Table, Tabs, Td, toast } from "@/components/ui";
@@ -143,10 +144,10 @@ X-Idempotency-Key: ERP:ticket.approved:TX-000412
 
 {
   "event": "ticket.approved",
-  "ticketNo": "T-1405-00412",
+  "ticketNo": "T-1403-00412",
   "netKg": 28640, "billableKg": 28540, "deductionKg": 100,
   "material": "FE-ORE-62", "customer": "C-1021",
-  "permitNo": "SO-1405-0012", "plate": "12B345-67",
+  "permitNo": "SO-1403-0012", "plate": "12B345-67",
   "verify": "https://…/verify/7KQ2-9XHD"
 }`}</pre>
           </div>
@@ -163,7 +164,7 @@ X-Idempotency-Key: ERP:ticket.approved:TX-000412
                 onClick={() => {
                   const k = `tzn_live_${Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
                   setNewKey(k);
-                  setKeys((ks) => [...ks, { name: L("کلید جدید", "New key"), prefix: k.slice(0, 13), scopes: "tickets:read", created: new Date().toISOString().slice(0, 10) }]);
+                  setKeys((ks) => [...ks, { name: L("کلید جدید", "New key"), prefix: k.slice(0, 13), scopes: "tickets:read", created: new Date(clockNow()).toISOString().slice(0, 10) }]);
                 }}
               >
                 {L("ساخت کلید", "Create key")}

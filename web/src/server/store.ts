@@ -1,3 +1,4 @@
+import { clockNow } from "@/domain/clock";
 import { randomBytes } from "node:crypto";
 import { appendAudit, sha256 } from "@/domain/audit";
 import { SLA_MINUTES } from "@/domain/rules";
@@ -96,7 +97,7 @@ export type CollectionName = Exclude<keyof DB, "live" | "revision" | "counters" 
 
 export const globalRef = globalThis as unknown as { __tozinDb?: DB; __tozinSimTimer?: ReturnType<typeof setInterval> };
 
-export const nowIso = () => new Date().toISOString();
+export const nowIso = () => new Date(clockNow()).toISOString();
 
 export function nextId(d: DB, prefix: string): string {
   d.counters[prefix] = (d.counters[prefix] ?? 0) + 1;
@@ -220,7 +221,7 @@ export function evidenceHash(seed: number, kind: string, at: string) {
   return sha256(`${seed}|${kind}|${at}`);
 }
 
-export function siteMidnightUtc(now = new Date()): Date {
+export function siteMidnightUtc(now = new Date(clockNow())): Date {
   // Asia/Tehran is UTC+03:30 (no DST)
   const offsetMs = 210 * 60000;
   const local = new Date(now.getTime() + offsetMs);

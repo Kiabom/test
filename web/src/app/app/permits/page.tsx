@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { FilePlus2, FileText } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Lines } from "@/components/charts";
@@ -74,7 +75,7 @@ export default function PermitsPage() {
           <Table head={[L("شماره", "No"), L("نوع", "Type"), L("مشتری/تأمین‌کننده", "Customer/supplier"), L("ماده", "Material"), L("مصرف / مجاز", "Used / allowed"), L("پیشرفت", "Progress"), L("مانده", "Remaining"), L("سفر", "Trips"), L("اعتبار تا", "Valid to"), L("وضعیت", "Status")]}>
             {permits.map((pm) => {
               const u = usagePct(pm);
-              const expiringDays = (new Date(pm.validTo).getTime() - Date.now()) / 864e5;
+              const expiringDays = (new Date(pm.validTo).getTime() - clockNow()) / 864e5;
               return (
                 <tr key={pm.id} className="cursor-pointer hover:bg-surface-2" onClick={() => setSel(pm.id)}>
                   <Td className="font-mono text-xs ltr">{pm.permitNo}</Td>

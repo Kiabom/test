@@ -1,3 +1,4 @@
+import { clockNow } from "@/domain/clock";
 import { getDb } from "@/server/runtime";
 import { liveSnapshotJson } from "@/server/views";
 
@@ -18,7 +19,7 @@ export function GET(req: Request) {
       const send = () => {
         try {
           const d = getDb();
-          const now = Date.now();
+          const now = clockNow();
           // unchanged data: refresh every 5 s in live mode, every 15 s for the frozen scene
           if (d.revision === sentRev && now - sentAt < (d.live.scene === "LIVE" ? 5000 : 15_000)) return;
           const snap = liveSnapshotJson(d);

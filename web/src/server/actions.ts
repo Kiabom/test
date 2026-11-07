@@ -1,3 +1,4 @@
+import { clockNow } from "@/domain/clock";
 import { verifyChain } from "@/domain/audit";
 import { can, type Permission } from "@/domain/rbac";
 import type * as T from "@/domain/types";
@@ -31,6 +32,8 @@ const PERMS: Record<string, Permission | null> = {
   "permit.status": "permit.manage",
   "permit.create": "permit.manage",
   "master.update": "master.edit",
+  "vehicle.drivers.set": "driver.assign",
+  "driver.tag.set": "driver.assign",
   "calibration.add": "calibration.edit",
   "qc.decide": null,
   "device.toggle": "sim.control",
@@ -100,7 +103,7 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
       if (!tx) throw new OpError("TX_NOT_FOUND");
       const ch = (str(p, "channel") || "SMS") as T.OutboxChannel;
       const dr = d.drivers.find((x) => x.id === tx.driverId);
-      const m = enqueueOutbox(d, ch, `ticket.resend.${Date.now()}`, tx.id, `رسید ${tx.ticketNo} — خالص ${tx.netKg?.toLocaleString("en")} kg — /verify/${tx.verifyCode}`, ch === "EMAIL" ? "driver@example.com" : dr?.phone);
+      const m = enqueueOutbox(d, ch, `ticket.resend.${clockNow()}`, tx.id, `رسید ${tx.ticketNo} — خالص ${tx.netKg?.toLocaleString("en")} kg — /verify/${tx.verifyCode}`, ch === "EMAIL" ? "driver@example.com" : dr?.phone);
       audit(d, "ticket.sent", "Transaction", tx.id, { actorId, data: { channel: ch } });
       bump(d);
       return m;
@@ -180,7 +183,7 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
     }
     case "permit.create": {
       const base = d.permits.find((x) => x.type === (str(p, "type") || "SALE")) ?? d.permits[0];
-      const pm: T.Permit = { ...base, id: nextId(d, "PM"), permitNo: `${str(p, "type") === "PURCHASE" ? "PO" : "SO"}-1405-${String(5000 + (d.counters.PM ?? 0))}`, type: (str(p, "type") || "SALE") as T.PermitType, customerId: str(p, "customerId") || base.customerId, materialId: str(p, "materialId") || base.materialId, allowedKg: num(p, "allowedT") * 1000 || 500_000, consumedKg: 0, reservedKg: 0, tripsUsed: 0, validFrom: nowIso(), validTo: new Date(Date.now() + (num(p, "days") || 30) * 864e5).toISOString(), status: "ACTIVE", allowedVehicleIds: [] };
+      const pm: T.Permit = { ...base, id: nextId(d, "PM"), permitNo: `${str(p, "type") === "PURCHASE" ? "PO" : "SO"}-1403-${String(5000 + (d.counters.PM ?? 0))}`, type: (str(p, "type") || "SALE") as T.PermitType, customerId: str(p, "customerId") || base.customerId, materialId: str(p, "materialId") || base.materialId, allowedKg: num(p, "allowedT") * 1000 || 500_000, consumedKg: 0, reservedKg: 0, tripsUsed: 0, validFrom: nowIso(), validTo: new Date(clockNow() + (num(p, "days") || 30) * 864e5).toISOString(), status: "ACTIVE", allowedVehicleIds: [] };
       d.permits.push(pm);
       audit(d, "permit.created", "Permit", pm.id, { actorId, data: { permitNo: pm.permitNo, allowedKg: pm.allowedKg } });
       bump(d);
@@ -199,9 +202,32 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
       bump(d);
       return item;
     }
+    case "vehicle.drivers.set": {
+      const v = d.vehicles.find((x) => x.id === str(p, "vehicleId"));
+      if (!v) throw new OpError("NOT_FOUND");
+      const ids = Array.isArray(p.driverIds) ? [...new Set((p.driverIds as unknown[]).filter((x): x is string => typeof x === "string"))] : [];
+      if (ids.some((id) => !d.drivers.some((x) => x.id === id))) throw new OpError("NOT_FOUND", "راننده پیدا نشد");
+      const before = [...(v.authorizedDriverIds ?? [])];
+      v.authorizedDriverIds = ids;
+      audit(d, "vehicle.drivers.updated", "Vehicle", v.id, { actorId, data: { before, after: ids } });
+      bump(d);
+      return v;
+    }
+    case "driver.tag.set": {
+      const dr = d.drivers.find((x) => x.id === str(p, "driverId"));
+      if (!dr) throw new OpError("NOT_FOUND");
+      const tag = str(p, "rfidTag").trim().toUpperCase();
+      if (tag && (d.drivers.some((x) => x.id !== dr.id && x.rfidTag?.toUpperCase() === tag) || d.vehicles.some((x) => x.rfidEpc?.toUpperCase() === tag)))
+        throw new OpError("DUPLICATE", "این تگ قبلاً به راننده یا خودروی دیگری داده شده است");
+      const before = dr.rfidTag;
+      dr.rfidTag = tag || undefined;
+      audit(d, "driver.tag.updated", "Driver", dr.id, { actorId, data: { before, after: dr.rfidTag } });
+      bump(d);
+      return dr;
+    }
     case "calibration.add": {
       const scaleId = str(p, "scaleId");
-      const rec: T.CalibrationRecord = { id: nextId(d, "CAL"), scaleId, certificateNo: str(p, "certificateNo") || `CAL-1405-${Math.floor(Math.random() * 9000 + 1000)}`, issuer: str(p, "issuer") || "آزمایشگاه مرجع اوزان (نمونه)", calibratedAt: nowIso(), validUntil: new Date(Date.now() + 365 * 864e5).toISOString(), testPoints: [0, 20000, 40000, 60000, 80000].map((ref) => ({ refKg: ref, readKg: ref, errorKg: 0 })), maxErrorKg: 20, documentHash: Math.random().toString(16).slice(2).padEnd(64, "0") };
+      const rec: T.CalibrationRecord = { id: nextId(d, "CAL"), scaleId, certificateNo: str(p, "certificateNo") || `CAL-1403-${Math.floor(Math.random() * 9000 + 1000)}`, issuer: str(p, "issuer") || "آزمایشگاه مرجع اوزان (نمونه)", calibratedAt: nowIso(), validUntil: new Date(clockNow() + 365 * 864e5).toISOString(), testPoints: [0, 20000, 40000, 60000, 80000].map((ref) => ({ refKg: ref, readKg: ref, errorKg: 0 })), maxErrorKg: 20, documentHash: Math.random().toString(16).slice(2).padEnd(64, "0") };
       d.calibrations.push(rec);
       const sc = d.scales.find((s) => s.id === scaleId);
       if (sc) {
@@ -264,13 +290,13 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
       return { ok: true };
     }
     case "report.schedule": {
-      const m = enqueueOutbox(d, "EMAIL", `report.${str(p, "template")}.${Date.now()}`, str(p, "template") || "daily", `گزارش زمان‌بندی‌شده «${str(p, "template")}» — هر روز ساعت ${str(p, "time") || "07:00"}`, str(p, "email") || "manager@example.com");
+      const m = enqueueOutbox(d, "EMAIL", `report.${str(p, "template")}.${clockNow()}`, str(p, "template") || "daily", `گزارش زمان‌بندی‌شده «${str(p, "template")}» — هر روز ساعت ${str(p, "time") || "07:00"}`, str(p, "email") || "manager@example.com");
       audit(d, "report.scheduled", "Report", str(p, "template"), { actorId, data: { email: str(p, "email") } });
       bump(d);
       return m;
     }
     case "day.close": {
-      const day = new Date(Date.now() + 210 * 60000).toISOString().slice(0, 10);
+      const day = new Date(clockNow() + 210 * 60000).toISOString().slice(0, 10);
       if (!d.live.closedDays.includes(day)) d.live.closedDays.push(day);
       audit(d, "day.closed", "DailyClose", day, { actorId });
       bump(d);

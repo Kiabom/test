@@ -5,22 +5,15 @@ import { useState } from "react";
 import { Button, Field, Input } from "@/components/ui";
 import { LogoMark } from "@/components/shell/Logo";
 import { BRAND, SITE } from "@/config/brand";
+import { homeFor } from "@/domain/access";
 import { ROLES } from "@/domain/rbac";
 import { USERS_LIST } from "@/lib/users";
+import { fmtNum } from "@/lib/format";
 import { useL, usePrefs } from "@/lib/prefs";
 
 /** Username for each account: the family name in Latin letters, e.g. U-ADMIN → "sadri". */
 const loginOf = (nameEn: string) => nameEn.replace(/^(Eng\.|Dr\.)\s*/, "").split(" ").pop()!.toLowerCase();
 
-const HOME_FOR_ROLE: Record<string, string> = {
-  gate_guard: "/app/guard",
-  scale_operator: "/app/weighing",
-  logistics: "/app/queue",
-  maintenance: "/app/devices",
-  auditor: "/app/audit",
-  finance: "/app/billing",
-  fleet_manager: "/app/map",
-};
 
 export default function LoginPage() {
   const L = useL();
@@ -39,7 +32,7 @@ export default function LoginPage() {
     if (password.length < 4) return setError(L("رمز عبور را وارد کنید.", "Enter your password."));
     setBusy(true);
     setUser(u.id);
-    router.push(HOME_FOR_ROLE[u.role] ?? "/app");
+    router.push(homeFor(u.role));
   };
 
   return (
@@ -56,19 +49,6 @@ export default function LoginPage() {
           <div className="text-xs font-semibold text-white/50">{L("سایت", "Site")}</div>
           <div className="mt-1 text-3xl font-black leading-snug">{locale === "fa" ? SITE.name : SITE.nameEn}</div>
           <div className="mt-1 text-sm text-white/60">{locale === "fa" ? SITE.place : SITE.placeEn}</div>
-          <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            {[
-              [L("باسکول", "Weighbridges"), L("۲ دستگاه ۸۰ تن", "2 × 80 t")],
-              [L("دروازه", "Gates"), L("ورود A · خروج E", "Entry A · Exit E")],
-              [L("اسکن بار", "Load scan"), L("LiDAR لاین D", "LiDAR lane D")],
-              [L("شیفت", "Shifts"), L("۳ شیفت ۸ ساعته", "3 × 8 h")],
-            ].map(([k, v]) => (
-              <div key={k} className="border-t border-white/10 pt-2">
-                <dt className="text-white/50">{k}</dt>
-                <dd className="font-semibold">{v}</dd>
-              </div>
-            ))}
-          </dl>
         </div>
         <div className="text-[11px] text-white/40">
           {BRAND.nameEn} {BRAND.version}
@@ -129,6 +109,7 @@ export default function LoginPage() {
                       <span>
                         {locale === "fa" ? u.name : u.nameEn}
                         <span className="ms-2 text-xs text-muted">{locale === "fa" ? r?.name : r?.nameEn}</span>
+                        <span className="ms-2 text-xs text-muted num">#{fmtNum(Number(u.personnelNo), locale, { useGrouping: false })}</span>
                       </span>
                       <span className="font-mono text-xs text-muted">{login}</span>
                     </button>

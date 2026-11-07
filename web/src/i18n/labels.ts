@@ -44,6 +44,7 @@ export const DECISION_CODE: Dict = {
   LOW_ANPR_CONFIDENCE: ["اطمینان پایین پلاک‌خوان", "Low ANPR confidence"],
   BLACKLIST: ["خودرو/راننده مسدود", "Blacklisted"],
   ANTI_PASSBACK: ["ورود مجدد بدون خروج", "Anti-passback"],
+  DRIVER_NOT_AUTHORIZED: ["راننده مجاز این خودرو نیست", "Driver not authorized for this vehicle"],
   DOCUMENT_EXPIRED: ["مدارک منقضی", "Documents expired"],
   PERMIT_MISSING: ["حواله ندارد", "No permit"],
   PERMIT_NOT_ACTIVE: ["حواله غیرفعال", "Permit not active"],
@@ -183,6 +184,8 @@ export const STAGE: Dict = {
 
 export const ERRORS: Dict = {
   FORBIDDEN: ["نقش فعلی مجوز این کار را ندارد", "Your role is not allowed to do this"],
+  NOT_FOUND: ["مورد پیدا نشد", "Not found"],
+  DUPLICATE: ["این تگ قبلاً به راننده یا خودروی دیگری داده شده است", "This tag is already assigned to another driver or vehicle"],
   REASON_REQUIRED: ["ثبت دلیل الزامی است", "A reason is required"],
   SECOND_SIGNATURE_REQUIRED: ["امضای دوم (کاربر دیگر) الزامی است", "A second signer (another user) is required"],
   QUOTA_EXHAUSTED: ["سهمیه حواله کافی نیست", "Permit quota exhausted"],

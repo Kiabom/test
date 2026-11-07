@@ -135,11 +135,7 @@ export const CUSTOMER_ROUTES: Record<string, Route> = {
   "C-01": { id: "R-ZRD", to: "zarand", path: via("zarand") },
   "C-02": { id: "R-KRM", to: "kerman", path: via("zarand", "kerman") },
   "C-03": { id: "R-SJN", to: "sirjan", path: via("zarand", "rafsanjan", "sirjan") },
-  "C-04": { id: "R-RFS", to: "rafsanjan", path: via("zarand", "rafsanjan") },
-  "C-05": { id: "R-BFQ", to: "bafq", path: via("kuhbanan", "behabad", "bafq") },
-  "C-06": { id: "R-BND", to: "bandarabbas", path: via("zarand", "rafsanjan", "sirjan", "hajiabad", "bandarabbas") },
-  "C-07": { id: "R-YZD", to: "yazd", path: via("zarand", "rafsanjan", "anar", "mehriz", "yazd") },
-  "C-08": { id: "R-RVR", to: "ravar", path: via("zarand", "ravar") },
+  "C-04": { id: "R-RVR", to: "ravar", path: via("zarand", "ravar") },
 };
 /** Inbound trucks come from their carrier's home town. */
 export const CARRIER_HOME: Record<string, CityKey> = { "CR-1": "kerman", "CR-2": "zarand", "CR-3": "rafsanjan", "CR-4": "sirjan", "CR-5": "yazd", "CR-6": "zarand" };

@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { BellRing, Mail, MessageCircle, MessageSquareText, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { Badge, Card, CardHeader, cx, PageHeader, Segmented, Skeleton, Switch, Table, Td } from "@/components/ui";
@@ -71,7 +72,7 @@ export default function NotificationsPage() {
           <div className="w-[280px] rounded-[2.5rem] border-[10px] border-slate-900 bg-slate-900 shadow-2xl">
             <div className="h-[520px] overflow-hidden rounded-[1.8rem] bg-gradient-to-b from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
               <div className="flex items-center justify-between px-5 pt-3 text-[11px] font-semibold text-slate-600 dark:text-slate-300" dir="ltr">
-                <span>{fmtTime(Date.now(), "en")}</span>
+                <span>{fmtTime(clockNow(), "en")}</span>
                 <span>5G ▮▮▮</span>
               </div>
               <div className="mt-3 border-b border-slate-300 px-4 pb-2 text-center text-sm font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200">{cur?.channel === "WHATSAPP" ? `WhatsApp · ${BRAND.nameEn}` : cur?.channel === "EMAIL" ? "Mail" : BRAND.nameEn}</div>

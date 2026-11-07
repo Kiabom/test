@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { SITE } from "@/config/brand";
 import { FileDown, Printer, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -17,7 +18,7 @@ export default function BillingPage() {
   const locale = useLocale();
   const masters = useMasters();
   const [range, setRange] = useState<"7d" | "30d">("7d");
-  const since = useMemo(() => new Date(Date.now() - (range === "7d" ? 7 : 30) * 864e5).toISOString(), [range]);
+  const since = useMemo(() => new Date(clockNow() - (range === "7d" ? 7 : 30) * 864e5).toISOString(), [range]);
   const { data } = useData<Transaction>("transactions", { limit: 5000, state: "APPROVED", since }, 30_000);
   const [cust, setCust] = useState("");
   const customers = (masters?.customers ?? []).filter((c) => c.type !== "SUPPLIER");
@@ -35,7 +36,7 @@ export default function BillingPage() {
   }, [data, customerId, masters]);
   const subtotal = lines.reduce((a, l) => a + l.amount, 0);
   const tons = lines.reduce((a, l) => a + l.kg, 0) / 1000;
-  const invoiceNo = `INV-1405-${(customerId ?? "0").replace(/\D/g, "").padStart(3, "0")}-${range === "7d" ? "W" : "M"}`;
+  const invoiceNo = `INV-1403-${(customerId ?? "0").replace(/\D/g, "").padStart(3, "0")}-${range === "7d" ? "W" : "M"}`;
   const nm = (x?: { name: string; nameEn?: string }) => (x ? (locale === "fa" ? x.name : x.nameEn ?? x.name) : "—");
   return (
     <div>
@@ -78,7 +79,7 @@ export default function BillingPage() {
             <div className="text-xl font-black">{L("صورت‌حساب فروش", "Sales statement")}</div>
             <div className="font-mono text-sm">{invoiceNo}</div>
             <div className="text-xs text-muted">
-              {fmtDate(since, locale)} — {fmtDate(Date.now(), locale)}
+              {fmtDate(since, locale)} — {fmtDate(clockNow(), locale)}
             </div>
             <Badge tone="warning">{L("پیش‌نویس", "Draft")}</Badge>
           </div>

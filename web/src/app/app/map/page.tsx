@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { AlertTriangle, Globe2, Map as MapIcon, Mountain, Pause, Play, Route, Search, Truck } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -166,7 +167,7 @@ export default function FleetMapPage() {
   });
   const go = (id: string, at: LatLng, road: boolean) => {
     setSelected(id);
-    setFocus({ key: `${id}-${Date.now()}`, bounds: [at], maxZoom: road ? 11 : 17 });
+    setFocus({ key: `${id}-${clockNow()}`, bounds: [at], maxZoom: road ? 11 : 17 });
   };
   const count = (g: ListItem["group"]) => view?.list.filter((x) => x.group === g).length ?? 0;
   const roadEvents = view?.evList.filter((e) => e.glyph !== "!").length ?? 0;

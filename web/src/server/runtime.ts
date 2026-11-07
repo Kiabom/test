@@ -1,10 +1,12 @@
 import "server-only";
+import { resetClock } from "@/domain/clock";
 import { buildSeed } from "./seed";
 import { stageShowcase } from "./showcase";
 import { startSimulation } from "./sim";
 import { globalRef, type DB } from "./store";
 
 function freshDb(): DB {
+  resetClock();
   const d = buildSeed();
   stageShowcase(d);
   return d;

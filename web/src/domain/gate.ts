@@ -8,6 +8,8 @@ export interface GateContext {
   lowConfidence?: boolean;
   vehicleBlocked: boolean;
   driverBlocked: boolean;
+  /** Driver card is not on the vehicle's authorized-driver list (IN only) */
+  driverNotAuthorized?: boolean;
   documentsExpired: boolean;
   hasOpenVisit: boolean; // anti-passback (IN only)
   permit: { ok: true } | { ok: false; reason: string } | "UNKNOWN";
@@ -55,6 +57,7 @@ export function evaluateGate(ctx: GateContext): GateResult {
   if (ctx.identity === "UNKNOWN") return finish("HOLD", "UNKNOWN_VEHICLE", "IDENTITY", "UNKNOWN");
   if (ctx.vehicleBlocked || ctx.driverBlocked) return finish("BLOCK", "BLACKLIST", "IDENTITY");
   if (ctx.direction === "IN" && ctx.hasOpenVisit) return finish("HOLD", "ANTI_PASSBACK", "IDENTITY");
+  if (ctx.direction === "IN" && ctx.driverNotAuthorized) return finish("HOLD", "DRIVER_NOT_AUTHORIZED", "IDENTITY");
   trace.push({ step: "IDENTITY", result: "OK", code: ctx.identity });
 
   if (ctx.documentsExpired) return finish("HOLD", "DOCUMENT_EXPIRED", "DOCUMENTS");

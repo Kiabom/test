@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { Camera, CameraOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui";
@@ -22,7 +23,7 @@ export function QrScanner({ onResult, active, onToggle }: { onResult: (text: str
         const controls = await reader.decodeFromConstraints({ video: { facingMode: { ideal: "environment" } } }, video.current!, (res) => {
           if (!res) return;
           const t = res.getText();
-          const now = Date.now();
+          const now = clockNow();
           if (t === last.current.t && now - last.current.at < 4000) return;
           last.current = { t, at: now };
           navigator.vibrate?.(80);

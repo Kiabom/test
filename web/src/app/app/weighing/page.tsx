@@ -1,4 +1,5 @@
 "use client";
+import { clockNow } from "@/domain/clock";
 import { CheckCircle2, Hand, Keyboard, LayoutGrid, Lock, Printer, Scale, Send, Timer, Zap } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -45,7 +46,7 @@ export default function WeighingPage() {
   const scaleId = laneCode === "B" ? "SC-1" : "SC-2";
   const scale = masters?.scales.find((s) => s.id === scaleId);
   const cal = masters?.calibrations.find((c) => c.id === scale?.calibrationId);
-  const calValid = !!cal && new Date(cal.validUntil) > new Date();
+  const calValid = !!cal && new Date(cal.validUntil) > new Date(clockNow());
   const ageMs = lane?.lastReadingAt && live ? new Date(live.now).getTime() - new Date(lane.lastReadingAt).getTime() : undefined;
   const guard = lane
     ? captureGuard({
