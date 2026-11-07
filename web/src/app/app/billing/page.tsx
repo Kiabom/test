@@ -69,7 +69,7 @@ export default function BillingPage() {
         <KpiTile label={L("جمع (ریال)", "Subtotal (IRR)")} value={fmtNum(subtotal, locale)} tone="success" />
         <KpiTile label={L("سقف اعتبار مشتری", "Credit limit")} value={fmtNum(customer?.creditLimit, locale)} tone={subtotal * (1 + VAT) > (customer?.creditLimit ?? Infinity) ? "danger" : "neutral"} />
       </div>
-      <Card className="mx-auto max-w-4xl p-8 print:border-0 print:shadow-none">
+      <Card className="print-doc mx-auto max-w-4xl p-8 print:max-w-none print:border-0 print:p-0 print:shadow-none">
         <div className="flex items-start justify-between border-b border-border pb-4">
           <div>
             <Logo locale={locale} />

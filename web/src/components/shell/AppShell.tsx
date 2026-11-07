@@ -9,7 +9,7 @@ import { BRAND, SITE } from "@/config/brand";
 import { canSee, homeFor } from "@/domain/access";
 import { ROLES } from "@/domain/rbac";
 import { USERS_LIST } from "@/lib/users";
-import { fmtNum, fmtTime } from "@/lib/format";
+import { fmtDate, fmtNum, fmtTime } from "@/lib/format";
 import { useLive, useLiveConnection, useLiveStore, useNow } from "@/lib/live";
 import { useL, usePrefs } from "@/lib/prefs";
 import { Logo, LogoMark } from "./Logo";
@@ -82,7 +82,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
   const shiftName = { A: L("شیفت صبح A", "Morning shift A"), B: L("شیفت عصر B", "Evening shift B"), C: L("شیفت شب C", "Night shift C") }[shift];
   const user = USERS_LIST.find((u) => u.id === userId) ?? USERS_LIST[0];
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-surface/90 px-3 backdrop-blur md:px-5">
+    <header className="sticky top-0 z-30 flex h-14 print:hidden items-center gap-2 border-b border-border bg-surface/90 px-3 backdrop-blur md:px-5">
       <button className="rounded-lg p-2 hover:bg-surface-2 lg:hidden" onClick={onMenu} aria-label="menu">
         <Menu className="size-5" />
       </button>
@@ -146,6 +146,36 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
   );
 }
 
+/** Letterhead that appears only on paper / PDF: system, site, who printed it and when. */
+function PrintHeader() {
+  const L = useL();
+  const locale = usePrefs((s) => s.locale);
+  const userId = usePrefs((s) => s.userId);
+  const user = USERS_LIST.find((u) => u.id === userId);
+  const now = useNow(60_000);
+  return (
+    <div className="print-header mb-4 hidden items-center justify-between border-b-2 border-black pb-2 text-[10pt] text-black print:flex">
+      <div className="flex items-center gap-2">
+        <LogoMark size={28} />
+        <div>
+          <div className="font-bold">{locale === "fa" ? BRAND.name : BRAND.nameEn}</div>
+          <div className="text-[9pt]">{locale === "fa" ? `${SITE.name} · ${SITE.place}` : `${SITE.nameEn} · ${SITE.placeEn}`}</div>
+        </div>
+      </div>
+      <div className="text-end text-[9pt] leading-5">
+        <div>
+          {L("تاریخ چاپ", "Printed")}: <span className="num">{fmtDate(now, locale)} {fmtTime(now, locale)}</span>
+        </div>
+        {user && (
+          <div>
+            {L("چاپ‌کننده", "Printed by")}: {locale === "fa" ? user.name : user.nameEn} <span className="num">({fmtNum(Number(user.personnelNo), locale, { useGrouping: false })})</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PageGuard({ children }: { children: ReactNode }) {
   const L = useL();
   const path = usePathname();
@@ -175,7 +205,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <div className="flex min-h-screen">
-      <aside className={cx("sticky top-0 hidden h-screen shrink-0 flex-col bg-shell text-white transition-all lg:flex", collapsed ? "w-[72px]" : "w-64")}>
+      <aside className={cx("sticky top-0 hidden h-screen shrink-0 flex-col bg-shell text-white transition-all lg:flex print:!hidden", collapsed ? "w-[72px]" : "w-64")}>
         <div className="flex h-14 items-center justify-between border-b border-white/10 px-3">
           <Link href="/app">{collapsed ? <LogoMark /> : <Logo locale={locale} light />}</Link>
         </div>
@@ -202,10 +232,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenu={() => setMobileOpen(true)} />
-        <main className="flex-1 p-3 md:p-5">
+        <main className="app-main flex-1 p-3 md:p-5 print:p-0">
+          <PrintHeader />
           <PageGuard>{children}</PageGuard>
         </main>
-        <footer className="flex justify-between gap-2 border-t border-border px-5 py-2 text-[11px] text-muted">
+        <footer className="flex justify-between gap-2 border-t print:hidden border-border px-5 py-2 text-[11px] text-muted">
           <span>{locale === "fa" ? `${SITE.name} · ${SITE.place}` : `${SITE.nameEn} · ${SITE.placeEn}`}</span>
           <span className="ltr">{BRAND.nameEn} {BRAND.version}</span>
         </footer>

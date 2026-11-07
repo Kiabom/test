@@ -320,9 +320,9 @@ export function Progress({ value, tone = "primary", className }: { value: number
 
 export function PageHeader({ title, subtitle, icon, actions }: { title: ReactNode; subtitle?: ReactNode; icon?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div className="page-header mb-5 flex flex-wrap items-end justify-between gap-3 print:mb-3">
       <div className="flex items-center gap-3">
-        {icon && <div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">{icon}</div>}
+        {icon && <div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary print:hidden">{icon}</div>}
         <div>
           <h1 className="text-xl font-bold tracking-tight">{title}</h1>
           {subtitle && <p className="text-sm text-muted">{subtitle}</p>}

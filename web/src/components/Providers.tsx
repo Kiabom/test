@@ -18,6 +18,18 @@ export function Providers({ children, forceTheme }: { children: ReactNode; force
     el.dir = locale === "fa" ? "rtl" : "ltr";
     el.dataset.theme = forceTheme ?? theme;
   }, [locale, theme, forceTheme]);
+  // paper is always printed in the light theme
+  useEffect(() => {
+    const el = document.documentElement;
+    const before = () => (el.dataset.theme = "light");
+    const after = () => (el.dataset.theme = forceTheme ?? usePrefs.getState().theme);
+    window.addEventListener("beforeprint", before);
+    window.addEventListener("afterprint", after);
+    return () => {
+      window.removeEventListener("beforeprint", before);
+      window.removeEventListener("afterprint", after);
+    };
+  }, [forceTheme]);
   if (!mounted)
     return (
       <div className="grid min-h-screen place-items-center">

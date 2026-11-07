@@ -135,6 +135,7 @@ export default function ReportsPage() {
   const closedToday = (closes?.items ?? []).some((a) => a.entityId === today);
   return (
     <div>
+      <style media="print">{"@page { size: A4 landscape; }"}</style>
       <PageHeader icon={<BarChart3 className="size-5" />} title={L("گزارش‌ها", "Reports")} subtitle={L("قالب‌های آماده، فیلتر، خروجی CSV/Excel/PDF، ارسال زمان‌بندی‌شده ایمیل و بستن روز (Daily Close)", "Ready templates, filters, CSV/Excel/PDF export, scheduled e-mail and Daily Close")} />
       <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
         <div className="flex flex-col gap-4 print:hidden">

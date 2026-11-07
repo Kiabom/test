@@ -60,6 +60,7 @@ function Inner() {
 
   return (
     <div>
+      <style media="print">{"@page { size: A4 landscape; }"}</style>
       <PageHeader
         icon={<Receipt className="size-5" />}
         title={L("تراکنش‌ها و تیکت‌ها", "Transactions & tickets")}

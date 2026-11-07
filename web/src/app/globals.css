@@ -195,11 +195,60 @@ body {
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 12mm 10mm;
+  }
   .no-print {
     display: none !important;
   }
+  html,
   body {
-    background: #fff;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* controls are not part of the document */
+  .app-main button,
+  .app-main select,
+  .app-main input,
+  .app-main [role="tablist"],
+  .page-header p {
+    display: none !important;
+  }
+  /* an invoice/statement is its own document: no app letterhead or page title */
+  .app-main:has(.print-doc) .print-header,
+  .app-main:has(.print-doc) .page-header {
+    display: none !important;
+  }
+  /* let tables use the full page and continue onto the next pages */
+  .app-main .overflow-auto,
+  .app-main .overflow-x-auto,
+  .app-main .overflow-y-auto,
+  .app-main .overflow-hidden {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  .app-main table {
+    width: 100% !important;
+    font-size: 8.5pt;
+    border-collapse: collapse;
+  }
+  .app-main thead {
+    display: table-header-group;
+    position: static !important;
+  }
+  .app-main th,
+  .app-main td {
+    white-space: normal !important;
+    padding: 3px 5px !important;
+    border-bottom: 0.5pt solid #bbb;
+  }
+  .app-main tr {
+    break-inside: avoid;
+  }
+  .app-main .rounded-xl {
+    box-shadow: none !important;
   }
 }
 
