@@ -64,8 +64,11 @@ export default function QueuePage() {
             <div className="flex min-h-40 flex-col gap-2">
               {c.items.map((v) => (
                 <Card key={v.id} className="p-2.5">
-                  <div className="flex items-center justify-between">
-                    <VehicleTag plate={v.plate} size="sm" />
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <span className="truncate text-sm font-bold">{(locale === "fa" ? v.driverName : v.driverNameEn) || "—"}</span>
+                      <VehicleTag vehicleId={v.vehicleId} size="xs" />
+                    </div>
                     <span className="num text-xs font-bold">#{v.queueNo}</span>
                   </div>
                   <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted">
@@ -86,7 +89,7 @@ export default function QueuePage() {
       </div>
       <Card className="mt-4">
         <CardHeader title={L("رزرو اسلات‌های امروز", "Today's slot bookings")} icon={<CalendarClock className="size-4" />} subtitle={L("زمان‌بندی نوبت حمل برای کاهش صف (ظرفیت ۲ خودرو در هر ۳۰ دقیقه)", "Haul slot scheduling to cut queues (2 trucks per 30 min)")} />
-        <Table head={[L("اسلات", "Slot"), L("تگ خودرو", "Vehicle tag"), L("راننده", "Driver"), L("حواله", "Permit"), L("وضعیت", "Status")]}>
+        <Table head={[L("اسلات", "Slot"), L("راننده / تگ خودرو", "Driver / vehicle tag"), L("حواله", "Permit"), L("وضعیت", "Status")]}>
           {bookings?.items.map((b) => {
             const v = masters?.vehicles.find((x) => x.id === b.vehicleId);
             const d = masters?.drivers.find((x) => x.id === b.driverId);
@@ -95,8 +98,10 @@ export default function QueuePage() {
                 <Td className="num">
                   {fmtTime(b.slotStart, locale)}–{fmtTime(b.slotEnd, locale)}
                 </Td>
-                <Td>{v && <VehicleTag plate={v.plate} size="xs" />}</Td>
-                <Td>{locale === "fa" ? d?.name : d?.nameEn}</Td>
+                <Td>
+                  <div className="text-sm font-semibold">{(locale === "fa" ? d?.name : d?.nameEn) ?? "—"}</div>
+                  {v && <VehicleTag vehicleId={v.id} size="xs" className="mt-1" />}
+                </Td>
                 <Td className="font-mono text-xs ltr">{masters?.permits.find((p) => p.id === b.permitId)?.permitNo}</Td>
                 <Td>
                   <Badge tone="info">{b.status}</Badge>
