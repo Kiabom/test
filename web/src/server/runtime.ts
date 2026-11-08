@@ -1,6 +1,7 @@
 import "server-only";
 import { resetClock } from "@/domain/clock";
 import { buildSeed } from "./seed";
+import { applyOverrides } from "./overrides";
 import { stageShowcase } from "./showcase";
 import { startSimulation } from "./sim";
 import { globalRef, type DB } from "./store";
@@ -8,6 +9,7 @@ import { globalRef, type DB } from "./store";
 function freshDb(): DB {
   resetClock();
   const d = buildSeed();
+  applyOverrides(d);
   stageShowcase(d);
   return d;
 }

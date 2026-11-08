@@ -160,7 +160,7 @@ export interface Masters {
 
 export function useMasters() {
   // master data rarely changes; own edits reload immediately via actNonce
-  return useFetch<Masters>("/api/data/masters", 60_000).data;
+  return useFetch<Masters>("/api/data/masters", 3000).data;
 }
 
 export class ActionError extends Error {

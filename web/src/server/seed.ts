@@ -89,9 +89,9 @@ function masters(r: Rand, now: number) {
     dev("EDGE-1", undefined, "EDGE_GATEWAY", "Edge Gateway سایت", "Fanless IPC + UPS", "HTTPS/mTLS", "10.10.0.2"),
   ];
   const materials: T.Material[] = [
-    { id: "M-FEL", code: "FE-LUMP", name: "سنگ آهن هماتیت دانه‌بندی", nameEn: "Hematite lump ore", grade: "Fe 54%", densityKgM3: 2400, pricePerTon: 4_200_000, color: "#8c2f1b", requiresQc: false, internalOnly: false },
-    { id: "M-FEC", code: "FE-CON", name: "کنسانتره هماتیت", nameEn: "Hematite concentrate", grade: "Fe 64%", densityKgM3: 2200, pricePerTon: 6_800_000, color: "#343a40", requiresQc: false, internalOnly: false },
-    { id: "M-PEL", code: "FE-FINE", name: "سنگ آهن نرمه", nameEn: "Iron ore fines", grade: "Fe 50%", densityKgM3: 2300, pricePerTon: 3_100_000, color: "#5c4033", requiresQc: false, internalOnly: false },
+    { id: "M-FEL", code: "FE-HG", name: "سنگ آهن پرعیار مگنتیتی", nameEn: "High-grade magnetite ore", grade: "Fe 56% · S<0.3%", densityKgM3: 2600, pricePerTon: 4_600_000, color: "#7a2e1b", requiresQc: false, internalOnly: false },
+    { id: "M-FEC", code: "FE-LG", name: "سنگ آهن کم‌عیار", nameEn: "Low-grade iron ore", grade: "Fe 45%", densityKgM3: 2350, pricePerTon: 2_700_000, color: "#8d6e63", requiresQc: false, internalOnly: false },
+    { id: "M-PEL", code: "FE-SUL", name: "سنگ آهن سولفیدی (پرگوگرد)", nameEn: "Sulphide iron ore (high-S)", grade: "Fe 50% · S 1.5%", densityKgM3: 2500, pricePerTon: 3_200_000, color: "#b7950b", requiresQc: false, internalOnly: false },
     { id: "M-WST", code: "WASTE", name: "باطله", nameEn: "Waste rock", grade: "—", densityKgM3: 1800, pricePerTon: 0, color: "#868e96", requiresQc: false, internalOnly: true },
   ];
   const customers: T.Customer[] = [
@@ -111,9 +111,9 @@ function masters(r: Rand, now: number) {
   const locations: T.Location[] = [
     { id: "LOC-PN", name: "پیت شمالی", nameEn: "North pit", type: "PIT" },
     { id: "LOC-PS", name: "پیت جنوبی", nameEn: "South pit", type: "PIT" },
-    { id: "LOC-SP1", name: "دپو ۱ — هماتیت دانه‌بندی", nameEn: "Stockpile 1 — lump", type: "STOCKPILE", materialId: "M-FEL", capacityT: 60000, openingT: 31500 },
-    { id: "LOC-SP2", name: "دپو ۲ — کنسانتره", nameEn: "Stockpile 2 — concentrate", type: "STOCKPILE", materialId: "M-FEC", capacityT: 40000, openingT: 17800 },
-    { id: "LOC-SP3", name: "دپو ۳ — نرمه", nameEn: "Stockpile 3 — fines", type: "STOCKPILE", materialId: "M-PEL", capacityT: 30000, openingT: 12400 },
+    { id: "LOC-SP1", name: "دپو پرعیار", nameEn: "High-grade stockpile", type: "STOCKPILE", materialId: "M-FEL", capacityT: 60000, openingT: 31500 },
+    { id: "LOC-SP2", name: "دپو کم‌عیار", nameEn: "Low-grade stockpile", type: "STOCKPILE", materialId: "M-FEC", capacityT: 40000, openingT: 17800 },
+    { id: "LOC-SP3", name: "دپو سولفیدی پشت", nameEn: "Back sulphide stockpile", type: "STOCKPILE", materialId: "M-PEL", capacityT: 30000, openingT: 12400 },
     { id: "LOC-CR", name: "سنگ‌شکن اولیه", nameEn: "Primary crusher", type: "CRUSHER" },
     { id: "LOC-PL", name: "کارخانه فرآوری", nameEn: "Processing plant", type: "PLANT" },
     { id: "LOC-DMP", name: "دامپ باطله", nameEn: "Waste dump", type: "DUMP" },
@@ -278,7 +278,7 @@ export function buildSeed(): DB {
     { origin: "LOC-PN", dest: "LOC-SP1", material: "M-FEL" },
     { origin: "LOC-PS", dest: "LOC-DMP", material: "M-WST" },
     { origin: "LOC-PS", dest: "LOC-SP3", material: "M-PEL" },
-    { origin: "LOC-PL", dest: "LOC-SP2", material: "M-FEC" },
+    { origin: "LOC-PS", dest: "LOC-SP2", material: "M-FEC" },
   ];
   const STOCK_OF: Record<string, string> = { "M-FEL": "LOC-SP1", "M-FEC": "LOC-SP2", "M-PEL": "LOC-SP3" };
   let trIdx = 0;

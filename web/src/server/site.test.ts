@@ -103,3 +103,17 @@ describe("internal hauls, stockpiles, guest entry, master create", () => {
     expect(() => dispatch(d, "master.create", { collection: "vehicles", data: { rfidEpc: "E280-9999-0000-0001" } }, "U-ADMIN")).toThrow();
   });
 });
+
+describe("master-data overrides", () => {
+  it("re-applies saved edits on top of the locked seed", async () => {
+    const { applyOverrides } = await import("./overrides");
+    const d = buildSeed();
+    applyOverrides(d, [
+      { kind: "update", col: "materials", id: "M-PEL", data: { name: "سولفیدی پشت فک" } },
+      { kind: "create", col: "carriers", id: "CR-9", data: { name: "حمل نمونه", nameEn: "X", regNo: "1", phone: "1", status: "ACTIVE" } },
+    ]);
+    expect(d.materials.find((m) => m.id === "M-PEL")!.name).toBe("سولفیدی پشت فک");
+    expect(d.carriers.some((c) => c.id === "CR-9")).toBe(true);
+    expect(buildSeed().materials.find((m) => m.id === "M-FEL")!.name).toBe("سنگ آهن پرعیار مگنتیتی");
+  });
+});

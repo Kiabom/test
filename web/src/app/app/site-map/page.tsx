@@ -130,9 +130,9 @@ export default function SiteMap() {
 
               {/* stockpile labels */}
               {[
-                [95, 432, "هماتیت دانه‌بندی", "Lump"],
-                [190, 444, "کنسانتره", "Concentrate"],
-                [272, 436, "نرمه", "Fines"],
+                [95, 432, "دپو پرعیار", "High-grade"],
+                [190, 444, "دپو کم‌عیار", "Low-grade"],
+                [272, 436, "سولفیدی پشت", "Sulphide"],
               ].map(([x, y, fa, en]) => (
                 <span key={en as string} className="absolute -translate-x-1/2 text-[10px] font-medium text-[#5b4b36] dark:text-white/70" style={{ left: `${(x as number) / 10}%`, top: `${((y as number) / 640) * 100}%` }}>
                   {nm(fa as string, en as string)}

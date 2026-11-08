@@ -9,9 +9,9 @@ type Index = { byPlate: Map<string, Vehicle>; byId: Map<string, Vehicle> };
 let cache: Promise<Index> | null = null;
 let cacheAt = 0;
 
-/** Vehicle registry shared by every tag on the page (one request, refreshed every minute). */
+/** Vehicle registry shared by every tag on the page (one request, refreshed every few seconds). */
 function loadIndex(): Promise<Index> {
-  if (!cache || Date.now() - cacheAt > 60_000) {
+  if (!cache || Date.now() - cacheAt > 5_000) {
     cacheAt = Date.now();
     cache = fetch("/api/data/masters")
       .then((r) => r.json())

@@ -32,7 +32,14 @@ export default function DriverDisplay({ params }: { params: Promise<{ lane: stri
           <TrafficLight state={g.light} size={140} />
         </div>
         <div className="flex flex-col items-center gap-8 text-center">
-          {v ? <VehicleTag plate={v.plate} size="xxl" /> : <div className="dotmatrix text-6xl text-zinc-600">— — —</div>}
+          {v ? (
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-7xl font-black leading-tight text-white">{(locale === "fa" ? v.driverName : v.driverNameEn) !== "—" ? (locale === "fa" ? v.driverName : v.driverNameEn) : L("راننده نامشخص", "Unknown driver")}</div>
+              <VehicleTag vehicleId={v.vehicleId} size="xl" className="border-zinc-600 bg-zinc-800 text-zinc-100" />
+            </div>
+          ) : (
+            <div className="dotmatrix text-6xl text-zinc-600">{L("لاین آزاد", "Lane free")}</div>
+          )}
           <div className={cx("dotmatrix font-black leading-tight", (locale === "fa" ? g.fa : g.en).length > 40 ? "text-6xl" : "text-7xl")} style={{ color }}>
             {locale === "fa" ? g.fa : g.en}
           </div>

@@ -68,6 +68,7 @@ export default function StockpilesPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-bold">{nm(p)}</div>
+                  <div className="text-xs text-muted">{nm(masters?.materials.find((x) => x.id === p.materialId))}</div>
                   <div className="num mt-1 text-2xl font-black">
                     {fmtT(p.balanceT, locale, 0)} <span className="text-sm font-medium text-muted">{L("تن", "t")}</span>
                   </div>

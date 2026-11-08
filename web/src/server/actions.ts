@@ -6,6 +6,7 @@ import { ackAlert, captureWeigh, finalizeTx, findTx, findVisit, gateDecide, gues
 import { enqueueDemoSms, runScenario, setScene } from "./sim";
 import { audit, bump, enqueueOutbox, log, nextId, nowIso, raiseAlert, type DB } from "./store";
 import { resetDb } from "./runtime";
+import { recordOverride } from "./overrides";
 
 type Payload = Record<string, unknown>;
 const str = (p: Payload, k: string) => (typeof p[k] === "string" ? (p[k] as string) : "");
@@ -231,6 +232,7 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
         delete item.plateText;
       }
       list.push(item as never);
+      recordOverride({ kind: "create", col, id, data: item });
       audit(d, "master.created", col, id, { actorId, data });
       bump(d);
       return item;
@@ -249,6 +251,7 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
       const before: Record<string, unknown> = {};
       for (const k of Object.keys(patch)) before[k] = (item as Record<string, unknown>)[k];
       Object.assign(item, patch);
+      recordOverride({ kind: "update", col, id: item.id, data: patch });
       audit(d, "master.updated", col, item.id, { actorId, data: { before, after: patch } });
       bump(d);
       return item;
@@ -260,6 +263,7 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
       if (ids.some((id) => !d.drivers.some((x) => x.id === id))) throw new OpError("NOT_FOUND", "راننده پیدا نشد");
       const before = [...(v.authorizedDriverIds ?? [])];
       v.authorizedDriverIds = ids;
+      recordOverride({ kind: "update", col: "vehicles", id: v.id, data: { authorizedDriverIds: ids } });
       audit(d, "vehicle.drivers.updated", "Vehicle", v.id, { actorId, data: { before, after: ids } });
       bump(d);
       return v;
@@ -272,6 +276,7 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
         throw new OpError("DUPLICATE", "این تگ قبلاً به راننده یا خودروی دیگری داده شده است");
       const before = dr.rfidTag;
       dr.rfidTag = tag || undefined;
+      recordOverride({ kind: "update", col: "drivers", id: dr.id, data: { rfidTag: dr.rfidTag } });
       audit(d, "driver.tag.updated", "Driver", dr.id, { actorId, data: { before, after: dr.rfidTag } });
       bump(d);
       return dr;

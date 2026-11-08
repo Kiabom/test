@@ -3,7 +3,7 @@ import { VehicleTag } from "@/components/domain/VehicleTag";
 import { cx } from "@/components/ui";
 import { fmtTime } from "@/lib/format";
 import { useLive, useNow } from "@/lib/live";
-import { useL } from "@/lib/prefs";
+import { useL, useLocale } from "@/lib/prefs";
 
 /** Parking-lot call board — one column per lane, "next" and "waiting" rows, green/red status. */
 export default function QueueBoard() {
@@ -36,13 +36,13 @@ export default function QueueBoard() {
               <div className={cx("px-4 py-2 text-center text-xl font-bold", busy ? "bg-red-600" : "bg-emerald-600")}>{lane?.locked ? L("خارج از سرویس", "Out of service") : busy ? L("مشغول", "Busy") : L("آزاد", "Free")}</div>
               <div className="flex min-h-28 flex-col items-center justify-center gap-2 bg-zinc-900 p-3">
                 <div className="text-sm text-zinc-400">{L("روی لاین", "On lane")}</div>
-                {onLane ? <VehicleTag plate={onLane.plate} size="md" /> : <div className="text-zinc-600">—</div>}
+                {onLane ? <Who v={onLane} size="md" /> : <div className="text-zinc-600">—</div>}
               </div>
               <div className="flex min-h-36 flex-col items-center justify-center gap-2 bg-zinc-800/70 p-3">
                 <div className="text-lg font-bold text-amber-300">{L("نفر بعد ▶", "NEXT ▶")}</div>
                 {next ? (
                   <>
-                    <VehicleTag plate={next.plate} size="lg" />
+                    <Who v={next} size="lg" />
                     <div className="led text-3xl text-amber-300">#{next.queueNo}</div>
                   </>
                 ) : (
@@ -55,7 +55,7 @@ export default function QueueBoard() {
                   const v = live?.visits[id];
                   return v ? (
                     <div key={id} className="flex items-center justify-between">
-                      <VehicleTag plate={v.plate} size="sm" />
+                      <Who v={v} size="sm" />
                       <span className="led text-xl text-zinc-300">#{v.queueNo}</span>
                     </div>
                   ) : null;
@@ -66,6 +66,18 @@ export default function QueueBoard() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** Driver name (what the driver looks for) with the vehicle tag underneath. */
+function Who({ v, size }: { v: { driverName: string; driverNameEn: string; vehicleId: string }; size: "sm" | "md" | "lg" }) {
+  const locale = useLocale();
+  const name = locale === "fa" ? v.driverName : v.driverNameEn;
+  return (
+    <div className={cx("flex flex-col gap-1", size === "sm" ? "items-start" : "items-center")}>
+      <span className={cx("font-bold text-white", size === "lg" ? "text-3xl" : size === "md" ? "text-xl" : "text-base")}>{name && name !== "—" ? name : "—"}</span>
+      <VehicleTag vehicleId={v.vehicleId} size={size === "lg" ? "md" : "xs"} className="border-zinc-600 bg-zinc-800 text-zinc-200" />
     </div>
   );
 }

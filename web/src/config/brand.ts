@@ -12,6 +12,6 @@ export const SITE = {
   nameEn: "Jalalabad Iron Ore Mine",
   place: "زرند، استان کرمان",
   placeEn: "Zarand, Kerman Province",
-  plant: "کارخانه کنسانتره جلال‌آباد",
-  plantEn: "Jalalabad concentrate plant",
+  plant: "کارخانه فرآوری جلال‌آباد",
+  plantEn: "Jalalabad processing plant",
 };
