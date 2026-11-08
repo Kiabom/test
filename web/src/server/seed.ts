@@ -121,7 +121,7 @@ function masters(r: Rand, now: number) {
   const shifts: T.Shift[] = [
     { id: "SH-A", siteId: "S1", code: "A", name: "شیفت صبح", nameEn: "Morning", startHour: 6, endHour: 14, targetTons: 1100 },
     { id: "SH-B", siteId: "S1", code: "B", name: "شیفت عصر", nameEn: "Evening", startHour: 14, endHour: 22, targetTons: 1000 },
-    { id: "SH-C", siteId: "S1", code: "C", name: "شیفت شب", nameEn: "Night", startHour: 22, endHour: 6, targetTons: 350 },
+    { id: "SH-C", siteId: "S1", code: "C", name: "شیفت شب", nameEn: "Night", startHour: 22, endHour: 6, targetTons: 900 },
   ];
   const equipment: T.Equipment[] = [
     { id: "EQ-L1", code: "L-01", type: "LOADER", name: "لودر L-01", nameEn: "Loader L-01", status: "WORKING", ratedBucketKg: 7000 },
@@ -591,11 +591,12 @@ export function buildSeed(): DB {
   );
 
   // fleet cycles for internal tippers (today's shifts)
-  const shiftStart = now - 8 * 3600_000;
+  // a service (loader queue → load → haul → dump → empty return) takes about an hour; cycles run from 00:00 site time
+  const shiftStart = now - ((now + 210 * MIN) % DAY);
   for (const v of internalV) {
     let t = shiftStart + int(r, 0, 20) * MIN;
-    while (t < now - 40 * MIN) {
-      const c: T.FleetCycle = { id: id("FC"), vehicleId: v.id, shiftCode: shiftOf(new Date(t)), start: iso(t), loadMin: Number(range(r, 3, 7).toFixed(1)), haulMin: Number(range(r, 8, 14).toFixed(1)), queueMin: Number(Math.max(0, gauss(r, 4, 3)).toFixed(1)), dumpMin: Number(range(r, 1.5, 3).toFixed(1)), returnMin: Number(range(r, 6, 11).toFixed(1)), payloadKg: Math.round(range(r, 15500, 19500)), equipmentId: pick(r, ["EQ-L1", "EQ-L2", "EQ-S1"]) };
+    while (t < now - 70 * MIN) {
+      const c: T.FleetCycle = { id: id("FC"), vehicleId: v.id, shiftCode: shiftOf(new Date(t)), start: iso(t), loadMin: Number(range(r, 8, 12).toFixed(1)), haulMin: Number(range(r, 18, 24).toFixed(1)), queueMin: Number(Math.max(1, gauss(r, 8, 4)).toFixed(1)), dumpMin: Number(range(r, 3, 5).toFixed(1)), returnMin: Number(range(r, 14, 18).toFixed(1)), payloadKg: Math.round(range(r, 15500, 19500)), equipmentId: pick(r, ["EQ-L1", "EQ-L2", "EQ-S1"]) };
       d.fleetCycles.push(c);
       t += (c.loadMin + c.haulMin + c.queueMin + c.dumpMin + c.returnMin) * MIN;
     }

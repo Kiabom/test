@@ -432,7 +432,7 @@ export function mapView(d: DB) {
     .filter((v) => v.internal && v.status === "ACTIVE")
     .map((v, i) => {
       const cyc = d.fleetCycles.filter((c) => c.vehicleId === v.id).slice(-6);
-      const cycleMin = cyc.length ? cyc.reduce((a, c) => a + c.loadMin + c.haulMin + c.queueMin + c.dumpMin + c.returnMin, 0) / cyc.length : 32;
+      const cycleMin = cyc.length ? cyc.reduce((a, c) => a + c.loadMin + c.haulMin + c.queueMin + c.dumpMin + c.returnMin, 0) / cyc.length : 60;
       return { id: v.id, plate: v.plate, plateNormalized: v.plateNormalized, loop: i % 3 === 2 ? "DUMP" : "HAUL", cycleMin: Math.round(cycleMin * 10) / 10, offsetMin: (i * 7.3) % cycleMin };
     });
 
