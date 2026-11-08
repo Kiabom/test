@@ -485,6 +485,12 @@ export interface ExitPermit {
   consumedAt?: ISO;
   consumedBy?: ID;
   scans: { at: ISO; by: ID; result: "ACCEPTED" | "REJECTED_USED" | "REJECTED_INVALID" | "REJECTED_CANCELLED" }[];
+  /** issued by hand at the exit-permits desk (not from a weighed trip) */
+  manual?: boolean;
+  vehicleId?: ID;
+  driverId?: ID;
+  reason?: string;
+  validUntil?: ISO;
 }
 
 export interface LidarScan {

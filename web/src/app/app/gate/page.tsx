@@ -132,7 +132,7 @@ export default function GatePage() {
                   <VisitTimeline visit={d.visit} events={{ ARRIVED: d.visit.arrivedAt, IN_SITE: d.visit.enteredAt, EXITED: d.visit.exitedAt }} />
                 </div>
               </Card>
-              <IdentityFusionCard identity={d.visit.identity} plate={d.vehicle.plate} vehicleStatus={d.vehicle.status} driverName={locale === "fa" ? d.driver?.name : d.driver?.nameEn} carrierName={locale === "fa" ? d.carrier?.name : d.carrier?.nameEn} />
+              <IdentityFusionCard identity={d.visit.identity} plate={d.vehicle.plate} vehicleId={d.vehicle.id} driverId={d.driver?.id} vehicleStatus={d.vehicle.status} driverName={locale === "fa" ? d.driver?.name : d.driver?.nameEn} carrierName={locale === "fa" ? d.carrier?.name : d.carrier?.nameEn} />
               <Card>
                 <CardHeader title={L("تصمیم گیت (مرحله‌به‌مرحله)", "Gate decision (step by step)")} subtitle={L("ایمنی ← هویت ← مدارک ← حواله ← هشدارها؛ PASS فقط درخواست باز شدن به PLC است", "Safety → identity → documents → permit → alerts; PASS only requests the PLC to open")} />
                 <div className="flex flex-col gap-3 p-4">

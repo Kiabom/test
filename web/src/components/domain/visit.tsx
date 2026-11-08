@@ -7,48 +7,68 @@ import { visitProgress, VISIT_STEPS } from "@/domain/workflow";
 import { Badge, Card, CardHeader, cx, Dialog, InDev, Kv } from "@/components/ui";
 import { CameraFeed, type CamView } from "@/components/hardware/CameraFeed";
 import { EVIDENCE_KIND, lbl, STAGE, STEP, DECISION_CODE, VISIT_STATE } from "@/i18n/labels";
-import { fmtDateTime, fmtPct, fmtTime, shortHash } from "@/lib/format";
+import { fmtDateTime, fmtTime, shortHash } from "@/lib/format";
+import { useMasters } from "@/lib/live";
 import { useL, useLocale } from "@/lib/prefs";
 
-export function IdentityFusionCard({ identity, plate, vehicleStatus, driverName, carrierName, compact }: { identity: Visit["identity"]; plate: Plate; vehicleStatus?: string; driverName?: string; carrierName?: string; compact?: boolean }) {
+export function IdentityFusionCard({ identity, plate, vehicleId, driverId, vehicleStatus, carrierName, compact }: { identity: Visit["identity"]; plate: Plate; vehicleId?: string; driverId?: string; vehicleStatus?: string; driverName?: string; carrierName?: string; compact?: boolean }) {
   const L = useL();
   const locale = useLocale();
-  const tone = identity.match === "MATCH" ? "success" : identity.match === "MISMATCH" ? "danger" : identity.match === "UNKNOWN" ? "warning" : "info";
-  const matchLabel = { MATCH: L("تطابق کامل ANPR + RFID", "ANPR + RFID match"), MISMATCH: L("مغایرت پلاک و RFID", "Plate / RFID mismatch"), PLATE_ONLY: L("فقط پلاک (تأییدشده)", "Plate only (confirmed)"), RFID_ONLY: L("فقط RFID", "RFID only"), UNKNOWN: L("هویت نامشخص", "Unknown identity") }[identity.match];
+  const masters = useMasters();
+  const vehicle = masters?.vehicles.find((v) => v.id === vehicleId);
+  const driver = masters?.drivers.find((x) => x.id === driverId);
+  const allowed = (vehicle?.authorizedDriverIds ?? []).map((id) => masters?.drivers.find((x) => x.id === id)).filter(Boolean);
+  const nm = (x?: { name: string; nameEn: string }) => (x ? (locale === "fa" ? x.name : x.nameEn) : "—");
+  const tagRead = !!identity.rfid;
+  const authorized = !!driver && !!vehicle?.authorizedDriverIds?.includes(driver.id);
+  const status: { tone: "success" | "danger" | "warning"; text: string } =
+    vehicleStatus === "BLOCKED"
+      ? { tone: "danger", text: L("خودرو مسدود است", "Vehicle is blocked") }
+      : vehicleStatus === "GUEST"
+        ? { tone: "warning", text: L("خودرو مهمان — بدون تگ ثبت‌شده", "Guest vehicle — no registered tag") }
+        : !tagRead
+          ? { tone: "warning", text: L("تگ خودرو خوانده نشد", "Vehicle tag not read") }
+          : authorized
+            ? { tone: "success", text: L("راننده مجاز این خودرو است", "Driver is authorized for this vehicle") }
+            : { tone: "danger", text: L("این راننده با تگ این خودرو همخوانی ندارد", "This driver does not match this vehicle's tag") };
   return (
     <Card>
-      <CardHeader title={L("تطبیق هویت (Identity Fusion)", "Identity fusion")} icon={<Fingerprint className="size-4" />} actions={<Badge tone={tone}>{matchLabel}</Badge>} />
+      <CardHeader title={L("تطبیق تگ خودرو و راننده (RFID)", "Vehicle & driver tag match (RFID)")} icon={<Fingerprint className="size-4" />} actions={<Badge tone={status.tone}>{status.tone === "success" ? "✓ " : status.tone === "danger" ? "✕ " : ""}{status.text}</Badge>} />
       <div className={cx("grid gap-3 p-4", compact ? "" : "md:grid-cols-2")}>
         <div className="rounded-lg border border-border p-3">
           <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-muted">
-            <ScanLine className="size-4" /> ANPR <InDev />
+            <Radio className="size-4" /> {L("تگ خودرو", "Vehicle tag")}
           </div>
-          <VehicleTag plate={plate} size="md" highlight={identity.match === "MATCH"} />
-          <div className="mt-2 text-xs text-muted">
-            {L("خوانده‌شده", "Read")}: <span className="font-mono ltr">{identity.anpr?.plate ?? "—"}</span>
-          </div>
-          <div className="mt-1 flex items-center gap-2 text-xs">
-            {L("اطمینان", "Confidence")}:
-            <span className={cx("num font-bold", (identity.anpr?.confidence ?? 0) >= 0.85 ? "text-success" : "text-danger")}>{identity.anpr ? fmtPct(identity.anpr.confidence * 100, locale) : "—"}</span>
-            {identity.anprRear && <span className="text-muted">· {L("عقب", "rear")} {fmtPct(identity.anprRear.confidence * 100, locale)}</span>}
-          </div>
-        </div>
-        <div className="rounded-lg border border-border p-3">
-          <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-muted">
-            <Radio className="size-4" /> RFID UHF
-          </div>
-          {identity.rfid ? (
+          {tagRead ? (
             <>
-              <div className="num break-all font-mono text-sm">{identity.rfid.epc}</div>
-              <div className="mt-1 text-xs text-muted">RSSI {identity.rfid.rssi} dBm</div>
+              <VehicleTag plate={plate} vehicleId={vehicleId} size="md" highlight={authorized} />
+              <div className="num mt-2 break-all font-mono text-xs text-muted ltr">{identity.rfid!.epc}</div>
+              <div className="mt-1 text-xs text-muted">RSSI {identity.rfid!.rssi} dBm</div>
             </>
           ) : (
-            <div className="text-sm text-muted">{L("تگی خوانده نشد", "No tag read")}</div>
+            <div className="text-sm text-warning">{L("تگی خوانده نشد", "No tag read")}</div>
           )}
-          {driverName && <Kv k={L("راننده", "Driver")} v={driverName} />}
-          {carrierName && <Kv k={L("حمل‌کننده", "Carrier")} v={carrierName} />}
-          {vehicleStatus && vehicleStatus !== "ACTIVE" && <Badge tone={vehicleStatus === "GUEST" ? "warning" : "danger"}>{vehicleStatus === "GUEST" ? L("خودرو مهمان", "Guest vehicle") : L("خودرو مسدود", "Blocked vehicle")}</Badge>}
+          {carrierName && <Kv k={L("شرکت حمل", "Carrier")} v={carrierName} />}
         </div>
+        <div className={cx("rounded-lg border p-3", status.tone === "danger" && tagRead ? "border-danger/40 bg-danger/5" : "border-border")}>
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-muted">
+            <Radio className="size-4" /> {L("تگ کارت راننده", "Driver card tag")}
+          </div>
+          <div className="text-sm font-semibold">{nm(driver)}</div>
+          <div className="num mt-1 font-mono text-xs text-muted ltr">{driver?.rfidTag ?? "—"}</div>
+          <div className={cx("mt-2 flex items-center gap-1.5 text-xs font-semibold", authorized ? "text-success" : "text-danger")}>
+            {authorized ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
+            {authorized ? L("در فهرست راننده‌های مجاز این خودرو", "On this vehicle's authorized list") : L("در فهرست راننده‌های مجاز این خودرو نیست", "Not on this vehicle's authorized list")}
+          </div>
+          {!authorized && allowed.length > 0 && (
+            <div className="mt-2 text-xs text-muted">
+              {L("راننده‌های مجاز:", "Authorized drivers:")} {allowed.map((x) => nm(x)).join("، ")}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5 border-t border-border px-4 py-2 text-[11px] text-muted">
+        <ScanLine className="size-3.5" /> {L("پلاک‌خوان", "Plate reader")} <InDev />
       </div>
     </Card>
   );

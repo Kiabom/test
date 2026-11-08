@@ -52,3 +52,22 @@ describe("page access", () => {
     expect(canSee("site_manager", "/app/integrations")).toBe(false);
   });
 });
+
+describe("manual exit permit", () => {
+  it("is accepted once, rejected on reuse and after it expires", async () => {
+    const { issueManualExitPermit, consumeExitPermit } = await import("./ops");
+    const { initLive } = await import("./sim");
+    const d = buildSeed();
+    initLive(d);
+    const v = d.vehicles.find((x) => x.status === "ACTIVE" && !d.visits.some((s) => s.vehicleId === x.id && !["EXITED", "REJECTED", "CANCELLED", "EXPECTED"].includes(s.state)))!;
+    const ep = issueManualExitPermit(d, { vehicleId: v.id, driverId: v.authorizedDriverIds[0], reason: "انتقال به تعمیرگاه", hours: 4, empty: true }, "U-OP1");
+    expect(ep.manual).toBe(true);
+    expect(consumeExitPermit(d, ep.token, "U-GD1").ok).toBe(true);
+    expect(consumeExitPermit(d, ep.token, "U-GD1").ok).toBe(false);
+    const v2 = d.vehicles.filter((x) => x.status === "ACTIVE" && x.id !== v.id).at(-1)!;
+    const ep2 = issueManualExitPermit(d, { vehicleId: v2.id, driverId: v2.authorizedDriverIds[0], reason: "خروج اضطراری", hours: 1, empty: true }, "U-OP1");
+    ep2.validUntil = new Date(Date.now() - 365 * 864e5 * 10).toISOString();
+    const r = consumeExitPermit(d, ep2.token, "U-GD1");
+    expect(r.ok).toBe(false);
+  });
+});

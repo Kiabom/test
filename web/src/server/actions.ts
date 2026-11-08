@@ -2,7 +2,7 @@ import { clockNow } from "@/domain/clock";
 import { verifyChain } from "@/domain/audit";
 import { can, type Permission } from "@/domain/rbac";
 import type * as T from "@/domain/types";
-import { ackAlert, captureWeigh, finalizeTx, findTx, findVisit, gateDecide, issueExitPermit, lane, OpError, printTx, registerGuest, requestBarrierOpen, confirmBarrierOpen, scanAny, setDeduction, voidTx } from "./ops";
+import { ackAlert, captureWeigh, finalizeTx, findTx, findVisit, gateDecide, issueExitPermit, issueManualExitPermit, lane, OpError, printTx, registerGuest, requestBarrierOpen, confirmBarrierOpen, scanAny, setDeduction, voidTx } from "./ops";
 import { enqueueDemoSms, runScenario, setScene } from "./sim";
 import { audit, bump, enqueueOutbox, log, nextId, nowIso, raiseAlert, type DB } from "./store";
 import { resetDb } from "./runtime";
@@ -23,6 +23,7 @@ const PERMS: Record<string, Permission | null> = {
   "tx.notify": "tx.print",
   "exit.issue": "exit.issue",
   "exit.cancel": "exit.issue",
+  "exit.manual": "exit.issue",
   scan: "exit.scan",
   "uvss.decide": "gate.decide",
   "alert.status": "alert.manage",
@@ -110,6 +111,8 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
     }
     case "exit.issue":
       return issueExitPermit(d, str(p, "visitId"), actorId, !!p.empty);
+    case "exit.manual":
+      return issueManualExitPermit(d, { vehicleId: str(p, "vehicleId"), driverId: str(p, "driverId"), reason: str(p, "reason"), hours: num(p, "hours") || 4, empty: !!p.empty }, actorId);
     case "exit.cancel": {
       const ep = d.exitPermits.find((e) => e.id === str(p, "id"));
       if (!ep || ep.status !== "APPROVED") throw new OpError("NOT_CANCELLABLE");

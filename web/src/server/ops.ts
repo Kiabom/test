@@ -527,6 +527,65 @@ export function parseScan(d: DB, raw: string): { kind: "EXIT_PERMIT" | "TICKET" 
 }
 
 /** Atomic one-time consumption of an exit permit token. A second scan is rejected and raises R36. */
+/** Manual exit permit for a vehicle + driver, issued at the desk with a reason and a validity window. */
+export function issueManualExitPermit(d: DB, p: { vehicleId: string; driverId: string; reason: string; hours: number; empty: boolean }, actorId: string) {
+  const vehicle = findVehicle(d, p.vehicleId);
+  const driver = d.drivers.find((x) => x.id === p.driverId);
+  if (!vehicle || !driver) throw new OpError("NOT_FOUND");
+  if (!p.reason.trim()) throw new OpError("REASON_REQUIRED");
+  const now = clockNow();
+  let visit = d.visits.find((v) => v.vehicleId === vehicle.id && !["EXITED", "REJECTED", "CANCELLED", "EXPECTED"].includes(v.state));
+  if (!visit) {
+    visit = {
+      id: nextId(d, "VS"),
+      siteId: "S1",
+      vehicleId: vehicle.id,
+      driverId: driver.id,
+      state: "READY_TO_EXIT",
+      arrivedAt: new Date(now).toISOString(),
+      enteredAt: new Date(now).toISOString(),
+      queueNo: 0,
+      driverToken: token(8),
+      identity: { rfid: vehicle.rfidEpc ? { epc: vehicle.rfidEpc, rssi: -60, readId: "MANUAL" } : undefined, match: vehicle.rfidEpc ? "RFID_ONLY" : "UNKNOWN" },
+      transactionIds: [],
+      shiftCode: shiftOf(new Date(now)),
+      internal: vehicle.internal,
+      operation: vehicle.internal ? "INTERNAL" : "DISPATCH",
+      holdReasons: [],
+    };
+    d.visits.push(visit);
+  }
+  const old = d.exitPermits.find((e) => e.id === visit!.exitPermitId && e.status === "APPROVED");
+  if (old) old.status = "CANCELLED";
+  const ep: T.ExitPermit = {
+    id: nextId(d, "EP"),
+    serial: `EXM-${String(d.counters.EP ?? 0).padStart(4, "0")}`,
+    visitId: visit.id,
+    transactionIds: visit.transactionIds.filter((id) => findTx(d, id)?.state === "APPROVED"),
+    token: token(12),
+    status: "APPROVED",
+    empty: p.empty,
+    approvedBy: actorId,
+    approvedAt: nowIso(),
+    scans: [],
+    manual: true,
+    vehicleId: vehicle.id,
+    driverId: driver.id,
+    reason: p.reason.trim(),
+    validUntil: new Date(now + Math.max(1, p.hours) * 3_600_000).toISOString(),
+  };
+  d.exitPermits.push(ep);
+  visit.exitPermitId = ep.id;
+  visit.driverId = driver.id;
+  visit.prevState = visit.state;
+  visit.state = "READY_TO_EXIT";
+  if (!visit.laneCode && !d.live.queueGateOut.includes(visit.id)) d.live.queueGateOut.push(visit.id);
+  enqueueOutbox(d, "SMS", "exit.permit", ep.id, `مجوز خروج دستی ${ep.serial} برای خودرو ${vehicle.id} صادر شد. QR را در دروازه خروج نشان دهید: /d/${visit.driverToken}`, driver.phone);
+  audit(d, "exit.manual", "ExitPermit", ep.id, { actorId, reason: ep.reason, data: { serial: ep.serial, vehicleId: vehicle.id, driverId: driver.id, validUntil: ep.validUntil, empty: p.empty } });
+  bump(d);
+  return ep;
+}
+
 export function consumeExitPermit(d: DB, tokenValue: string, actorId: string): ScanResult {
   const ep = d.exitPermits.find((e) => e.token === tokenValue);
   if (!ep) return { ok: false, kind: "EXIT_PERMIT", reason: "INVALID" };
@@ -537,6 +596,12 @@ export function consumeExitPermit(d: DB, tokenValue: string, actorId: string): S
     audit(d, "exit.rejected_reuse", "ExitPermit", ep.id, { actorId });
     bump(d);
     return { ok: false, kind: "EXIT_PERMIT", reason: "USED", permit: ep, visit, usedAt: ep.consumedAt, usedBy: ep.consumedBy };
+  }
+  if (ep.status === "APPROVED" && ep.validUntil && ep.validUntil < nowIso()) {
+    ep.scans.push({ at: nowIso(), by: actorId, result: "REJECTED_INVALID" });
+    audit(d, "exit.rejected_expired", "ExitPermit", ep.id, { actorId });
+    bump(d);
+    return { ok: false, kind: "EXIT_PERMIT", reason: "INVALID", permit: ep, visit };
   }
   if (ep.status !== "APPROVED") {
     ep.scans.push({ at: nowIso(), by: actorId, result: "REJECTED_CANCELLED" });
