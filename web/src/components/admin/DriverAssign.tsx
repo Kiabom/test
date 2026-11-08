@@ -1,7 +1,7 @@
 "use client";
 import { Pencil, Plus, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { Badge, Button, Card, CardHeader, Dialog, Field, Input, Select, Table, Td, toast } from "@/components/ui";
 import type { Driver, Vehicle } from "@/domain/types";
 import { ERRORS, lbl } from "@/i18n/labels";
@@ -26,7 +26,7 @@ export function DriverAssign() {
     const s = q.trim().toUpperCase();
     return (m?.vehicles ?? [])
       .filter((v) => v.status !== "GUEST")
-      .filter((v) => !s || v.plateNormalized.toUpperCase().includes(s) || (v.rfidEpc ?? "").toUpperCase().includes(s) || v.authorizedDriverIds.some((id) => (drivers.find((x) => x.id === id)?.rfidTag ?? "").toUpperCase().includes(s)));
+      .filter((v) => !s || v.id.toUpperCase().includes(s) || v.plateNormalized.toUpperCase().includes(s) || (v.rfidEpc ?? "").toUpperCase().includes(s) || v.authorizedDriverIds.some((id) => (drivers.find((x) => x.id === id)?.rfidTag ?? "").toUpperCase().includes(s)));
   }, [m, q, drivers]);
   const fail = (e: unknown) => toast.error(e instanceof ActionError ? lbl(ERRORS, e.code, locale) : String(e));
 
@@ -39,15 +39,15 @@ export function DriverAssign() {
           actions={
             <div className="relative">
               <Search className="pointer-events-none absolute start-2.5 top-3 size-4 text-muted" />
-              <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("پلاک یا تگ…", "Plate or tag…")} className="h-10 w-56 ps-8" />
+              <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("کد خودرو یا تگ…", "Vehicle code or tag…")} className="h-10 w-56 ps-8" />
             </div>
           }
         />
-        <Table head={[L("پلاک", "Plate"), L("تگ خودرو", "Vehicle tag"), L("شرکت حمل", "Carrier"), L("راننده‌های مجاز", "Authorized drivers"), ""]}>
+        <Table head={[L("خودرو", "Vehicle"), L("تگ کامل", "Full tag"), L("شرکت حمل", "Carrier"), L("راننده‌های مجاز", "Authorized drivers"), ""]}>
           {vehicles.map((v) => (
             <tr key={v.id}>
               <Td>
-                <IranPlate plate={v.plate} size="xs" />
+                <VehicleTag plate={v.plate} size="xs" />
               </Td>
               <Td className="font-mono text-[11px] ltr">{v.rfidEpc ?? "—"}</Td>
               <Td className="text-xs">{carrierName(v.carrierId)}</Td>
@@ -140,7 +140,7 @@ function VehicleDrivers({ vehicle, drivers, onClose, onFail }: { vehicle: Vehicl
     >
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
-          <IranPlate plate={vehicle.plate} size="sm" />
+          <VehicleTag plate={vehicle.plate} size="sm" />
           <span className="font-mono text-[11px] text-muted ltr">{vehicle.rfidEpc}</span>
         </div>
         <div className="flex flex-col gap-1.5">

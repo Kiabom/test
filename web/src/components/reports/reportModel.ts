@@ -61,7 +61,7 @@ export interface ReportOut {
 export const DETAIL_COLS: (Col & { def?: boolean })[] = [
   { key: "ticket", fa: "تیکت", en: "Ticket", def: true },
   { key: "time", fa: "زمان", en: "Time", def: true },
-  { key: "plate", fa: "پلاک", en: "Plate", def: true },
+  { key: "plate", fa: "تگ خودرو", en: "Vehicle tag", def: true },
   { key: "driver", fa: "راننده", en: "Driver" },
   { key: "carrier", fa: "شرکت حمل", en: "Carrier" },
   { key: "customer", fa: "مشتری", en: "Customer", def: true },
@@ -95,7 +95,7 @@ export function buildReport(tpl: TplId, txs: Transaction[], ctx: ModelCtx, opts:
   const nm = (x?: { name: string; nameEn?: string }) => (x ? (fa ? x.name : x.nameEn ?? x.name) : "—");
   const plate = (id: string) => {
     const v = m?.vehicles.find((x) => x.id === id);
-    return v ? plateText(v.plate, locale) : id;
+    return v ? `${v.id} · ${(v.rfidEpc ?? "").split("-").slice(-2).join("-")}` : id;
   };
   const shiftName = (c: string) => nm(m?.shifts.find((s) => s.code === c)) + ` (${c})`;
   const dayLabel = (iso: string) => (fa ? faDigits(jKey(toJDate(new Date(iso).getTime()))) : jKey(toJDate(new Date(iso).getTime())));
@@ -229,7 +229,7 @@ export function buildReport(tpl: TplId, txs: Transaction[], ctx: ModelCtx, opts:
     const rejected = vs.filter((v) => v.state === "REJECTED");
     const open = vs.filter((v) => !["EXITED", "REJECTED", "CANCELLED"].includes(v.state));
     const cols: Col[] = [
-      { key: "plate", fa: "پلاک", en: "Plate" },
+      { key: "plate", fa: "تگ خودرو", en: "Vehicle tag" },
       { key: "arrived", fa: "ورود", en: "Arrived" },
       { key: "exited", fa: "خروج", en: "Exited" },
       { key: "state", fa: "وضعیت", en: "State" },
@@ -259,7 +259,7 @@ export function buildReport(tpl: TplId, txs: Transaction[], ctx: ModelCtx, opts:
     const cols: Col[] = [
       { key: "ticket", fa: "تیکت", en: "Ticket" },
       { key: "time", fa: "زمان", en: "Time" },
-      { key: "plate", fa: "پلاک", en: "Plate" },
+      { key: "plate", fa: "تگ خودرو", en: "Vehicle tag" },
       { key: "state", fa: "وضعیت", en: "State" },
       { key: "reasons", fa: "قواعد / دلایل", en: "Rules / reasons" },
       { key: "ver", fa: "نسخه", en: "Ver", num: true },

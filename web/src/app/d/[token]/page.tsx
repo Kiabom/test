@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { use, useMemo, useState } from "react";
 import { origin, Qr } from "@/components/domain/codes";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { TrafficLight } from "@/components/domain/indicators";
 import { NavButtons } from "@/components/map/NavButtons";
 import { Logo } from "@/components/shell/Logo";
@@ -92,7 +92,7 @@ export default function DriverPortal({ params }: { params: Promise<{ token: stri
       </div>
       <div className="flex flex-col gap-3 p-4">
         <Card className="flex items-center justify-between gap-3 p-3">
-          <IranPlate plate={data.vehicle.plate} size="md" />
+          <VehicleTag plate={data.vehicle.plate} size="md" />
           <div className="text-end text-xs text-muted">
             <div>{locale === "fa" ? data.driver?.name : data.driver?.nameEn}</div>
             <div>

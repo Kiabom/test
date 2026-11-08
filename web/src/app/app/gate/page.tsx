@@ -3,13 +3,13 @@ import { clockNow } from "@/domain/clock";
 import { Ban, CheckCircle2, DoorOpen, FileWarning, QrCode, ShieldAlert, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { BarrierIcon, TrafficLight } from "@/components/domain/indicators";
 import { decisionStatus } from "@/components/domain/lanes";
 import { EvidenceGallery, GateDecisionTrace, IdentityFusionCard, VisitTimeline } from "@/components/domain/visit";
 import { CameraFeed } from "@/components/hardware/CameraFeed";
 import { UvssImage } from "@/components/hardware/Devices";
-import { Badge, Button, Card, CardHeader, ConfirmDialog, cx, EmptyState, Input, Kv, PageHeader, StatusPill, Tabs, toast } from "@/components/ui";
+import { Badge, Button, Card, CardHeader, ConfirmDialog, cx, EmptyState, Input, Kv, PageHeader, StatusPill, Tabs, toast, InDev } from "@/components/ui";
 import { remainingKg } from "@/domain/permits";
 import { DECISION_CODE, ERRORS, lbl, PERMIT_STATUS, VISIT_STATE } from "@/i18n/labels";
 import { fmtDate, fmtDuration, fmtKg, fmtTime } from "@/lib/format";
@@ -75,7 +75,7 @@ export default function GatePage() {
         {/* cameras */}
         <div className="flex flex-col gap-3">
           <Card>
-            <CardHeader title={L("دوربین‌ها و اسکن زیر خودرو", "Cameras & under-vehicle scan")} />
+            <CardHeader title={<>{L("دوربین‌ها و اسکن زیر خودرو", "Cameras & under-vehicle scan")}<InDev /></>} />
             <div className="grid grid-cols-2 gap-2 p-3">
               <CameraFeed view={d ? "front" : "empty"} plate={d?.vehicle.plate} color={d?.vehicle.color} loaded={tab === "in" ? d?.visit.operation === "RECEIVE" : d?.visit.operation !== "RECEIVE"} seed={evGate[0]?.seed ?? 11} label={tab === "in" ? "CAM-A-FRONT" : "CAM-E-FRONT"} at={live?.now} confidence={d?.visit.identity.anpr?.confidence} compact />
               <CameraFeed view={d ? "rear" : "empty"} plate={d?.vehicle.plate} loaded={tab === "in" ? d?.visit.operation === "RECEIVE" : d?.visit.operation !== "RECEIVE"} seed={evGate[1]?.seed ?? 12} label="CAM-A-REAR" at={live?.now} confidence={d?.visit.identity.anprRear?.confidence} compact />
@@ -116,7 +116,7 @@ export default function GatePage() {
               <Card className="p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <IranPlate plate={d.vehicle.plate} size="lg" />
+                    <VehicleTag plate={d.vehicle.plate} size="lg" />
                     <div>
                       <div className="text-sm font-semibold">
                         #{d.visit.queueNo} · {lbl(VISIT_STATE, d.visit.state, locale)}
@@ -230,7 +230,7 @@ export default function GatePage() {
               {held.map((h) => (
                 <li key={h.id}>
                   <button onClick={() => setSelected(h.id)} className={cx("flex w-full items-center gap-2 px-3 py-2 text-start hover:bg-surface-2", visitId === h.id && "bg-primary/5")}>
-                    <IranPlate plate={h.plate} size="xs" />
+                    <VehicleTag plate={h.plate} size="xs" />
                     <span className="flex-1 truncate text-xs text-danger">{h.holdReasons.map((r) => lbl(DECISION_CODE, r, locale)).join("، ")}</span>
                   </button>
                 </li>
@@ -248,7 +248,7 @@ export default function GatePage() {
             const dwell = live ? new Date(live.now).getTime() - new Date(v.arrivedAt).getTime() : 0;
             return (
               <div key={v.id} className="rounded-lg border border-border p-2">
-                <IranPlate plate={v.plate} size="sm" />
+                <VehicleTag plate={v.plate} size="sm" />
                 <div className="mt-1 text-[11px] text-muted">{lbl(VISIT_STATE, v.state, locale)}</div>
                 <div className={cx("num text-xs font-bold", dwell > 7.2e6 ? "text-danger" : dwell > 3.6e6 ? "text-warning" : "text-success")}>{fmtDuration(dwell, locale)}</div>
               </div>

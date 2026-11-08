@@ -4,12 +4,12 @@ import { CheckCircle2, Hand, Keyboard, LayoutGrid, Lock, Printer, Scale, Send, T
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Lines } from "@/components/charts";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { BarrierIcon, TrafficLight, WeightDisplay } from "@/components/domain/indicators";
 import { EvidenceGallery, VisitTimeline } from "@/components/domain/visit";
 import { CameraFeed } from "@/components/hardware/CameraFeed";
 import { ScaleDeckTop } from "@/components/hardware/ScaleDeck";
-import { Badge, Button, Card, CardHeader, ConfirmDialog, cx, Dialog, Field, Input, Kv, PageHeader, Segmented, StatusPill, toast } from "@/components/ui";
+import { Badge, Button, Card, CardHeader, ConfirmDialog, cx, Dialog, Field, Input, Kv, PageHeader, Segmented, StatusPill, toast, InDev } from "@/components/ui";
 import { guidanceFor } from "@/domain/driverGuidance";
 import { remainingKg } from "@/domain/permits";
 import { captureGuard } from "@/domain/weighing";
@@ -132,7 +132,7 @@ export default function WeighingPage() {
       <Card className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 p-3">
         {det ? (
           <>
-            <IranPlate plate={det.vehicle.plate} size="md" />
+            <VehicleTag plate={det.vehicle.plate} size="md" />
             <div className="text-sm">
               <div className="text-xs text-muted">RFID</div>
               {det.visit.identity.rfid ? <Badge tone="success">✓ {det.visit.identity.rfid.epc.slice(-9)}</Badge> : <Badge tone="warning">{L("بدون تگ", "No tag")}</Badge>}
@@ -269,7 +269,7 @@ export default function WeighingPage() {
 
           <div className="flex flex-col gap-4 xl:col-span-2">
             <Card>
-              <CardHeader title={L("موقعیت روی باسکول", "Position on deck")} subtitle={L("۴ پرتو IR + ماسک ROI دوربین بالا + ۸ لودسل", "4 IR beams + overhead ROI mask + 8 load cells")} actions={lane?.positionOk ? <StatusPill status="PASS" label={L("موقعیت صحیح", "Positioned")} /> : onDeck ? <StatusPill status="HOLD" label={L("موقعیت نادرست", "Not positioned")} /> : null} />
+              <CardHeader title={<>{L("موقعیت روی باسکول", "Position on deck")}<InDev /></>} subtitle={L("۴ پرتو IR + ماسک ROI دوربین بالا + ۸ لودسل", "4 IR beams + overhead ROI mask + 8 load cells")} actions={lane?.positionOk ? <StatusPill status="PASS" label={L("موقعیت صحیح", "Positioned")} /> : onDeck ? <StatusPill status="HOLD" label={L("موقعیت نادرست", "Not positioned")} /> : null} />
               <div className="p-3">
                 <ScaleDeckTop occupied={onDeck} beams={lane?.beams} positionOk={lane?.positionOk} offsetPct={lane?.truckOffsetPct} loaded={loadedNow} color={det?.vehicle.color} className="w-full" />
                 <div className="mt-2 flex items-center justify-between">
@@ -282,7 +282,7 @@ export default function WeighingPage() {
               </div>
             </Card>
             <Card>
-              <CardHeader title={L("دوربین‌های باسکول", "Scale cameras")} />
+              <CardHeader title={<>{L("دوربین‌های باسکول", "Scale cameras")}<InDev /></>} />
               <div className="grid grid-cols-2 gap-2 p-3">
                 {(["front", "rear", "top", "side"] as const).map((view, i) => (
                   <CameraFeed key={view} view={onDeck ? view : "empty"} plate={det?.vehicle.plate} color={det?.vehicle.color} loaded={loadedNow} seed={(det?.visit.queueNo ?? 1) * 13 + i} label={`CAM-${laneCode}-${view.toUpperCase()}`} at={live?.now} confidence={view === "front" ? det?.visit.identity.anpr?.confidence : undefined} roi={view === "top" && onDeck ? (lane?.positionOk ? "ok" : "bad") : undefined} compact />
@@ -291,7 +291,7 @@ export default function WeighingPage() {
             </Card>
             {det && (
               <Card>
-                <CardHeader title={L("شواهد ثبت‌شده", "Recorded evidence")} />
+                <CardHeader title={<>{L("شواهد ثبت‌شده", "Recorded evidence")}<InDev /></>} />
                 <div className="flex flex-col gap-3 p-3">
                   <EvidenceGallery evidence={[...camEv("SCALE_1"), ...camEv("SCALE_2")]} plate={det.vehicle.plate} color={det.vehicle.color} cols={4} />
                 </div>
@@ -304,7 +304,7 @@ export default function WeighingPage() {
                   {awaiting.map((v) => (
                     <li key={v.id}>
                       <button onClick={() => setPicked(v.id)} className={cx("flex w-full items-center gap-2 px-3 py-2 text-start hover:bg-surface-2", visitId === v.id && "bg-primary/5")}>
-                        <IranPlate plate={v.plate} size="xs" />
+                        <VehicleTag plate={v.plate} size="xs" />
                         <span className="flex-1 text-xs">{v.state === "HOLD" ? v.holdReasons.map((r) => lbl(DECISION_CODE, r, locale)).join("، ") : L("منتظر تأیید اپراتور", "Awaiting operator")}</span>
                       </button>
                     </li>
@@ -378,7 +378,7 @@ export default function WeighingPage() {
           </div>
           <div className="grid grid-cols-1 gap-2 text-sm">
             {[
-              [L("پلاک", "Vehicle No"), vehicle?.plateNormalized],
+              [L("تگ خودرو", "Vehicle tag"), `${vehicle?.id ?? ""} · ${vehicle?.rfidEpc ?? ""}`],
               [L("راننده", "Driver"), locale === "fa" ? det?.driver?.name : det?.driver?.nameEn],
               [L("مشتری / تأمین‌کننده", "Buyer / supplier"), masters?.customers.find((c) => c.id === det?.permit?.customerId)?.[locale === "fa" ? "name" : "nameEn"]],
               [L("کالا", "Product"), mat?.[locale === "fa" ? "name" : "nameEn"]],

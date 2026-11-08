@@ -1,5 +1,5 @@
 "use client";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { cx } from "@/components/ui";
 import { fmtTime } from "@/lib/format";
 import { useLive, useNow } from "@/lib/live";
@@ -36,13 +36,13 @@ export default function QueueBoard() {
               <div className={cx("px-4 py-2 text-center text-xl font-bold", busy ? "bg-red-600" : "bg-emerald-600")}>{lane?.locked ? L("خارج از سرویس", "Out of service") : busy ? L("مشغول", "Busy") : L("آزاد", "Free")}</div>
               <div className="flex min-h-28 flex-col items-center justify-center gap-2 bg-zinc-900 p-3">
                 <div className="text-sm text-zinc-400">{L("روی لاین", "On lane")}</div>
-                {onLane ? <IranPlate plate={onLane.plate} size="md" /> : <div className="text-zinc-600">—</div>}
+                {onLane ? <VehicleTag plate={onLane.plate} size="md" /> : <div className="text-zinc-600">—</div>}
               </div>
               <div className="flex min-h-36 flex-col items-center justify-center gap-2 bg-zinc-800/70 p-3">
                 <div className="text-lg font-bold text-amber-300">{L("نفر بعد ▶", "NEXT ▶")}</div>
                 {next ? (
                   <>
-                    <IranPlate plate={next.plate} size="lg" />
+                    <VehicleTag plate={next.plate} size="lg" />
                     <div className="led text-3xl text-amber-300">#{next.queueNo}</div>
                   </>
                 ) : (
@@ -55,7 +55,7 @@ export default function QueueBoard() {
                   const v = live?.visits[id];
                   return v ? (
                     <div key={id} className="flex items-center justify-between">
-                      <IranPlate plate={v.plate} size="sm" />
+                      <VehicleTag plate={v.plate} size="sm" />
                       <span className="led text-xl text-zinc-300">#{v.queueNo}</span>
                     </div>
                   ) : null;

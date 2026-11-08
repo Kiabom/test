@@ -1,5 +1,5 @@
 "use client";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { cx } from "@/components/ui";
 import { fmtNum, fmtTime } from "@/lib/format";
 import { useLive, useMasters, useNow, useView } from "@/lib/live";
@@ -48,7 +48,7 @@ export default function Wallboard() {
                 <span>Lane {l.code}</span>
                 <span className={cx("size-4 rounded-full", l.light === "GREEN" ? "bg-emerald-400" : l.light === "YELLOW" ? "bg-amber-400" : "bg-red-500")} />
               </div>
-              <div className="mt-3 flex h-14 items-center">{v ? <IranPlate plate={v.plate} size="md" /> : <span className="text-zinc-600">—</span>}</div>
+              <div className="mt-3 flex h-14 items-center">{v ? <VehicleTag plate={v.plate} size="md" /> : <span className="text-zinc-600">—</span>}</div>
               {l.kind === "SCALE" && <div className="led mt-3 text-5xl" style={{ color: l.stable ? "#22ff88" : "#ffb000" }}>{fmtNum(l.weightKg, "en")} kg</div>}
             </div>
           );
@@ -59,7 +59,7 @@ export default function Wallboard() {
           <div className="mb-3 text-xl text-zinc-400">{L("آخرین محموله‌ها", "Latest loads")}</div>
           {data?.recent.slice(0, 7).map((t) => (
             <div key={t.id} className="flex items-center justify-between border-b border-zinc-800 py-2 text-xl">
-              <IranPlate plate={t.plate} size="sm" />
+              <VehicleTag plate={t.plate} size="sm" />
               <span>{locale === "fa" ? masters?.materials.find((m) => m.id === t.materialId)?.name : masters?.materials.find((m) => m.id === t.materialId)?.nameEn}</span>
               <span className="num font-bold">{fmtNum(t.netKg, locale)} kg</span>
             </div>

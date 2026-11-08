@@ -1,4 +1,5 @@
 "use client";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { DoorOpen, Scale, ScanLine } from "lucide-react";
 import type { LaneLive } from "@/domain/types";
 import { guidanceFor } from "@/domain/driverGuidance";
@@ -8,7 +9,6 @@ import { lbl, DECISION_CODE, VISIT_STATE } from "@/i18n/labels";
 import { useL, useLocale } from "@/lib/prefs";
 import type { LiveData, VisitBrief } from "@/server/views";
 import { BarrierIcon, TrafficLight, WeightDisplay } from "./indicators";
-import { IranPlate } from "./IranPlate";
 
 export const laneName = (code: string, L: (a: string, b: string) => string) =>
   ({ A: L("لاین A — دروازه ورود", "Lane A — entry gate"), B: L("لاین B — باسکول ۱", "Lane B — scale 1"), C: L("لاین C — باسکول ۲", "Lane C — scale 2"), D: L("لاین D — گنتری LiDAR", "Lane D — LiDAR gantry"), E: L("لاین E — دروازه خروج", "Lane E — exit gate") })[code] ?? code;
@@ -42,7 +42,7 @@ export function LaneCard({ lane, live, dark }: { lane: LaneLive; live: LiveData;
       </div>
       <div className="flex flex-1 flex-col gap-2 p-3">
         <div className="flex items-center justify-between gap-2">
-          {v ? <IranPlate plate={v.plate} size="sm" /> : <span className={cx("text-xs", dark ? "text-white/50" : "text-muted")}>{L("لاین آزاد", "Lane free")}</span>}
+          {v ? <VehicleTag plate={v.plate} size="sm" /> : <span className={cx("text-xs", dark ? "text-white/50" : "text-muted")}>{L("لاین آزاد", "Lane free")}</span>}
           <div className="flex items-center gap-2">
             <BarrierIcon state={lane.barrier} ack={lane.barrierAck} width={64} />
             <TrafficLight state={lane.light} size={12} horizontal />

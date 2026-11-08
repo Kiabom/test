@@ -2,7 +2,7 @@
 import { clockNow } from "@/domain/clock";
 import { CheckCircle2, DoorOpen, Keyboard, ScanQrCode, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { QrScanner } from "@/components/domain/QrScanner";
 import { CameraFeed } from "@/components/hardware/CameraFeed";
 import { Badge, Button, Card, CardHeader, cx, Input, Kv, PageHeader, toast } from "@/components/ui";
@@ -107,7 +107,7 @@ export default function GuardPage() {
               </div>
               {resVehicle && (
                 <div className="mt-4 flex items-center gap-3 rounded-xl bg-white/15 p-3">
-                  <IranPlate plate={resVehicle.plate} size="md" />
+                  <VehicleTag plate={resVehicle.plate} size="md" />
                   <CameraFeed view="front" plate={resVehicle.plate} color={resVehicle.color} seed={resVehicle.id.length * 77} className="w-32" compact rec={false} />
                 </div>
               )}

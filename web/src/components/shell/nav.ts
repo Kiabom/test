@@ -41,6 +41,8 @@ export interface NavItem {
   en: string;
   icon: LucideIcon;
   badge?: "alerts" | "queue" | "holds";
+  /** feature still in development: labelled «(در دست توسعه)» */
+  dev?: boolean;
 }
 export interface NavGroup {
   fa: string;
@@ -55,11 +57,11 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/app", fa: "داشبورد", en: "Dashboard", icon: LayoutDashboard },
       { href: "/app/process", fa: "فرآیند و مراحل", en: "Process & steps", icon: Workflow },
-      { href: "/app/live", fa: "اتاق کنترل زنده", en: "Live control room", icon: MonitorPlay },
-      { href: "/app/map", fa: "نقشه ناوگان و رویدادها", en: "Fleet & events map", icon: Globe2 },
+      { href: "/app/live", fa: "اتاق کنترل زنده", en: "Live control room", icon: MonitorPlay, dev: true },
+      { href: "/app/map", fa: "نقشه ناوگان و رویدادها", en: "Fleet & events map", icon: Globe2, dev: true },
       { href: "/app/gate", fa: "دروازه / حراست", en: "Gate / security", icon: DoorOpen, badge: "holds" },
       { href: "/app/weighing", fa: "ایستگاه توزین", en: "Weighing station", icon: Scale },
-      { href: "/app/scan", fa: "مرکز اسکن", en: "Scan center", icon: ScanLine },
+      { href: "/app/scan", fa: "مرکز اسکن", en: "Scan center", icon: ScanLine, dev: true },
       { href: "/app/queue", fa: "صف و نوبت", en: "Queue & booking", icon: ListOrdered, badge: "queue" },
     ],
   },
@@ -86,8 +88,8 @@ export const NAV: NavGroup[] = [
     fa: "تولید معدنی",
     en: "Mine production",
     items: [
-      { href: "/app/modules/lidar", fa: "حجم‌سنجی LiDAR", en: "LiDAR volume", icon: Box },
-      { href: "/app/modules/payload", fa: "Payload لودر/شاول", en: "Loader payload", icon: Mountain },
+      { href: "/app/modules/lidar", fa: "حجم‌سنجی LiDAR", en: "LiDAR volume", icon: Box, dev: true },
+      { href: "/app/modules/payload", fa: "Payload لودر/شاول", en: "Loader payload", icon: Mountain, dev: true },
       { href: "/app/modules/fleet", fa: "KPI ناوگان", en: "Fleet KPIs", icon: Activity },
     ],
   },
@@ -96,7 +98,7 @@ export const NAV: NavGroup[] = [
     en: "Maintenance",
     items: [
       { href: "/app/devices", fa: "تجهیزات و سلامت", en: "Devices & health", icon: Wrench },
-      { href: "/app/hardware", fa: "کاتالوگ سخت‌افزار", en: "Hardware catalog", icon: Camera },
+      { href: "/app/hardware", fa: "کاتالوگ سخت‌افزار", en: "Hardware catalog", icon: Camera, dev: true },
       { href: "/app/site-map", fa: "نقشه سایت", en: "Site map", icon: Map },
     ],
   },
@@ -107,7 +109,7 @@ export const NAV: NavGroup[] = [
       { href: "/app/reports", fa: "گزارش‌ها", en: "Reports", icon: BarChart3 },
       { href: "/app/billing", fa: "صورت‌حساب", en: "Billing", icon: Wallet },
       { href: "/app/masters", fa: "اطلاعات پایه", en: "Master data", icon: Boxes },
-      { href: "/app/integrations", fa: "یکپارچه‌سازی ERP", en: "Integrations", icon: Cable },
+      { href: "/app/integrations", fa: "یکپارچه‌سازی ERP", en: "Integrations", icon: Cable, dev: true },
       { href: "/app/notifications", fa: "پیامک و اعلان‌ها", en: "SMS & notifications", icon: BellRing },
       { href: "/app/admin", fa: "مدیریت سامانه", en: "Administration", icon: Settings },
     ],
@@ -124,3 +126,7 @@ export const DISPLAY_LINKS = [
 ];
 
 export const EXTRA_ICONS = { Users, FlaskConical };
+
+/** Routes whose features are still in development. */
+export const DEV_ROUTES = NAV.flatMap((g) => g.items).filter((i) => i.dev).map((i) => i.href);
+export const IN_DEV = ["در دست توسعه", "In development"] as const;

@@ -1,7 +1,7 @@
 "use client";
 import { use } from "react";
 import { origin, Qr } from "@/components/domain/codes";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { TrafficLight } from "@/components/domain/indicators";
 import { laneName } from "@/components/domain/lanes";
 import { cx } from "@/components/ui";
@@ -32,7 +32,7 @@ export default function DriverDisplay({ params }: { params: Promise<{ lane: stri
           <TrafficLight state={g.light} size={140} />
         </div>
         <div className="flex flex-col items-center gap-8 text-center">
-          {v ? <IranPlate plate={v.plate} size="xxl" /> : <div className="dotmatrix text-6xl text-zinc-600">— — —</div>}
+          {v ? <VehicleTag plate={v.plate} size="xxl" /> : <div className="dotmatrix text-6xl text-zinc-600">— — —</div>}
           <div className={cx("dotmatrix font-black leading-tight", (locale === "fa" ? g.fa : g.en).length > 40 ? "text-6xl" : "text-7xl")} style={{ color }}>
             {locale === "fa" ? g.fa : g.en}
           </div>

@@ -3,7 +3,7 @@ import { ClipboardCheck, QrCode } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { origin, Qr } from "@/components/domain/codes";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { Badge, Button, Card, ConfirmDialog, Dialog, Kv, PageHeader, Segmented, Skeleton, StatusPill, Table, Td, toast } from "@/components/ui";
 import type { ExitPermit, Visit } from "@/domain/types";
 import { ERRORS, lbl } from "@/i18n/labels";
@@ -43,11 +43,11 @@ export default function ExitPermitsPage() {
         {!data ? (
           <Skeleton className="m-4 h-96" />
         ) : (
-          <Table head={[L("سریال", "Serial"), L("پلاک", "Plate"), L("تراکنش‌ها", "Transactions"), L("صادرکننده", "Issued by"), L("صدور", "Issued"), L("مصرف", "Consumed"), L("اسکن‌ها", "Scans"), L("وضعیت", "Status"), ""]}>
+          <Table head={[L("سریال", "Serial"), L("تگ خودرو", "Vehicle tag"), L("تراکنش‌ها", "Transactions"), L("صادرکننده", "Issued by"), L("صدور", "Issued"), L("مصرف", "Consumed"), L("اسکن‌ها", "Scans"), L("وضعیت", "Status"), ""]}>
             {data.items.map((e) => (
               <tr key={e.id} className="hover:bg-surface-2">
                 <Td className="font-mono text-xs ltr">{e.serial}</Td>
-                <Td>{veh(e.visitId) && <IranPlate plate={veh(e.visitId)!.plate} size="xs" />}</Td>
+                <Td>{veh(e.visitId) && <VehicleTag plate={veh(e.visitId)!.plate} size="xs" />}</Td>
                 <Td className="text-xs">
                   {e.transactionIds.map((t) => (
                     <Link key={t} href={`/app/transactions/${t}`} className="me-1 text-primary">

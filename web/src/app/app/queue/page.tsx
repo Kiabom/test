@@ -1,7 +1,7 @@
 "use client";
 import { BellRing, CalendarClock, ListOrdered, MonitorPlay } from "lucide-react";
 import Link from "next/link";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { Badge, Button, Card, CardHeader, cx, PageHeader, Skeleton, Table, Td, toast } from "@/components/ui";
 import type { Booking } from "@/domain/types";
 import { ERRORS, lbl, VISIT_STATE } from "@/i18n/labels";
@@ -65,7 +65,7 @@ export default function QueuePage() {
               {c.items.map((v) => (
                 <Card key={v.id} className="p-2.5">
                   <div className="flex items-center justify-between">
-                    <IranPlate plate={v.plate} size="sm" />
+                    <VehicleTag plate={v.plate} size="sm" />
                     <span className="num text-xs font-bold">#{v.queueNo}</span>
                   </div>
                   <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted">
@@ -86,7 +86,7 @@ export default function QueuePage() {
       </div>
       <Card className="mt-4">
         <CardHeader title={L("رزرو اسلات‌های امروز", "Today's slot bookings")} icon={<CalendarClock className="size-4" />} subtitle={L("زمان‌بندی نوبت حمل برای کاهش صف (ظرفیت ۲ خودرو در هر ۳۰ دقیقه)", "Haul slot scheduling to cut queues (2 trucks per 30 min)")} />
-        <Table head={[L("اسلات", "Slot"), L("پلاک", "Plate"), L("راننده", "Driver"), L("حواله", "Permit"), L("وضعیت", "Status")]}>
+        <Table head={[L("اسلات", "Slot"), L("تگ خودرو", "Vehicle tag"), L("راننده", "Driver"), L("حواله", "Permit"), L("وضعیت", "Status")]}>
           {bookings?.items.map((b) => {
             const v = masters?.vehicles.find((x) => x.id === b.vehicleId);
             const d = masters?.drivers.find((x) => x.id === b.driverId);
@@ -95,7 +95,7 @@ export default function QueuePage() {
                 <Td className="num">
                   {fmtTime(b.slotStart, locale)}–{fmtTime(b.slotEnd, locale)}
                 </Td>
-                <Td>{v && <IranPlate plate={v.plate} size="xs" />}</Td>
+                <Td>{v && <VehicleTag plate={v.plate} size="xs" />}</Td>
                 <Td>{locale === "fa" ? d?.name : d?.nameEn}</Td>
                 <Td className="font-mono text-xs ltr">{masters?.permits.find((p) => p.id === b.permitId)?.permitNo}</Td>
                 <Td>

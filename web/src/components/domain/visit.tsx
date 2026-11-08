@@ -1,14 +1,14 @@
 "use client";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { CheckCircle2, CircleDashed, Fingerprint, Radio, ScanLine, XCircle, HelpCircle, MinusCircle } from "lucide-react";
 import { useState } from "react";
 import type { DecisionStep, Evidence, Plate, Visit } from "@/domain/types";
 import { visitProgress, VISIT_STEPS } from "@/domain/workflow";
-import { Badge, Card, CardHeader, cx, Dialog, Kv } from "@/components/ui";
+import { Badge, Card, CardHeader, cx, Dialog, InDev, Kv } from "@/components/ui";
 import { CameraFeed, type CamView } from "@/components/hardware/CameraFeed";
 import { EVIDENCE_KIND, lbl, STAGE, STEP, DECISION_CODE, VISIT_STATE } from "@/i18n/labels";
 import { fmtDateTime, fmtPct, fmtTime, shortHash } from "@/lib/format";
 import { useL, useLocale } from "@/lib/prefs";
-import { IranPlate } from "./IranPlate";
 
 export function IdentityFusionCard({ identity, plate, vehicleStatus, driverName, carrierName, compact }: { identity: Visit["identity"]; plate: Plate; vehicleStatus?: string; driverName?: string; carrierName?: string; compact?: boolean }) {
   const L = useL();
@@ -21,9 +21,9 @@ export function IdentityFusionCard({ identity, plate, vehicleStatus, driverName,
       <div className={cx("grid gap-3 p-4", compact ? "" : "md:grid-cols-2")}>
         <div className="rounded-lg border border-border p-3">
           <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-muted">
-            <ScanLine className="size-4" /> ANPR
+            <ScanLine className="size-4" /> ANPR <InDev />
           </div>
-          <IranPlate plate={plate} size="md" highlight={identity.match === "MATCH"} />
+          <VehicleTag plate={plate} size="md" highlight={identity.match === "MATCH"} />
           <div className="mt-2 text-xs text-muted">
             {L("خوانده‌شده", "Read")}: <span className="font-mono ltr">{identity.anpr?.plate ?? "—"}</span>
           </div>

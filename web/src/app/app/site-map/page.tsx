@@ -1,7 +1,7 @@
 "use client";
 import { AlertTriangle, ChevronLeft, Cpu, ListOrdered, Map as MapIcon, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { Badge, Card, CardHeader, cx, Drawer, KpiTile, Kv, PageHeader, Skeleton } from "@/components/ui";
 import { DECISION_CODE, DEVICE_TYPE, lbl, VISIT_STATE } from "@/i18n/labels";
 import { fmtNum, fmtRelative } from "@/lib/format";
@@ -274,7 +274,7 @@ export default function SiteMap() {
                   <div className="flex flex-col gap-1.5">
                     {(model.trucks[sel.id] ?? []).map((v) => (
                       <button key={v.id} type="button" onClick={() => setTruck(v.id)} className={cx("flex items-center gap-3 rounded-lg border px-3 py-2 text-start hover:bg-surface-2", v.state === "HOLD" ? "border-danger/40 bg-danger/5" : "border-border")}>
-                        <IranPlate plate={v.plate} size="xs" />
+                        <VehicleTag plate={v.plate} size="xs" />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm">{nm(v.driverName, v.driverNameEn)}</span>
                           <span className={cx("block truncate text-xs", v.state === "HOLD" ? "text-danger" : "text-muted")}>
@@ -321,7 +321,7 @@ export default function SiteMap() {
       <Drawer open={!!selVisit} onClose={() => setTruck(null)} title={L("کامیون", "Truck")}>
         {selVisit && (
           <div className="flex flex-col gap-3">
-            <IranPlate plate={selVisit.plate} size="lg" />
+            <VehicleTag plate={selVisit.plate} size="lg" />
             <Kv k={L("وضعیت", "State")} v={lbl(VISIT_STATE, selVisit.state, locale)} />
             {selVisit.holdReasons.length > 0 && <Kv k={L("دلیل توقف", "Hold reason")} v={selVisit.holdReasons.map((r) => lbl(DECISION_CODE, r, locale)).join("، ")} />}
             <Kv k={L("راننده", "Driver")} v={nm(selVisit.driverName, selVisit.driverNameEn)} />

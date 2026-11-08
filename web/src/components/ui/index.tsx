@@ -1,4 +1,5 @@
 "use client";
+import { usePathname } from "next/navigation";
 import { clockNow } from "@/domain/clock";
 import { clsx } from "clsx";
 import { AlertTriangle, Ban, CheckCircle2, HelpCircle, Hand, Info, Loader2, PauseCircle, Sigma, WifiOff, X } from "lucide-react";
@@ -318,13 +319,25 @@ export function Progress({ value, tone = "primary", className }: { value: number
   );
 }
 
+/** «(در دست توسعه)» marker for features that are not live yet. */
+export function InDev({ className }: { className?: string }) {
+  const fa = typeof document === "undefined" || document.documentElement.lang !== "en";
+  return <span className={cx("ms-1.5 whitespace-nowrap text-[0.8em] font-medium text-warning", className)}>({fa ? "در دست توسعه" : "In development"})</span>;
+}
+const DEV_PAGES = ["/app/live", "/app/map", "/app/scan", "/app/modules/lidar", "/app/modules/payload", "/app/hardware", "/app/integrations"];
+
 export function PageHeader({ title, subtitle, icon, actions }: { title: ReactNode; subtitle?: ReactNode; icon?: ReactNode; actions?: ReactNode }) {
+  const path = usePathname() ?? "";
+  const dev = DEV_PAGES.some((p) => path === p || path.startsWith(p + "/"));
   return (
     <div className="page-header mb-5 flex flex-wrap items-end justify-between gap-3 print:mb-3">
       <div className="flex items-center gap-3">
         {icon && <div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary print:hidden">{icon}</div>}
         <div>
-          <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+          <h1 className="text-xl font-bold tracking-tight">
+            {title}
+            {dev && <InDev />}
+          </h1>
           {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
         </div>
       </div>

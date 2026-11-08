@@ -1,7 +1,7 @@
 "use client";
 import { CheckCircle2, Phone, Printer, QrCode, Volume2, VolumeX } from "lucide-react";
 import { use, useEffect, useRef, useState } from "react";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { TrafficLight } from "@/components/domain/indicators";
 import { cx } from "@/components/ui";
 import { guidanceFor } from "@/domain/driverGuidance";
@@ -52,7 +52,7 @@ export default function Kiosk({ params }: { params: Promise<{ lane: string }> })
         </div>
       </div>
       <div className="mt-6 flex flex-1 flex-col items-center gap-6">
-        {v ? <IranPlate plate={v.plate} size="xl" /> : <div className="text-3xl text-white/50">{L("لطفاً کارت یا QR خود را اسکن کنید", "Please scan your card or QR")}</div>}
+        {v ? <VehicleTag plate={v.plate} size="xl" /> : <div className="text-3xl text-white/50">{L("لطفاً کارت یا QR خود را اسکن کنید", "Please scan your card or QR")}</div>}
         <div className={cx("flex w-full max-w-3xl items-center gap-5 rounded-3xl p-6", g.tone === "go" ? "bg-emerald-600" : g.tone === "stop" ? "bg-red-600" : g.tone === "wait" ? "bg-amber-500 text-black" : "bg-white/10")}>
           <TrafficLight state={g.light} size={26} />
           <div className="text-3xl font-black leading-snug">{text}</div>

@@ -3,7 +3,7 @@ import { Printer } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, use } from "react";
 import { Barcode, origin, Qr } from "@/components/domain/codes";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { CameraFeed } from "@/components/hardware/CameraFeed";
 import { LogoMark } from "@/components/shell/Logo";
 import { Button, cx, Segmented, Skeleton } from "@/components/ui";
@@ -71,7 +71,7 @@ function Ticket({ id }: { id: string }) {
           </div>
         </div>
         <div className={cx("my-3 flex items-center justify-between gap-3", tpl === "thermal" && "flex-col")}>
-          <IranPlate plate={data.vehicle.plate} size={tpl === "thermal" ? "md" : "lg"} />
+          <VehicleTag plate={data.vehicle.plate} size={tpl === "thermal" ? "md" : "lg"} />
           <div className="text-center">
             <div className="text-[10px] text-zinc-600">{L("وزن خالص", "NET WEIGHT")}</div>
             <div className="num text-3xl font-black">{fmtNum(tx.netKg, locale)} kg</div>

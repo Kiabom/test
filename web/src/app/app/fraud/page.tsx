@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Bars, Lines } from "@/components/charts";
 import { EvidenceGallery } from "@/components/domain/visit";
-import { IranPlate } from "@/components/domain/IranPlate";
-import { Badge, Button, Card, CardHeader, cx, EmptyState, Kv, PageHeader, Progress, Skeleton, Table, Td, toast } from "@/components/ui";
+import { VehicleTag } from "@/components/domain/VehicleTag";
+import { Badge, Button, Card, CardHeader, cx, EmptyState, Kv, PageHeader, Progress, Skeleton, Table, Td, toast, InDev } from "@/components/ui";
 import type { FraudCase, Transaction, WeighEvent } from "@/domain/types";
 import { median } from "@/domain/kpi";
 import { ERRORS, lbl } from "@/i18n/labels";
@@ -100,7 +100,7 @@ export default function FraudPage() {
                   <div className="text-xs text-muted">{fc.id} · {L(...KIND[fc.kind])}</div>
                   <div className="text-lg font-bold">{locale === "fa" ? fc.title : fc.titleEn}</div>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
-                    {veh && <IranPlate plate={veh.plate} size="sm" />}
+                    {veh && <VehicleTag plate={veh.plate} size="sm" />}
                     {fc.operatorId && <Badge>{L("اپراتور: ", "Operator: ")}{userName(fc.operatorId, locale)}</Badge>}
                   </div>
                 </div>
@@ -195,7 +195,7 @@ function SideBySide({ ids }: { ids: string[] }) {
   const L = useL();
   return (
     <Card>
-      <CardHeader title={L("شواهد کنار هم", "Side-by-side evidence")} subtitle={L("تصاویر hash‌دار توزین‌ها برای مقایسه چشمی", "Hashed weighing photos for visual comparison")} />
+      <CardHeader title={<>{L("شواهد کنار هم", "Side-by-side evidence")}<InDev /></>} subtitle={L("تصاویر hash‌دار توزین‌ها برای مقایسه چشمی", "Hashed weighing photos for visual comparison")} />
       <div className="grid gap-4 p-3 lg:grid-cols-2">
         {ids.map((id) => (
           <TxEvidence key={id} id={id} />

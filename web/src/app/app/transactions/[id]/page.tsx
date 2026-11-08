@@ -4,11 +4,11 @@ import { ArrowRight, Ban, FileJson, History, Printer, Receipt, Send, ShieldCheck
 import Link from "next/link";
 import { use, useState } from "react";
 import { Barcode, origin, Qr } from "@/components/domain/codes";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { EvidenceGallery, GateDecisionTrace, VisitTimeline } from "@/components/domain/visit";
 import { UvssImage } from "@/components/hardware/Devices";
 import { HeightMap } from "@/components/hardware/heap";
-import { Badge, Button, Card, CardHeader, ConfirmDialog, Kv, PageHeader, Skeleton, StatusPill, Table, Td, toast } from "@/components/ui";
+import { Badge, Button, Card, CardHeader, ConfirmDialog, Kv, PageHeader, Skeleton, StatusPill, Table, Td, toast, InDev } from "@/components/ui";
 import { DECISION_CODE, ERRORS, lbl, OPERATION, STAGE, TX_STATE } from "@/i18n/labels";
 import { downloadJson } from "@/lib/export";
 import { fmtDateTime, fmtKg, fmtNum, fmtTime, shortHash } from "@/lib/format";
@@ -88,7 +88,7 @@ export default function TxDetail({ params }: { params: Promise<{ id: string }> }
       />
 
       <Card className="mb-4 flex flex-wrap items-center gap-6 p-4">
-        <IranPlate plate={data.vehicle.plate} size="lg" />
+        <VehicleTag plate={data.vehicle.plate} size="lg" />
         <Kv k={L("راننده", "Driver")} v={locale === "fa" ? data.driver?.name : data.driver?.nameEn} />
         <Kv k={L("حمل‌کننده", "Carrier")} v={locale === "fa" ? data.carrier?.name : data.carrier?.nameEn} />
         <Kv k={L("حواله", "Permit")} v={<span className="font-mono ltr">{data.permit?.permitNo ?? "—"}</span>} />
@@ -149,14 +149,14 @@ export default function TxDetail({ params }: { params: Promise<{ id: string }> }
             </Table>
           </Card>
           <Card>
-            <CardHeader title={L("گالری شواهد تصویری", "Evidence gallery")} subtitle={L("هر تصویر با SHA-256 و زمان ثبت", "Each image with SHA-256 and timestamp")} />
+            <CardHeader title={<>{L("گالری شواهد تصویری", "Evidence gallery")}<InDev /></>} subtitle={L("هر تصویر با SHA-256 و زمان ثبت", "Each image with SHA-256 and timestamp")} />
             <div className="p-3">
               <EvidenceGallery evidence={data.evidence} plate={data.vehicle.plate} color={data.vehicle.color} cols={5} />
             </div>
           </Card>
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
-              <CardHeader title={L("اسکن بالای بار (LiDAR)", "Overhead scan (LiDAR)")} actions={<StatusPill status="ESTIMATED" />} />
+              <CardHeader title={<>{L("اسکن بالای بار (LiDAR)", "Overhead scan (LiDAR)")}<InDev /></>} actions={<StatusPill status="ESTIMATED" />} />
               <div className="p-3">
                 {data.lidarScans[0] ? (
                   <>
@@ -171,7 +171,7 @@ export default function TxDetail({ params }: { params: Promise<{ id: string }> }
               </div>
             </Card>
             <Card>
-              <CardHeader title={L("اسکن زیر خودرو (UVSS)", "Under-vehicle scan")} actions={data.uvss && <Badge tone={data.uvss.status === "CLEAR" || data.uvss.status === "CLEARED_BY_GUARD" ? "success" : "danger"}>{data.uvss.status}</Badge>} />
+              <CardHeader title={<>{L("اسکن زیر خودرو (UVSS)", "Under-vehicle scan")}<InDev /></>} actions={data.uvss && <Badge tone={data.uvss.status === "CLEAR" || data.uvss.status === "CLEARED_BY_GUARD" ? "success" : "danger"}>{data.uvss.status}</Badge>} />
               <div className="p-3">{data.uvss ? <UvssImage anomalies={data.uvss.anomalies} className="w-full rounded" /> : <div className="py-6 text-center text-sm text-muted">—</div>}</div>
             </Card>
           </div>

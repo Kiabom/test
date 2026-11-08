@@ -3,7 +3,7 @@ import { Activity, AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Clock, Gauge
 import Link from "next/link";
 import { useState } from "react";
 import { AreaSeries, Bars, Donut, Gauge, PALETTE } from "@/components/charts";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { CameraFeed } from "@/components/hardware/CameraFeed";
 import { Badge, Card, CardHeader, KpiTile, PageHeader, Progress, Segmented, Skeleton, StatusPill, Table, Td } from "@/components/ui";
 import { lbl, OPERATION, SEVERITY, TX_STATE } from "@/i18n/labels";
@@ -139,7 +139,7 @@ export default function DashboardPage() {
           <div className="grid gap-4 xl:grid-cols-3">
             <Card className="xl:col-span-2">
               <CardHeader title={L("آخرین سفرها", "Latest trips")} actions={<Link href="/app/transactions" className="text-xs text-primary">{L("همه", "All")} ←</Link>} />
-              <Table head={[L("تصویر", "Photo"), L("پلاک", "Plate"), L("تیکت", "Ticket"), L("ماده", "Material"), L("عملیات", "Operation"), L("خالص", "Net"), L("زمان", "Time"), L("وضعیت", "Status")]}>
+              <Table head={[L("تصویر", "Photo"), L("تگ خودرو", "Vehicle tag"), L("تیکت", "Ticket"), L("ماده", "Material"), L("عملیات", "Operation"), L("خالص", "Net"), L("زمان", "Time"), L("وضعیت", "Status")]}>
                 {data.recent.map((t) => (
                   <tr key={t.id} className="hover:bg-surface-2">
                     <Td>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                       </Link>
                     </Td>
                     <Td>
-                      <IranPlate plate={t.plate} size="sm" />
+                      <VehicleTag plate={t.plate} size="sm" />
                     </Td>
                     <Td className="num font-mono text-xs">
                       <Link href={`/app/transactions/${t.id}`} className="text-primary hover:underline">

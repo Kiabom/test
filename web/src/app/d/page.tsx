@@ -1,7 +1,7 @@
 "use client";
 import { BookOpen, Smartphone } from "lucide-react";
 import Link from "next/link";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { Logo } from "@/components/shell/Logo";
 import { Card, Skeleton } from "@/components/ui";
 import { lbl, VISIT_STATE } from "@/i18n/labels";
@@ -29,7 +29,7 @@ export default function DriverIndex() {
           return (
             <Link key={id} href={`/d/${v.driverToken}`}>
               <Card className="flex items-center justify-between gap-3 p-3 hover:border-primary">
-                <IranPlate plate={v.plate} size="sm" />
+                <VehicleTag plate={v.plate} size="sm" />
                 <div className="text-end text-xs">
                   <div className="font-semibold">{locale === "fa" ? v.driverName : v.driverNameEn}</div>
                   <div className="text-muted">{lbl(VISIT_STATE, v.state, locale)}</div>

@@ -13,7 +13,7 @@ import { fmtDate, fmtNum, fmtTime } from "@/lib/format";
 import { useLive, useLiveConnection, useLiveStore, useNow } from "@/lib/live";
 import { useL, usePrefs } from "@/lib/prefs";
 import { Logo, LogoMark } from "./Logo";
-import { DISPLAY_LINKS, NAV } from "./nav";
+import { DISPLAY_LINKS, IN_DEV, NAV } from "./nav";
 import { PresenterPanel } from "./PresenterPanel";
 
 function SideNav({ onNavigate }: { onNavigate?: () => void }) {
@@ -40,7 +40,12 @@ function SideNav({ onNavigate }: { onNavigate?: () => void }) {
                 <li key={it.href}>
                   <Link href={it.href} onClick={onNavigate} title={locale === "fa" ? it.fa : it.en} className={cx("group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition", active ? "bg-white/12 text-white" : "text-white/70 hover:bg-white/6 hover:text-white")}>
                     <it.icon className={cx("size-[18px] shrink-0", active ? "text-sky-300" : "text-white/60 group-hover:text-white")} />
-                    {!collapsed && <span className="flex-1 truncate">{locale === "fa" ? it.fa : it.en}</span>}
+                    {!collapsed && (
+                      <span className="flex-1 truncate">
+                        {locale === "fa" ? it.fa : it.en}
+                        {it.dev && <span className="ms-1 text-[10px] text-amber-300/90">({locale === "fa" ? IN_DEV[0] : IN_DEV[1]})</span>}
+                      </span>
+                    )}
                     {!collapsed && !!badge && <span className={cx("rounded-full px-1.5 text-[10px] font-bold num", it.badge === "alerts" || it.badge === "holds" ? "bg-red-500 text-white" : "bg-sky-500/80 text-white")}>{fmtNum(badge, locale)}</span>}
                   </Link>
                 </li>
@@ -104,7 +109,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         }}
       >
         <Search className="pointer-events-none absolute start-2.5 top-2.5 size-4 text-muted" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("جست‌وجوی پلاک، تیکت، حواله…", "Search plate, ticket, permit…")} className="h-9 w-full rounded-lg border border-border bg-surface-2 ps-8 pe-2 text-sm outline-none focus:border-primary" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("جست‌وجوی تگ خودرو، تیکت، حواله…", "Search vehicle tag, ticket, permit…")} className="h-9 w-full rounded-lg border border-border bg-surface-2 ps-8 pe-2 text-sm outline-none focus:border-primary" />
       </form>
       )}
       <div className="ms-auto flex items-center gap-1.5">

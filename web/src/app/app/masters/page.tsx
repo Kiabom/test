@@ -2,7 +2,7 @@
 import { clockNow } from "@/domain/clock";
 import { Boxes, Pencil, UserRound } from "lucide-react";
 import { useState } from "react";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { TruckSvg } from "@/components/hardware/Truck";
 import { Badge, Button, Card, Drawer, Field, Input, Kv, PageHeader, Select, Skeleton, Table, Tabs, Td, toast } from "@/components/ui";
 import type { Driver, Vehicle } from "@/domain/types";
@@ -54,11 +54,11 @@ export default function MastersPage() {
       ) : (
         <Card>
           {tab === "vehicles" && (
-            <Table head={[L("پلاک", "Plate"), L("نوع", "Type"), L("محور", "Axles"), "RFID EPC", L("تارای ذخیره", "Stored tare"), L("اعتبار تارا", "Tare valid"), L("حداکثر GVW", "Max GVW"), L("حمل‌کننده", "Carrier"), L("بیمه", "Insurance"), L("وضعیت", "Status"), ""]}>
+            <Table head={[L("تگ خودرو", "Vehicle tag"), L("نوع", "Type"), L("محور", "Axles"), "RFID EPC", L("تارای ذخیره", "Stored tare"), L("اعتبار تارا", "Tare valid"), L("حداکثر GVW", "Max GVW"), L("حمل‌کننده", "Carrier"), L("بیمه", "Insurance"), L("وضعیت", "Status"), ""]}>
               {m.vehicles.filter((v) => !q || v.plateNormalized.includes(q) || (v.rfidEpc ?? "").includes(q)).map((v) => (
                 <tr key={v.id} className="hover:bg-surface-2">
                   <Td>
-                    <IranPlate plate={v.plate} size="xs" />
+                    <VehicleTag plate={v.plate} size="xs" />
                   </Td>
                   <Td>
                     {lbl(VEHICLE_TYPE, v.type, locale)} {v.internal && <Badge tone="info">{L("داخلی", "Internal")}</Badge>}
@@ -237,7 +237,7 @@ function VehicleForm({ v, onSave }: { v: Vehicle; onSave: (p: Record<string, unk
   const [epc, setEpc] = useState(v.rfidEpc ?? "");
   return (
     <div className="flex flex-col gap-3">
-      <IranPlate plate={v.plate} size="lg" />
+      <VehicleTag plate={v.plate} size="lg" />
       <TruckSvg view="side" width={300} color={v.color} />
       <Field label={L("تارای ذخیره (kg)", "Stored tare (kg)")} hint={L("با ذخیره، اعتبار تارا ۳۰ روز تمدید می‌شود", "Saving extends tare validity by 30 days")}>
         <Input type="number" value={tare} onChange={(e) => setTare(e.target.value)} />

@@ -7,7 +7,6 @@ import type { ListKey, ReportFilter } from "@/domain/reportFilter";
 import { lbl, OPERATION, TX_STATE } from "@/i18n/labels";
 import { fmtNum } from "@/lib/format";
 import type { Masters } from "@/lib/live";
-import { plateText } from "./reportModel";
 import { useL, useLocale, type Locale } from "@/lib/prefs";
 
 type Opt = { id: string; label: string; sub?: string };
@@ -34,7 +33,7 @@ export function filterOptions(m: Masters | null, locale: Locale): Record<ListKey
     shifts: (m?.shifts ?? []).map((x) => ({ id: x.code, label: `${nm(x)} (${x.code})` })),
     operations: Object.keys(OPERATION).map((k) => ({ id: k, label: lbl(OPERATION, k, locale) })),
     carriers: (m?.carriers ?? []).map((x) => ({ id: x.id, label: nm(x) })),
-    vehicles: (m?.vehicles ?? []).filter((v) => v.status !== "GUEST").map((v) => ({ id: v.id, label: plateText(v.plate, locale), sub: v.plateNormalized })),
+    vehicles: (m?.vehicles ?? []).filter((v) => v.status !== "GUEST").map((v) => ({ id: v.id, label: `${v.id} · ${(v.rfidEpc ?? "").split("-").slice(-2).join("-")}`, sub: v.rfidEpc })),
     drivers: (m?.drivers ?? []).map((x) => ({ id: x.id, label: nm(x), sub: x.licenseNo })),
     permits: (m?.permits ?? []).map((p) => ({ id: p.id, label: p.permitNo })),
     states: Object.keys(TX_STATE).map((k) => ({ id: k, label: lbl(TX_STATE, k, locale) })),

@@ -3,7 +3,7 @@ import { Download, FileSpreadsheet, Printer, Receipt, Search } from "lucide-reac
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
-import { IranPlate } from "@/components/domain/IranPlate";
+import { VehicleTag } from "@/components/domain/VehicleTag";
 import { FilterBar } from "@/components/reports/FilterBar";
 import { Badge, Button, Card, Input, PageHeader, Skeleton, StatusPill, Table, Td } from "@/components/ui";
 import { clockNow } from "@/domain/clock";
@@ -37,7 +37,7 @@ function Inner() {
     if (!sp.get("visit")) r = applyFilter(r, filter, { manualTxIds: manualTx });
     if (q.trim()) {
       const s = q.trim();
-      r = r.filter((t) => t.ticketNo.includes(s) || veh(t.vehicleId)?.plateNormalized.includes(s) || masters?.permits.find((p) => p.id === t.permitId)?.permitNo.includes(s) || cus(t.customerId)?.name.includes(s));
+      r = r.filter((t) => t.ticketNo.includes(s) || t.vehicleId.includes(s.toUpperCase()) || (veh(t.vehicleId)?.rfidEpc ?? "").includes(s.toUpperCase()) || veh(t.vehicleId)?.plateNormalized.includes(s) || masters?.permits.find((p) => p.id === t.permitId)?.permitNo.includes(s) || cus(t.customerId)?.name.includes(s));
     }
     return r;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,7 +85,7 @@ function Inner() {
       <Card className="mb-3 flex flex-col gap-3 p-3 no-print">
         <div className="relative">
           <Search className="pointer-events-none absolute start-2.5 top-3 size-4 text-muted" />
-          <Input className="ps-8" placeholder={L("جست‌وجوی تیکت، پلاک، حواله، مشتری…", "Ticket, plate, permit, customer…")} value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
+          <Input className="ps-8" placeholder={L("جست‌وجوی تیکت، تگ خودرو، حواله، مشتری…", "Ticket, vehicle tag, permit, customer…")} value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
         </div>
         <FilterBar value={filter} onChange={(f) => { setFilter(f); setPage(0); }} masters={masters} count={data ? rows.length : undefined} />
       </Card>
@@ -93,7 +93,7 @@ function Inner() {
         {!data ? (
           <Skeleton className="m-4 h-96" />
         ) : (
-          <Table head={[L("تیکت", "Ticket"), L("پلاک", "Plate"), L("ماده", "Material"), L("مشتری", "Customer"), L("عملیات", "Op"), L("ناخالص", "Gross"), L("تارا", "Tare"), L("خالص", "Net"), L("روش", "Method"), L("زمان", "Time"), L("وضعیت", "State"), L("چاپ", "Prints"), "ERP"]}>
+          <Table head={[L("تیکت", "Ticket"), L("تگ خودرو", "Vehicle tag"), L("ماده", "Material"), L("مشتری", "Customer"), L("عملیات", "Op"), L("ناخالص", "Gross"), L("تارا", "Tare"), L("خالص", "Net"), L("روش", "Method"), L("زمان", "Time"), L("وضعیت", "State"), L("چاپ", "Prints"), "ERP"]}>
             {pageRows.map((t) => (
               <tr key={t.id} className="hover:bg-surface-2">
                 <Td>
@@ -101,7 +101,7 @@ function Inner() {
                     {t.ticketNo}
                   </Link>
                 </Td>
-                <Td>{veh(t.vehicleId) && <IranPlate plate={veh(t.vehicleId)!.plate} size="xs" />}</Td>
+                <Td>{veh(t.vehicleId) && <VehicleTag plate={veh(t.vehicleId)!.plate} size="xs" />}</Td>
                 <Td>{locale === "fa" ? mat(t.materialId)?.name : mat(t.materialId)?.nameEn}</Td>
                 <Td className="max-w-40 truncate">{locale === "fa" ? cus(t.customerId)?.name : cus(t.customerId)?.nameEn}</Td>
                 <Td>{lbl(OPERATION, t.operation, locale)}</Td>
