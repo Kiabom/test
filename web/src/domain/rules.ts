@@ -7,7 +7,7 @@ const RULES: R[] = [
   { code: "R02", name: "خوانش کهنه", nameEn: "Stale reading", condition: "ageMs > freshMs", severity: "WARNING", action: "BLOCK_CAPTURE", params: { freshMs: 12000 }, source: "WeighHub" },
   { code: "R03", name: "چرخ خارج باسکول", nameEn: "Wheel off deck", condition: "positionOk = false (IR / ROI)", severity: "HIGH", action: "BLOCK_CAPTURE", params: {}, source: "Metrici, Otomatik Kantar" },
   { code: "R04", name: "indicator آفلاین", nameEn: "Indicator offline", condition: "now − heartbeat > timeout", severity: "CRITICAL", action: "BLOCK_CAPTURE", params: { timeoutS: 10 }, source: "All" },
-  { code: "R05", name: "مغایرت پلاک و RFID", nameEn: "Plate / RFID mismatch", condition: "ANPR vehicle ≠ RFID vehicle", severity: "CRITICAL", action: "HOLD_ENTRY", params: { minConfidence: 0.85 }, source: "Codeshilp, STAIN" },
+  { code: "R05", name: "مغایرت پلاک و RFID (در دست توسعه)", nameEn: "Plate / RFID mismatch", condition: "ANPR vehicle ≠ RFID vehicle", severity: "INFO", action: "NOTIFY", params: { minConfidence: 0.85 }, source: "Codeshilp, STAIN" },
   { code: "R06", name: "اطمینان پایین ANPR", nameEn: "Low ANPR confidence", condition: "confidence < min", severity: "WARNING", action: "REVIEW", params: { minConfidence: 0.85 }, source: "Codeshilp" },
   { code: "R07", name: "خودرو ناشناس", nameEn: "Unknown vehicle", condition: "plate/tag not in registry", severity: "HIGH", action: "HOLD_ENTRY", params: {}, source: "STAIN" },
   { code: "R08", name: "ورود مجدد بدون خروج", nameEn: "Anti-passback", condition: "re-entry without exit", severity: "HIGH", action: "HOLD_ENTRY", params: {}, source: "Smart Traffic" },

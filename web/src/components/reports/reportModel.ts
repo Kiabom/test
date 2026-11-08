@@ -6,10 +6,11 @@ import type { Masters } from "@/lib/live";
 import type { Locale } from "@/lib/prefs";
 import { userName } from "@/lib/users";
 
-export type TplId = "daily" | "customer" | "material" | "vehicle" | "carrier" | "driver" | "shift" | "day" | "trips" | "exceptions" | "manual" | "permit";
+export type TplId = "daily" | "route" | "customer" | "material" | "vehicle" | "carrier" | "driver" | "shift" | "day" | "trips" | "exceptions" | "manual" | "permit";
 export const TEMPLATES: { id: TplId; fa: string; en: string; group?: "detail" | "summary" | "other" }[] = [
   { id: "daily", fa: "فهرست تیکت‌ها (ریز)", en: "Ticket list (detail)", group: "detail" },
   { id: "day", fa: "خلاصه روزانه", en: "Daily summary", group: "summary" },
+  { id: "route", fa: "به تفکیک مسیر (مبدأ ← مقصد)", en: "By route (origin → destination)", group: "summary" },
   { id: "customer", fa: "به تفکیک مشتری", en: "By customer", group: "summary" },
   { id: "material", fa: "به تفکیک ماده", en: "By material", group: "summary" },
   { id: "vehicle", fa: "به تفکیک خودرو", en: "By vehicle", group: "summary" },
@@ -22,9 +23,10 @@ export const TEMPLATES: { id: TplId; fa: string; en: string; group?: "detail" | 
   { id: "permit", fa: "مصرف حواله‌ها", en: "Permit consumption", group: "other" },
 ];
 
-export type GroupBy = "" | "day" | "shift" | "customer" | "material" | "vehicle" | "carrier" | "driver";
+export type GroupBy = "" | "route" | "day" | "shift" | "customer" | "material" | "vehicle" | "carrier" | "driver";
 export const GROUP_BY: { id: GroupBy; fa: string; en: string }[] = [
   { id: "", fa: "بدون گروه‌بندی", en: "No grouping" },
+  { id: "route", fa: "مسیر", en: "Route" },
   { id: "day", fa: "روز", en: "Day" },
   { id: "shift", fa: "شیفت", en: "Shift" },
   { id: "customer", fa: "مشتری", en: "Customer" },
@@ -67,6 +69,7 @@ export const DETAIL_COLS: (Col & { def?: boolean })[] = [
   { key: "customer", fa: "مشتری", en: "Customer", def: true },
   { key: "material", fa: "ماده", en: "Material", def: true },
   { key: "operation", fa: "عملیات", en: "Operation" },
+  { key: "route", fa: "مبدأ ← مقصد", en: "Origin → destination", def: true },
   { key: "shift", fa: "شیفت", en: "Shift" },
   { key: "permit", fa: "حواله", en: "Permit" },
   { key: "gross", fa: "ناخالص (kg)", en: "Gross (kg)", num: true, sum: true, def: true },
@@ -99,8 +102,12 @@ export function buildReport(tpl: TplId, txs: Transaction[], ctx: ModelCtx, opts:
   };
   const shiftName = (c: string) => nm(m?.shifts.find((s) => s.code === c)) + ` (${c})`;
   const dayLabel = (iso: string) => (fa ? faDigits(jKey(toJDate(new Date(iso).getTime()))) : jKey(toJDate(new Date(iso).getTime())));
+  const locName = (id?: string) => nm(m?.locations.find((l) => l.id === id)).split(" — ")[0];
+  const routeOf = (t: Transaction) => `${locName(t.originId)} ← ${locName(t.destinationId)}`;
   const keyOf = (g: GroupBy, t: Transaction): string => {
     switch (g) {
+      case "route":
+        return routeOf(t);
       case "day":
         return dayLabel(txTime(t));
       case "shift":
@@ -122,7 +129,7 @@ export function buildReport(tpl: TplId, txs: Transaction[], ctx: ModelCtx, opts:
   const approved = txs.filter((t) => t.state === "APPROVED");
 
   // -------- summaries: one row per group
-  const SUMMARY: Partial<Record<TplId, GroupBy>> = { day: "day", customer: "customer", material: "material", vehicle: "vehicle", carrier: "carrier", driver: "driver", shift: "shift" };
+  const SUMMARY: Partial<Record<TplId, GroupBy>> = { route: "route", day: "day", customer: "customer", material: "material", vehicle: "vehicle", carrier: "carrier", driver: "driver", shift: "shift" };
   const dim = SUMMARY[tpl];
   if (dim) {
     const map = new Map<string, { n: number; gross: number; tare: number; net: number; bill: number; order: string }>();
@@ -183,6 +190,8 @@ export function buildReport(tpl: TplId, txs: Transaction[], ctx: ModelCtx, opts:
           return nm(m?.materials.find((c) => c.id === t.materialId));
         case "operation":
           return lbl(OPERATION, t.operation, locale);
+        case "route":
+          return routeOf(t);
         case "shift":
           return shiftName(t.shiftCode);
         case "permit":

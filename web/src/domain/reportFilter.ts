@@ -101,12 +101,14 @@ export interface ReportFilter {
   drivers: string[];
   permits: string[];
   states: string[];
+  origins: string[];
+  destinations: string[];
   method: "" | "MANUAL" | "STORED";
   /** tons */
   netMin?: number;
   netMax?: number;
 }
-export const LIST_KEYS = ["shifts", "operations", "customers", "materials", "carriers", "vehicles", "drivers", "permits", "states"] as const;
+export const LIST_KEYS = ["shifts", "operations", "customers", "materials", "carriers", "vehicles", "drivers", "permits", "states", "origins", "destinations"] as const;
 export type ListKey = (typeof LIST_KEYS)[number];
 
 export function presetRange(preset: RangePreset, now: number): { from: string; to: string } {
@@ -132,7 +134,7 @@ export function presetRange(preset: RangePreset, now: number): { from: string; t
 }
 
 export function emptyFilter(now: number, preset: RangePreset = "today"): ReportFilter {
-  return { ...presetRange(preset, now), preset, shifts: [], operations: [], customers: [], materials: [], carriers: [], vehicles: [], drivers: [], permits: [], states: [], method: "" };
+  return { ...presetRange(preset, now), preset, shifts: [], operations: [], customers: [], materials: [], carriers: [], vehicles: [], drivers: [], permits: [], states: [], origins: [], destinations: [], method: "" };
 }
 
 export const txTime = (t: Pick<Transaction, "approvedAt" | "createdAt">) => t.approvedAt ?? t.createdAt;
@@ -144,6 +146,7 @@ export function applyFilter(txs: Transaction[], f: ReportFilter, ctx: { manualTx
     if (at < f.from || at >= f.to) return false;
     if (!has(f.shifts, t.shiftCode) || !has(f.operations, t.operation) || !has(f.customers, t.customerId) || !has(f.materials, t.materialId)) return false;
     if (!has(f.carriers, t.carrierId) || !has(f.vehicles, t.vehicleId) || !has(f.drivers, t.driverId) || !has(f.permits, t.permitId) || !has(f.states, t.state)) return false;
+    if (!has(f.origins, t.originId) || !has(f.destinations, t.destinationId)) return false;
     if (f.method === "MANUAL" && !ctx.manualTxIds?.has(t.id)) return false;
     if (f.method === "STORED" && t.tareSource !== "STORED") return false;
     const netT = (t.netKg ?? 0) / 1000;
@@ -156,7 +159,7 @@ export function applyFilter(txs: Transaction[], f: ReportFilter, ctx: { manualTx
 export const activeCount = (f: ReportFilter) => LIST_KEYS.reduce((a, k) => a + (f[k].length ? 1 : 0), 0) + (f.method ? 1 : 0) + (f.netMin != null || f.netMax != null ? 1 : 0);
 
 // ---------------------------------------------------------------- URL encoding (print page, links)
-const SHORT: Record<ListKey, string> = { shifts: "sh", operations: "op", customers: "cu", materials: "ma", carriers: "ca", vehicles: "ve", drivers: "dr", permits: "pe", states: "st" };
+const SHORT: Record<ListKey, string> = { shifts: "sh", operations: "op", customers: "cu", materials: "ma", carriers: "ca", vehicles: "ve", drivers: "dr", permits: "pe", states: "st", origins: "or", destinations: "de" };
 
 export function filterToQuery(f: ReportFilter): URLSearchParams {
   const q = new URLSearchParams();

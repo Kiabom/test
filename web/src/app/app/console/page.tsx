@@ -12,7 +12,7 @@ import { useL, useLocale } from "@/lib/prefs";
 const SCENARIOS: { code: string; fa: string; en: string; dfa: string; den: string; tone: "success" | "warning" | "danger" | "info" }[] = [
   { code: "S-NORMAL", fa: "سفر عادی فروش", en: "Normal sales trip", dfa: "ورود → توزین خالی → بارگیری → توزین پر → تیکت → QR خروج", den: "Entry → tare → loading → gross → ticket → exit QR", tone: "success" },
   { code: "S-INBOUND", fa: "ورود کامیون پر (خرید)", en: "Inbound loaded (purchase)", dfa: "Gross→Tare؛ تخلیه در سایت", den: "Gross→Tare; unloads on site", tone: "success" },
-  { code: "S-MISMATCH", fa: "مغایرت پلاک و RFID", en: "Plate/RFID mismatch", dfa: "تگ RFID متعلق به خودرو دیگری است → HOLD", den: "RFID tag belongs to another vehicle → HOLD", tone: "danger" },
+  { code: "S-MISMATCH", fa: "راننده غیرمجاز برای خودرو", en: "Driver not authorized", dfa: "تگ کارت راننده در فهرست مجاز این خودرو نیست → HOLD", den: "Driver card not authorized for this vehicle → HOLD", tone: "danger" },
   { code: "S-LOWCONF", fa: "اطمینان پایین ANPR", en: "Low ANPR confidence", dfa: "پلاک کثیف/گردوخاک → بازبینی دستی", den: "Dirty plate/dust → manual review", tone: "warning" },
   { code: "S-UNKNOWN", fa: "خودروی ناشناس", en: "Unknown vehicle", dfa: "پلاک در سامانه نیست → ثبت مهمان یا رد", den: "Plate not registered → guest or reject", tone: "warning" },
   { code: "S-OVERWEIGHT", fa: "اضافه‌بار", en: "Overweight", dfa: "ناخالص بیش از GVW مجاز + بار خارج از مرکز", den: "Gross above max GVW + off-centre load", tone: "danger" },

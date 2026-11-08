@@ -39,7 +39,7 @@ export const DECISION_CODE: Dict = {
   EMERGENCY_STOP: ["توقف اضطراری", "Emergency stop"],
   INTERLOCK_FAULT: ["خطای interlock", "Interlock fault"],
   LANE_NOT_CLEAR: ["لاین خالی نیست", "Lane not clear"],
-  IDENTITY_MISMATCH: ["مغایرت پلاک و RFID", "Plate / RFID mismatch"],
+  IDENTITY_MISMATCH: ["مغایرت پلاک و RFID (در دست توسعه)", "Plate / RFID mismatch (in development)"],
   UNKNOWN_VEHICLE: ["خودرو ناشناس", "Unknown vehicle"],
   LOW_ANPR_CONFIDENCE: ["اطمینان پایین پلاک‌خوان", "Low ANPR confidence"],
   BLACKLIST: ["خودرو/راننده مسدود", "Blacklisted"],
@@ -96,10 +96,10 @@ export const CAPTURE_BLOCK: Dict = {
 };
 
 export const OPERATION: Dict = {
-  DISPATCH: ["ارسال (فروش)", "Dispatch"],
-  RECEIVE: ["دریافت (خرید)", "Receive"],
-  TRANSFER: ["انتقال", "Transfer"],
-  INTERNAL: ["داخلی", "Internal"],
+  DISPATCH: ["فروش (ارسال به مشتری)", "Sale (dispatch)"],
+  RECEIVE: ["خرید (دریافت)", "Purchase (receive)"],
+  TRANSFER: ["انتقال به کارخانه فرآوری", "Haul to processing plant"],
+  INTERNAL: ["جابه‌جایی درون معدن (پیت ← دپو)", "In-mine haul (pit → stockpile)"],
 };
 
 export const SEVERITY: Dict = {

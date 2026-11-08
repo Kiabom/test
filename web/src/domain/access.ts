@@ -20,6 +20,7 @@ export const PAGE_ACCESS: Rule[] = [
   { prefix: "/app/fraud", any: ["fraud.review"] },
   { prefix: "/app/audit", any: ["audit.read"] },
   { prefix: "/app/modules", any: ["report.read"] },
+  { prefix: "/app/stockpiles", any: ["report.read"] },
   { prefix: "/app/devices", any: ["calibration.edit", "admin.manage"] },
   { prefix: "/app/hardware", any: ["calibration.edit", "admin.manage"] },
   { prefix: "/app/site-map", any: ["calibration.edit", "admin.manage"] },

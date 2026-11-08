@@ -532,3 +532,67 @@ export function processView(d: DB) {
   };
 }
 export type ProcessData = ReturnType<typeof processView>;
+
+// ---------------- Stockpiles ----------------
+export interface StockMove {
+  at: string;
+  txId: string;
+  ticketNo: string;
+  vehicleId: string;
+  originId: string;
+  destinationId: string;
+  stockpileId: string;
+  dir: "IN" | "OUT";
+  t: number;
+}
+export interface StockpileView {
+  id: string;
+  name: string;
+  nameEn: string;
+  materialId?: string;
+  capacityT: number;
+  openingT: number;
+  balanceT: number;
+  todayIn: number;
+  todayOut: number;
+  days: { day: string; inT: number; outT: number }[];
+}
+
+/**
+ * Stockpile balances from weighed tickets: a ticket whose destination is the stockpile adds its net
+ * tonnage, one whose origin is the stockpile removes it. Balance = opening + Σin − Σout.
+ */
+export function stockpilesView(d: DB, from?: string, to?: string) {
+  const now = sceneNow(d);
+  const piles = d.locations.filter((l) => l.type === "STOCKPILE");
+  const ids = new Set(piles.map((p) => p.id));
+  const moves: StockMove[] = [];
+  for (const t of d.transactions) {
+    if (t.state !== "APPROVED" || !t.netKg) continue;
+    const at = t.approvedAt ?? t.createdAt;
+    if (new Date(at).getTime() > now) continue;
+    const base = { at, txId: t.id, ticketNo: t.ticketNo, vehicleId: t.vehicleId, originId: t.originId, destinationId: t.destinationId, t: t.netKg / 1000 };
+    if (ids.has(t.destinationId)) moves.push({ ...base, stockpileId: t.destinationId, dir: "IN" });
+    if (ids.has(t.originId)) moves.push({ ...base, stockpileId: t.originId, dir: "OUT" });
+  }
+  const dayStart = siteMidnightUtc(new Date(now)).getTime();
+  const dayKey = (ms: number) => new Date(ms + 210 * 60_000).toISOString().slice(0, 10);
+  const views: StockpileView[] = piles.map((p) => {
+    const mine = moves.filter((m) => m.stockpileId === p.id);
+    const sum = (list: StockMove[], dir: "IN" | "OUT") => list.filter((m) => m.dir === dir).reduce((a, m) => a + m.t, 0);
+    const today = mine.filter((m) => new Date(m.at).getTime() >= dayStart);
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const s = dayStart - (6 - i) * 864e5;
+      const list = mine.filter((m) => {
+        const x = new Date(m.at).getTime();
+        return x >= s && x < s + 864e5;
+      });
+      return { day: dayKey(s), inT: +sum(list, "IN").toFixed(1), outT: +sum(list, "OUT").toFixed(1) };
+    });
+    const opening = p.openingT ?? 0;
+    return { id: p.id, name: p.name, nameEn: p.nameEn, materialId: p.materialId, capacityT: p.capacityT ?? 0, openingT: opening, balanceT: +(opening + sum(mine, "IN") - sum(mine, "OUT")).toFixed(1), todayIn: +sum(today, "IN").toFixed(1), todayOut: +sum(today, "OUT").toFixed(1), days };
+  });
+  const inRange = moves.filter((m) => (!from || m.at >= from) && (!to || m.at < to)).sort((a, b) => b.at.localeCompare(a.at));
+  return { stockpiles: views, moves: inRange.slice(0, 2000) };
+}
+export type StockpilesData = ReturnType<typeof stockpilesView>;

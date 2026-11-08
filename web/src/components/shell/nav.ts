@@ -33,6 +33,7 @@ import {
   Globe2,
   Workflow,
   BookOpen,
+  Layers3,
 } from "lucide-react";
 
 export interface NavItem {
@@ -90,6 +91,7 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/app/modules/lidar", fa: "حجم‌سنجی LiDAR", en: "LiDAR volume", icon: Box, dev: true },
       { href: "/app/modules/payload", fa: "Payload لودر/شاول", en: "Loader payload", icon: Mountain, dev: true },
+      { href: "/app/stockpiles", fa: "دپوها", en: "Stockpiles", icon: Layers3, dev: true },
       { href: "/app/modules/fleet", fa: "KPI ناوگان", en: "Fleet KPIs", icon: Activity },
     ],
   },

@@ -2,7 +2,7 @@ import { clockNow } from "@/domain/clock";
 import { verifyChain } from "@/domain/audit";
 import { can, type Permission } from "@/domain/rbac";
 import type * as T from "@/domain/types";
-import { ackAlert, captureWeigh, finalizeTx, findTx, findVisit, gateDecide, issueExitPermit, issueManualExitPermit, lane, OpError, printTx, registerGuest, requestBarrierOpen, confirmBarrierOpen, scanAny, setDeduction, voidTx } from "./ops";
+import { ackAlert, captureWeigh, finalizeTx, findTx, findVisit, gateDecide, guestEntry, issueExitPermit, issueManualExitPermit, lane, OpError, printTx, registerGuest, requestBarrierOpen, confirmBarrierOpen, scanAny, setDeduction, voidTx } from "./ops";
 import { enqueueDemoSms, runScenario, setScene } from "./sim";
 import { audit, bump, enqueueOutbox, log, nextId, nowIso, raiseAlert, type DB } from "./store";
 import { resetDb } from "./runtime";
@@ -14,6 +14,7 @@ const num = (p: Payload, k: string) => Number(p[k] ?? 0);
 const PERMS: Record<string, Permission | null> = {
   "gate.decide": "gate.decide",
   "gate.guest": "gate.guest",
+  "gate.guestEntry": "gate.guest",
   "barrier.open": "gate.decide",
   "weigh.capture": "weigh.capture",
   "tx.deduction": "tx.finalize",
@@ -33,6 +34,7 @@ const PERMS: Record<string, Permission | null> = {
   "permit.status": "permit.manage",
   "permit.create": "permit.manage",
   "master.update": "master.edit",
+  "master.create": "master.edit",
   "vehicle.drivers.set": "driver.assign",
   "driver.tag.set": "driver.assign",
   "calibration.add": "calibration.edit",
@@ -54,6 +56,13 @@ const PERMS: Record<string, Permission | null> = {
   "kiosk.print": null,
 };
 
+function assertUniqueTags(d: DB, epc?: string, tag?: string, selfId?: string) {
+  for (const t of [epc, tag].filter((x): x is string => !!x && !!x.trim())) {
+    const u = t.trim().toUpperCase();
+    if (d.vehicles.some((v) => v.id !== selfId && v.rfidEpc?.toUpperCase() === u) || d.drivers.some((x) => x.id !== selfId && x.rfidTag?.toUpperCase() === u)) throw new OpError("DUPLICATE");
+  }
+}
+
 export function dispatch(d: DB, type: string, p: Payload, actorId: string): unknown {
   const user = d.users.find((u) => u.id === actorId);
   const perm = PERMS[type];
@@ -63,6 +72,8 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
   switch (type) {
     case "gate.decide":
       return gateDecide(d, str(p, "visitId"), !!p.approve, actorId, str(p, "reason") || undefined);
+    case "gate.guestEntry":
+      return guestEntry(d, { plate: str(p, "plate"), vehicleType: str(p, "vehicleType"), driverName: str(p, "driverName"), mobile: str(p, "mobile"), company: str(p, "company"), note: str(p, "note") }, actorId, str(p, "visitId") || undefined);
     case "gate.guest":
       return registerGuest(d, str(p, "visitId"), actorId, str(p, "reason"));
     case "barrier.open": {
@@ -192,12 +203,49 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
       bump(d);
       return pm;
     }
+    case "master.create": {
+      const col = str(p, "collection") as "vehicles" | "drivers" | "carriers" | "customers" | "materials" | "locations";
+      if (!["vehicles", "drivers", "carriers", "customers", "materials", "locations"].includes(col)) throw new OpError("NOT_FOUND");
+      const data = { ...((p.data ?? {}) as Record<string, unknown>) };
+      const prefix = { vehicles: "VH", drivers: "D", carriers: "CR", customers: "C", materials: "M", locations: "LOC" }[col];
+      const list = d[col] as { id: string }[];
+      let n = list.length + 1;
+      while (list.some((x) => x.id === `${prefix}-${String(n).padStart(3, "0")}`)) n++;
+      const id = `${prefix}-${String(n).padStart(3, "0")}`;
+      assertUniqueTags(d, data.rfidEpc as string | undefined, data.rfidTag as string | undefined);
+      const now = nowIso();
+      const later = new Date(new Date(now).getTime() + 365 * 864e5).toISOString();
+      const base: Record<string, Record<string, unknown>> = {
+        vehicles: { type: "TIPPER", axles: 3, ratedPayloadKg: 18000, maxGvwKg: 32000, carrierId: d.carriers[0]?.id ?? "", insuranceUntil: later, inspectionUntil: later, status: "ACTIVE", internal: false, color: "#495057", authorizedDriverIds: [] },
+        drivers: { nameEn: String(data.name ?? ""), nationalIdMasked: "—", licenseNo: "—", licenseUntil: later, phone: "—", carrierId: d.carriers[0]?.id ?? "", status: "ACTIVE" },
+        carriers: { nameEn: String(data.name ?? ""), regNo: "—", phone: "—", status: "ACTIVE" },
+        customers: { nameEn: String(data.name ?? ""), type: "CUSTOMER", erpCode: "", city: "", creditLimit: 0 },
+        materials: { nameEn: String(data.name ?? ""), code: id, grade: "—", densityKgM3: 2000, pricePerTon: 0, color: "#868e96", requiresQc: false, internalOnly: false },
+        locations: { nameEn: String(data.name ?? ""), type: "STOCKPILE" },
+      };
+      const item: Record<string, unknown> = { id, ...base[col], ...data };
+      if (col === "vehicles") {
+        const text = String(data.plateText ?? "").trim();
+        item.plate = { d2: "00", letter: "ع", d3: "000", region: "00" };
+        item.plateNormalized = text || id;
+        delete item.plateText;
+      }
+      list.push(item as never);
+      audit(d, "master.created", col, id, { actorId, data });
+      bump(d);
+      return item;
+    }
     case "master.update": {
       const col = str(p, "collection") as "vehicles" | "drivers" | "carriers" | "customers" | "materials";
       const list = d[col] as { id: string }[];
       const item = list?.find((x) => x.id === str(p, "id"));
       if (!item) throw new OpError("NOT_FOUND");
-      const patch = (p.patch ?? {}) as Record<string, unknown>;
+      const patch = { ...((p.patch ?? {}) as Record<string, unknown>) };
+      if (col === "vehicles" && "plateText" in patch) {
+        if (String(patch.plateText ?? "").trim()) patch.plateNormalized = String(patch.plateText).trim();
+        delete patch.plateText;
+      }
+      if (col === "vehicles" || col === "drivers") assertUniqueTags(d, patch.rfidEpc as string | undefined, patch.rfidTag as string | undefined, item.id);
       const before: Record<string, unknown> = {};
       for (const k of Object.keys(patch)) before[k] = (item as Record<string, unknown>)[k];
       Object.assign(item, patch);

@@ -111,12 +111,13 @@ function masters(r: Rand, now: number) {
   const locations: T.Location[] = [
     { id: "LOC-PN", name: "پیت شمالی", nameEn: "North pit", type: "PIT" },
     { id: "LOC-PS", name: "پیت جنوبی", nameEn: "South pit", type: "PIT" },
-    { id: "LOC-SP1", name: "دپو ۱", nameEn: "Stockpile 1", type: "STOCKPILE" },
-    { id: "LOC-SP2", name: "دپو ۲", nameEn: "Stockpile 2", type: "STOCKPILE" },
+    { id: "LOC-SP1", name: "دپو ۱ — هماتیت دانه‌بندی", nameEn: "Stockpile 1 — lump", type: "STOCKPILE", materialId: "M-FEL", capacityT: 60000, openingT: 31500 },
+    { id: "LOC-SP2", name: "دپو ۲ — کنسانتره", nameEn: "Stockpile 2 — concentrate", type: "STOCKPILE", materialId: "M-FEC", capacityT: 40000, openingT: 17800 },
+    { id: "LOC-SP3", name: "دپو ۳ — نرمه", nameEn: "Stockpile 3 — fines", type: "STOCKPILE", materialId: "M-PEL", capacityT: 30000, openingT: 12400 },
     { id: "LOC-CR", name: "سنگ‌شکن اولیه", nameEn: "Primary crusher", type: "CRUSHER" },
     { id: "LOC-PL", name: "کارخانه فرآوری", nameEn: "Processing plant", type: "PLANT" },
     { id: "LOC-DMP", name: "دامپ باطله", nameEn: "Waste dump", type: "DUMP" },
-    { id: "LOC-EXT", name: "مقصد مشتری", nameEn: "Customer site", type: "EXTERNAL" },
+    { id: "LOC-EXT", name: "خارج از سایت", nameEn: "Off-site", type: "EXTERNAL" },
   ];
   const shifts: T.Shift[] = [
     { id: "SH-A", siteId: "S1", code: "A", name: "شیفت صبح", nameEn: "Morning", startHour: 6, endHour: 14, targetTons: 1100 },
@@ -271,21 +272,32 @@ export function buildSeed(): DB {
       pricePerTon: mat.pricePerTon,
     });
   }
-  const permitTypes: T.PermitType[] = ["SALE", "SALE", "SALE", "HAUL", "SALE", "HAUL", "SALE", "SALE", "SALE", "HAUL", "SALE", "SALE", "SALE", "SALE", "HAUL", "SALE", "SALE", "SALE", "PURCHASE", "PURCHASE", "TRANSFER", "TRANSFER", "SALE", "SALE"];
+  const permitTypes: T.PermitType[] = ["SALE", "SALE", "SALE", "HAUL", "SALE", "HAUL", "SALE", "SALE", "SALE", "HAUL", "SALE", "SALE", "SALE", "SALE", "HAUL", "SALE", "SALE", "SALE", "PURCHASE", "PURCHASE", "TRANSFER", "TRANSFER", "SALE", "SALE", "TRANSFER", "TRANSFER"];
+  // internal weighed hauls (TRANSFER permits): pit → stockpile, plant → concentrate stockpile, pit → waste dump
+  const INTERNAL_ROUTES = [
+    { origin: "LOC-PN", dest: "LOC-SP1", material: "M-FEL" },
+    { origin: "LOC-PS", dest: "LOC-DMP", material: "M-WST" },
+    { origin: "LOC-PS", dest: "LOC-SP3", material: "M-PEL" },
+    { origin: "LOC-PL", dest: "LOC-SP2", material: "M-FEC" },
+  ];
+  const STOCK_OF: Record<string, string> = { "M-FEL": "LOC-SP1", "M-FEC": "LOC-SP2", "M-PEL": "LOC-SP3" };
+  let trIdx = 0;
   permitTypes.forEach((type, i) => {
+    const route = type === "TRANSFER" ? INTERNAL_ROUTES[trIdx++ % INTERNAL_ROUTES.length] : undefined;
     const contract = type === "SALE" || type === "HAUL" ? d.contracts[i % d.contracts.length] : undefined;
     const material =
-      type === "PURCHASE" ? d.materials.find((x) => x.id === "M-FEL")! : type === "TRANSFER" ? d.materials.find((x) => x.id === "M-WST")! : d.materials.find((x) => x.id === contract!.materialId)!;
+      type === "PURCHASE" ? d.materials.find((x) => x.id === "M-FEL")! : type === "TRANSFER" ? d.materials.find((x) => x.id === route!.material)! : d.materials.find((x) => x.id === contract!.materialId)!;
     const validTo = i === 4 || i === 15 ? now - int(r, 1, 6) * DAY : now + int(r, 10, 90) * DAY;
     d.permits.push({
       id: `PM-${String(i + 1).padStart(3, "0")}`,
       permitNo: `${type === "PURCHASE" ? "PO" : type === "TRANSFER" ? "TR" : type === "HAUL" ? "HV" : "SO"}-1403-${String(1000 + i * 7)}`,
       type,
-      customerId: type === "PURCHASE" ? "C-04" : type === "TRANSFER" ? "C-01" : contract!.customerId,
+      customerId: type === "PURCHASE" ? "C-04" : type === "TRANSFER" ? "" : contract!.customerId,
       materialId: material.id,
       contractId: contract?.id,
-      originId: type === "PURCHASE" ? "LOC-EXT" : type === "TRANSFER" ? "LOC-PN" : pick(r, ["LOC-SP1", "LOC-SP2", "LOC-CR"]),
-      destinationId: type === "PURCHASE" ? "LOC-PL" : type === "TRANSFER" ? "LOC-DMP" : "LOC-EXT",
+      // sales leave from the material's stockpile; hauls take lump ore from stockpile 1 to the processing plant
+      originId: type === "PURCHASE" ? "LOC-EXT" : type === "TRANSFER" ? route!.origin : type === "HAUL" ? "LOC-SP1" : (STOCK_OF[material.id] ?? "LOC-CR"),
+      destinationId: type === "PURCHASE" ? "LOC-SP1" : type === "TRANSFER" ? route!.dest : type === "HAUL" ? "LOC-PL" : "LOC-EXT",
       allowedKg: 0,
       reservedKg: 0,
       consumedKg: 0,
@@ -296,7 +308,7 @@ export function buildSeed(): DB {
       validFrom: iso(now - int(r, 20, 60) * DAY),
       validTo: iso(validTo),
       status: validTo < now ? "EXPIRED" : i === 9 ? "SUSPENDED" : "ACTIVE",
-      issuer: type === "PURCHASE" ? "واحد خرید" : "واحد فروش",
+      issuer: type === "PURCHASE" ? "واحد خرید" : type === "TRANSFER" ? "واحد تولید معدن" : type === "HAUL" ? "واحد برنامه‌ریزی تولید" : "واحد فروش",
       documentHash: sha256(`permit-${i}`),
     });
   });
@@ -355,7 +367,7 @@ export function buildSeed(): DB {
 
   for (const t0 of visitTimes) {
     const roll = r();
-    const kind: T.Operation = roll < 0.85 ? "DISPATCH" : roll < 0.95 ? "RECEIVE" : "INTERNAL";
+    const kind: T.Operation = roll < 0.7 ? "DISPATCH" : roll < 0.78 ? "RECEIVE" : "INTERNAL";
     const vehicle = kind === "INTERNAL" ? pick(r, internalV) : pick(r, external);
     const permitPool = kind === "DISPATCH" ? salePermits : kind === "RECEIVE" ? buyPermits : trPermits;
     const permit = pick(r, permitPool);
@@ -430,7 +442,7 @@ export function buildSeed(): DB {
       vehicleId: vehicle.id,
       driverId: driver.id,
       carrierId: vehicle.carrierId,
-      customerId: permit.customerId,
+      customerId: permit.customerId || undefined,
       materialId: material.id,
       permitId: permit.id,
       originId: permit.originId,

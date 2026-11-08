@@ -21,6 +21,8 @@ export const FIELD_LABEL: Record<ListKey | "method" | "net", [string, string]> =
   drivers: ["راننده", "Driver"],
   permits: ["حواله", "Permit"],
   states: ["وضعیت", "State"],
+  origins: ["مبدأ", "Origin"],
+  destinations: ["مقصد", "Destination"],
   method: ["روش توزین", "Weighing method"],
   net: ["خالص (تن)", "Net (t)"],
 };
@@ -37,6 +39,8 @@ export function filterOptions(m: Masters | null, locale: Locale): Record<ListKey
     drivers: (m?.drivers ?? []).map((x) => ({ id: x.id, label: nm(x), sub: x.licenseNo })),
     permits: (m?.permits ?? []).map((p) => ({ id: p.id, label: p.permitNo })),
     states: Object.keys(TX_STATE).map((k) => ({ id: k, label: lbl(TX_STATE, k, locale) })),
+    origins: (m?.locations ?? []).map((x) => ({ id: x.id, label: nm(x) })),
+    destinations: (m?.locations ?? []).map((x) => ({ id: x.id, label: nm(x) })),
   };
 }
 
@@ -59,7 +63,7 @@ export function FilterBar({ value, onChange, masters, fields, count }: { value: 
   const L = useL();
   const locale = useLocale();
   const opts = useMemo(() => filterOptions(masters, locale), [masters, locale]);
-  const show = fields ?? (["customers", "materials", "shifts", "operations", "carriers", "vehicles", "drivers", "permits", "states", "method", "net"] as const);
+  const show = fields ?? (["customers", "materials", "shifts", "operations", "origins", "destinations", "carriers", "vehicles", "drivers", "permits", "states", "method", "net"] as const);
   const chips = describeFilter(value, masters, locale).filter((c) => c.key !== "range");
   const clear = (k: string) => {
     if (k === "method") onChange({ ...value, method: "" });
@@ -101,7 +105,7 @@ export function FilterBar({ value, onChange, masters, fields, count }: { value: 
             </span>
           ))}
           {chips.length > 0 && (
-            <button type="button" onClick={() => onChange({ ...value, shifts: [], operations: [], customers: [], materials: [], carriers: [], vehicles: [], drivers: [], permits: [], states: [], method: "", netMin: undefined, netMax: undefined })} className="text-xs text-muted underline-offset-2 hover:text-danger hover:underline">
+            <button type="button" onClick={() => onChange({ ...value, shifts: [], operations: [], customers: [], materials: [], carriers: [], vehicles: [], drivers: [], permits: [], states: [], origins: [], destinations: [], method: "", netMin: undefined, netMax: undefined })} className="text-xs text-muted underline-offset-2 hover:text-danger hover:underline">
               {L("پاک کردن همه", "Clear all")}
             </button>
           )}

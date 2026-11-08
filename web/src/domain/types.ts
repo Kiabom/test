@@ -160,6 +160,10 @@ export interface Location {
   name: string;
   nameEn: string;
   type: "PIT" | "STOCKPILE" | "CRUSHER" | "PLANT" | "EXTERNAL" | "DUMP";
+  /** stockpiles: capacity, opening balance and stored material */
+  capacityT?: number;
+  openingT?: number;
+  materialId?: ID;
 }
 
 export interface Shift {
@@ -310,6 +314,8 @@ export interface Visit {
   scenario?: string;
   uvssScanId?: ID;
   loadingEquipmentId?: ID;
+  /** free-text details of a guest vehicle entry (all optional) */
+  guest?: { plate?: string; vehicleType?: string; driverName?: string; mobile?: string; company?: string; note?: string };
 }
 
 export type Operation = "DISPATCH" | "RECEIVE" | "TRANSFER" | "INTERNAL";

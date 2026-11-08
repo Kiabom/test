@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/runtime";
-import { dashboard, driverView, mapView, processView, verifyView, visitDetail } from "@/server/views";
+import { dashboard, driverView, mapView, processView, stockpilesView, verifyView, visitDetail } from "@/server/views";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +13,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ name: string }>
   switch (name) {
     case "process":
       return NextResponse.json(processView(d));
+    case "stockpiles":
+      return NextResponse.json(stockpilesView(d, url.searchParams.get("from") ?? undefined, url.searchParams.get("to") ?? undefined));
     case "map":
       return NextResponse.json(mapView(d));
     case "showcase":

@@ -9,11 +9,12 @@ import { decisionStatus } from "@/components/domain/lanes";
 import { EvidenceGallery, GateDecisionTrace, IdentityFusionCard, VisitTimeline } from "@/components/domain/visit";
 import { CameraFeed } from "@/components/hardware/CameraFeed";
 import { UvssImage } from "@/components/hardware/Devices";
-import { Badge, Button, Card, CardHeader, ConfirmDialog, cx, EmptyState, Input, Kv, PageHeader, StatusPill, Tabs, toast, InDev } from "@/components/ui";
+import { Badge, Button, Card, CardHeader, ConfirmDialog, cx, Dialog, EmptyState, Field, Input, Kv, PageHeader, StatusPill, Tabs, toast, InDev } from "@/components/ui";
+import type { Visit } from "@/domain/types";
 import { remainingKg } from "@/domain/permits";
 import { DECISION_CODE, ERRORS, lbl, PERMIT_STATUS, VISIT_STATE } from "@/i18n/labels";
 import { fmtDate, fmtDuration, fmtKg, fmtTime } from "@/lib/format";
-import { act, ActionError, useLive, useView } from "@/lib/live";
+import { act, ActionError, useData, useLive, useView } from "@/lib/live";
 import { useL, useLocale } from "@/lib/prefs";
 import { USERS_LIST } from "@/lib/users";
 import type { VisitDetail } from "@/server/views";
@@ -217,12 +218,12 @@ export default function GatePage() {
                 <Ban className="size-5" />
                 {L("رد ورود", "Reject")}
               </Button>
-              <Button size="lg" variant="warning" disabled={!d || d.visit.identity.match !== "UNKNOWN"} onClick={() => setDlg("guest")}>
+              <Button size="lg" variant="warning" onClick={() => setDlg("guest")}>
                 <UserPlus className="size-5" />
                 {L("ثبت خودرو مهمان", "Register guest")}
               </Button>
             </div>
-            <p className="mt-3 text-[11px] leading-5 text-muted">{L("هر اقدام با دلیل، هویت کاربر و زمان در زنجیره audit ثبت می‌شود. اصلاح پلاک، رکورد خام ANPR را تغییر نمی‌دهد.", "Every action is recorded with reason, user and time in the audit chain. Plate corrections never modify the raw ANPR record.")}</p>
+            <p className="mt-3 text-[11px] leading-5 text-muted">{L("هر اقدام با دلیل، هویت کاربر و زمان در ردپای ممیزی ثبت می‌شود.", "Every action is recorded with reason, user and time in the audit trail.")}</p>
           </Card>
           <Card>
             <CardHeader title={L("نیازمند بررسی", "Needs review")} icon={<ShieldAlert className="size-4" />} actions={<Badge tone={held.length ? "danger" : "neutral"}>{held.length}</Badge>} />
@@ -238,6 +239,7 @@ export default function GatePage() {
               {!held.length && <li className="px-3 py-4 text-center text-xs text-muted">{L("موردی نیست", "Nothing pending")}</li>}
             </ul>
           </Card>
+          <GuestLog />
         </div>
       </div>
 
@@ -259,8 +261,84 @@ export default function GatePage() {
 
       <ConfirmDialog open={dlg === "approve"} onClose={() => setDlg(null)} title={L("تأیید ورود خودرو", "Approve entry")} description={d?.visit.identity.match === "MISMATCH" ? L("مغایرت پلاک و RFID — دلیل تطبیق دستی را ثبت کنید.", "Plate/RFID mismatch — record why you are overriding.") : undefined} needReason={d?.visit.identity.match === "MISMATCH" || d?.visit.identity.match === "UNKNOWN"} onConfirm={({ reason }) => run("gate.decide", { visitId: d!.visit.id, approve: true, reason }, L("ورود تأیید شد — راهبند باز شد", "Entry approved — barrier opened"))} />
       <ConfirmDialog open={dlg === "reject"} onClose={() => setDlg(null)} danger title={L("رد ورود", "Reject entry")} onConfirm={({ reason }) => run("gate.decide", { visitId: d!.visit.id, approve: false, reason }, L("ورود رد شد", "Entry rejected"))} />
-      <ConfirmDialog open={dlg === "guest"} onClose={() => setDlg(null)} title={L("ثبت خودرو مهمان", "Register guest vehicle")} description={L("خودرو در رجیستری نیست؛ با مدرک (بارنامه/کارت) به‌صورت مهمان ثبت می‌شود.", "Vehicle not in registry; it will be registered as a guest using a document.")} onConfirm={({ reason }) => run("gate.guest", { visitId: d!.visit.id, reason }, L("مهمان ثبت شد", "Guest registered"))} />
+      {dlg === "guest" && <GuestDialog onClose={() => setDlg(null)} laneVisitId={d && d.visit.identity.match === "UNKNOWN" ? d.visit.id : undefined} />}
       <ConfirmDialog open={dlg === "barrier"} onClose={() => setDlg(null)} title={L("باز کردن دستی راهبند", "Manual barrier open")} description={L("درخواست به PLC ارسال می‌شود؛ interlock ایمنی همچنان تصمیم نهایی را می‌گیرد.", "A request is sent to the PLC; the safety interlock still has the final say.")} needSigner users={USERS_LIST.map((u) => ({ id: u.id, name: locale === "fa" ? u.name : u.nameEn }))} onConfirm={({ reason }) => run("barrier.open", { lane: tab === "in" ? "A" : "E", reason }, L("درخواست باز شدن ارسال شد", "Open request sent"))} />
     </div>
+  );
+}
+
+function GuestDialog({ onClose, laneVisitId }: { onClose: () => void; laneVisitId?: string }) {
+  const L = useL();
+  const locale = useLocale();
+  const [f, setF] = useState({ plate: "", vehicleType: "", driverName: "", mobile: "", company: "", note: "" });
+  const [busy, setBusy] = useState(false);
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
+  const submit = async () => {
+    setBusy(true);
+    try {
+      await act("gate.guestEntry", { ...f, visitId: laneVisitId });
+      toast.success(L("ورود خودرو مهمان ثبت شد", "Guest entry logged"));
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof ActionError ? lbl(ERRORS, e.code, locale) : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const fields: [keyof typeof f, string, string][] = [
+    ["plate", "پلاک", "Plate"],
+    ["vehicleType", "نوع خودرو", "Vehicle type"],
+    ["driverName", "نام راننده", "Driver name"],
+    ["mobile", "موبایل", "Mobile"],
+    ["company", "شرکت / علت مراجعه", "Company / purpose"],
+    ["note", "توضیحات", "Note"],
+  ];
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={L("ثبت خودرو مهمان", "Register guest vehicle")}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            {L("انصراف", "Cancel")}
+          </Button>
+          <Button variant="primary" loading={busy} onClick={submit}>
+            {L("ثبت ورود", "Log entry")}
+          </Button>
+        </>
+      }
+    >
+      <p className="mb-3 text-xs text-muted">{L("همه فیلدها اختیاری است؛ فقط ورود خودرو در لاگ دروازه و ردپای ممیزی ثبت می‌شود و توزینی انجام نمی‌شود.", "All fields are optional; only the entry is logged at the gate and in the audit trail, no weighing.")}</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {fields.map(([k, fa, en]) => (
+          <Field key={k} label={L(fa, en)}>
+            <Input value={f[k]} onChange={set(k)} dir={k === "mobile" ? "ltr" : undefined} />
+          </Field>
+        ))}
+      </div>
+    </Dialog>
+  );
+}
+
+function GuestLog() {
+  const L = useL();
+  const locale = useLocale();
+  const { data } = useData<Visit>("visits", { scenario: "GUEST-ENTRY", limit: 30 }, 5000);
+  const items = data?.items ?? [];
+  return (
+    <Card>
+      <CardHeader title={L("تردد مهمان", "Guest entries")} icon={<UserPlus className="size-4" />} actions={<Badge>{items.length}</Badge>} />
+      <ul className="max-h-60 divide-y divide-border overflow-auto text-xs">
+        {items.map((v) => (
+          <li key={v.id} className="flex items-center gap-2 px-3 py-2">
+            <span className="num w-12 text-muted">{fmtTime(v.arrivedAt, locale)}</span>
+            <span className="font-mono">{v.vehicleId}</span>
+            <span className="min-w-0 flex-1 truncate">{[v.guest?.plate, v.guest?.driverName, v.guest?.company || v.guest?.note].filter(Boolean).join(" · ") || L("بدون مشخصات", "No details")}</span>
+          </li>
+        ))}
+        {!items.length && <li className="px-3 py-4 text-center text-muted">{L("امروز ورود مهمانی ثبت نشده", "No guest entries yet")}</li>}
+      </ul>
+    </Card>
   );
 }

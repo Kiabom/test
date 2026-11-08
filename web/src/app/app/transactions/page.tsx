@@ -93,7 +93,7 @@ function Inner() {
         {!data ? (
           <Skeleton className="m-4 h-96" />
         ) : (
-          <Table head={[L("تیکت", "Ticket"), L("تگ خودرو", "Vehicle tag"), L("ماده", "Material"), L("مشتری", "Customer"), L("عملیات", "Op"), L("ناخالص", "Gross"), L("تارا", "Tare"), L("خالص", "Net"), L("روش", "Method"), L("زمان", "Time"), L("وضعیت", "State"), L("چاپ", "Prints"), "ERP"]}>
+          <Table head={[L("تیکت", "Ticket"), L("تگ خودرو", "Vehicle tag"), L("ماده", "Material"), L("مشتری", "Customer"), L("عملیات", "Op"), L("مبدأ ← مقصد", "Route"), L("ناخالص", "Gross"), L("تارا", "Tare"), L("خالص", "Net"), L("روش", "Method"), L("زمان", "Time"), L("وضعیت", "State"), L("چاپ", "Prints"), "ERP"]}>
             {pageRows.map((t) => (
               <tr key={t.id} className="hover:bg-surface-2">
                 <Td>
@@ -105,6 +105,7 @@ function Inner() {
                 <Td>{locale === "fa" ? mat(t.materialId)?.name : mat(t.materialId)?.nameEn}</Td>
                 <Td className="max-w-40 truncate">{locale === "fa" ? cus(t.customerId)?.name : cus(t.customerId)?.nameEn}</Td>
                 <Td>{lbl(OPERATION, t.operation, locale)}</Td>
+                <Td className="text-xs whitespace-nowrap">{[t.originId, t.destinationId].map((id) => ((locale === "fa" ? masters?.locations.find((l) => l.id === id)?.name : masters?.locations.find((l) => l.id === id)?.nameEn) ?? "—").split(" — ")[0]).join(" ← ")}</Td>
                 <Td className="num">{fmtNum(t.grossKg, locale)}</Td>
                 <Td className="num">{fmtNum(t.tareKg, locale)}</Td>
                 <Td className="num font-bold">{fmtNum(t.netKg, locale)}</Td>

@@ -324,7 +324,7 @@ export function InDev({ className }: { className?: string }) {
   const fa = typeof document === "undefined" || document.documentElement.lang !== "en";
   return <span className={cx("ms-1.5 whitespace-nowrap text-[0.8em] font-medium text-warning", className)}>({fa ? "در دست توسعه" : "In development"})</span>;
 }
-const DEV_PAGES = ["/app/live", "/app/map", "/app/scan", "/app/modules/lidar", "/app/modules/payload", "/app/hardware", "/app/integrations"];
+const DEV_PAGES = ["/app/stockpiles", "/app/live", "/app/map", "/app/scan", "/app/modules/lidar", "/app/modules/payload", "/app/hardware", "/app/integrations"];
 
 export function PageHeader({ title, subtitle, icon, actions }: { title: ReactNode; subtitle?: ReactNode; icon?: ReactNode; actions?: ReactNode }) {
   const path = usePathname() ?? "";

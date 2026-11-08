@@ -96,7 +96,8 @@ export function gateContextFor(d: DB, visit: T.Visit, direction: "IN" | "OUT"): 
   return {
     direction,
     safety: { emergencyStop: false, laneClear: true, interlockFault: false },
-    identity: visit.identity.match,
+    // identity on site is the RFID tag: a plate-reader disagreement never blocks when the tag belongs to this registered vehicle
+    identity: visit.identity.match === "MISMATCH" && !!visit.identity.rfid && d.vehicles.some((x) => x.id === visit.vehicleId && x.rfidEpc === visit.identity.rfid!.epc) ? "RFID_ONLY" : visit.identity.match,
     lowConfidence: !!visit.identity.anpr && visit.identity.anpr.confidence < minConfidence(d) && !visit.identity.rfid,
     vehicleBlocked: vehicle.status === "BLOCKED",
     driverBlocked: driver?.status === "BLOCKED",
@@ -211,6 +212,62 @@ export function registerGuest(d: DB, visitId: string, actorId: string, reason: s
   v.status = "GUEST";
   audit(d, "vehicle.guest_registered", "Vehicle", v.id, { actorId, reason });
   return gateDecide(d, visitId, true, actorId, reason || "ثبت مهمان");
+}
+
+/** Log-only entry of a guest vehicle: no required fields, no weighing. */
+export function guestEntry(d: DB, g: NonNullable<T.Visit["guest"]>, actorId: string, laneVisitId?: string) {
+  const clean = Object.fromEntries(Object.entries(g).map(([k, v]) => [k, String(v ?? "").trim()]).filter(([, v]) => v)) as NonNullable<T.Visit["guest"]>;
+  const now = new Date(clockNow()).toISOString();
+  const onLane = laneVisitId ? findVisit(d, laneVisitId) : undefined;
+  if (onLane) {
+    onLane.guest = clean;
+    const v = findVehicle(d, onLane.vehicleId)!;
+    v.status = "GUEST";
+    audit(d, "vehicle.guest_entry", "Visit", onLane.id, { actorId, data: clean });
+    return gateDecide(d, onLane.id, true, actorId, clean.note || "ورود خودرو مهمان");
+  }
+  const vehicle: T.Vehicle = {
+    id: nextId(d, "GV"),
+    plate: { d2: "00", letter: "ع", d3: "000", region: "00" },
+    plateNormalized: clean.plate || `GUEST-${(d.counters.GV ?? 0) + 0}`,
+    type: "TIPPER",
+    axles: 2,
+    ratedPayloadKg: 0,
+    maxGvwKg: 0,
+    carrierId: "",
+    insuranceUntil: now,
+    inspectionUntil: now,
+    status: "GUEST",
+    internal: false,
+    color: "#868e96",
+    authorizedDriverIds: [],
+  };
+  d.vehicles.push(vehicle);
+  const visit: T.Visit = {
+    id: nextId(d, "VS"),
+    siteId: "S1",
+    vehicleId: vehicle.id,
+    driverId: "",
+    state: "IN_SITE",
+    arrivedAt: now,
+    enteredAt: now,
+    queueNo: 0,
+    driverToken: token(8),
+    identity: { match: "UNKNOWN" },
+    transactionIds: [],
+    shiftCode: shiftOf(new Date(now)),
+    internal: true,
+    operation: "INTERNAL",
+    holdReasons: [],
+    scenario: "GUEST-ENTRY",
+    guest: clean,
+  };
+  d.visits.push(visit);
+  d.gateEvents.push({ id: nextId(d, "GE"), visitId: visit.id, laneCode: "A", type: "ARRIVE", reason: "ورود خودرو مهمان", at: now } as T.GateEvent);
+  audit(d, "vehicle.guest_entry", "Visit", visit.id, { actorId, data: clean });
+  log(d, "info", "GATE-A", `Guest entry ${vehicle.id}${clean.plate ? " " + clean.plate : ""}`);
+  bump(d);
+  return visit;
 }
 
 export function releaseLane(d: DB, code: T.Lane["code"], visitId?: string) {

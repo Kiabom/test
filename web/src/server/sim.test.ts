@@ -57,13 +57,15 @@ describe("simulator", () => {
     expect(gateContextFor(d, v, "OUT").openCriticalAlerts).toBe(0);
   });
 
-  it("mismatch scenario holds the truck at the gate", () => {
+  it("unauthorized driver holds the truck at the gate (RFID decides, plate mismatch only informs)", () => {
     d.live.speed = 10;
     runScenario(d, "S-MISMATCH", "U-ADMIN");
     run(30);
     const v = d.visits.find((x) => x.scenario === "S-MISMATCH")!;
     expect(v).toBeDefined();
-    expect(d.alerts.some((a) => a.ruleCode === "R05" && a.visitId === v.id)).toBe(true);
+    expect(d.alerts.some((a) => a.ruleCode === "R41" && a.visitId === v.id)).toBe(true);
+    expect(v.holdReasons).toContain("DRIVER_NOT_AUTHORIZED");
+    expect(gateContextFor(d, v, "IN").identity).toBe("RFID_ONLY");
   });
 
   it("calibration expiry locks scale 2", () => {

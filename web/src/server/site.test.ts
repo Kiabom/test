@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 import { canSee } from "@/domain/access";
 import { CLOCK_ANCHOR } from "@/domain/clock";
 import { evaluateGate } from "@/domain/gate";
@@ -69,5 +71,35 @@ describe("manual exit permit", () => {
     ep2.validUntil = new Date(Date.now() - 365 * 864e5 * 10).toISOString();
     const r = consumeExitPermit(d, ep2.token, "U-GD1");
     expect(r.ok).toBe(false);
+  });
+});
+
+describe("internal hauls, stockpiles, guest entry, master create", () => {
+  it("weighs in-mine hauls and keeps stockpile balance = opening + in − out", async () => {
+    const { stockpilesView } = await import("./views");
+    const d = buildSeed();
+    const internal = d.transactions.filter((t) => t.operation === "INTERNAL" && t.state === "APPROVED");
+    expect(internal.some((t) => t.destinationId.startsWith("LOC-SP"))).toBe(true);
+    const v = stockpilesView(d);
+    const sp1 = v.stockpiles.find((s) => s.id === "LOC-SP1")!;
+    const ins = d.transactions.filter((t) => t.state === "APPROVED" && t.destinationId === "LOC-SP1").reduce((a, t) => a + (t.netKg ?? 0), 0) / 1000;
+    const outs = d.transactions.filter((t) => t.state === "APPROVED" && t.originId === "LOC-SP1").reduce((a, t) => a + (t.netKg ?? 0), 0) / 1000;
+    expect(Math.abs(sp1.balanceT - (sp1.openingT + ins - outs))).toBeLessThan(0.5);
+  });
+  it("logs a guest entry without any required field", async () => {
+    const { guestEntry } = await import("./ops");
+    const { initLive } = await import("./sim");
+    const d = buildSeed();
+    initLive(d);
+    const v = guestEntry(d, {}, "U-GD1") as { scenario?: string };
+    expect(v.scenario).toBe("GUEST-ENTRY");
+    expect(d.audit.at(-1)?.action).toBe("vehicle.guest_entry");
+  });
+  it("creates master records and rejects a duplicate RFID tag", async () => {
+    const { dispatch } = await import("./actions");
+    const d = buildSeed();
+    const dr = dispatch(d, "master.create", { collection: "drivers", data: { name: "راننده جدید", rfidTag: "E280-9999-0000-0001" } }, "U-ADMIN") as { id: string };
+    expect(d.drivers.some((x) => x.id === dr.id)).toBe(true);
+    expect(() => dispatch(d, "master.create", { collection: "vehicles", data: { rfidEpc: "E280-9999-0000-0001" } }, "U-ADMIN")).toThrow();
   });
 });

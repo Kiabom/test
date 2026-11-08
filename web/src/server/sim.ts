@@ -128,7 +128,9 @@ export function spawnArrival(d: DB, scenario?: string, silent = false): T.Visit 
   if (!vehicle) return;
   const okDriver = (x: T.Driver) => x.status === "ACTIVE" && new Date(x.licenseUntil) > now;
   const authorized = d.drivers.filter((x) => vehicle!.authorizedDriverIds?.includes(x.id) && okDriver(x));
-  const driver = authorized[Math.floor(rnd() * authorized.length)] ?? d.drivers.find((x) => x.carrierId === vehicle!.carrierId && okDriver(x)) ?? d.drivers[0];
+  // S-MISMATCH: the driver's card is not on this vehicle's authorized list (RFID check holds the truck)
+  const outsider = scenario === "S-MISMATCH" ? d.drivers.find((x) => okDriver(x) && !vehicle!.authorizedDriverIds?.includes(x.id)) : undefined;
+  const driver = outsider ?? authorized[Math.floor(rnd() * authorized.length)] ?? d.drivers.find((x) => x.carrierId === vehicle!.carrierId && okDriver(x)) ?? d.drivers[0];
   const inbound = scenario === "S-INBOUND" || (!scenario && rnd() < 0.08);
   let permit: T.Permit | undefined;
   if (scenario === "S-PERMIT-EXP") permit = d.permits.find((p) => p.status === "EXPIRED");
@@ -205,15 +207,14 @@ export function processGateIn(d: DB, now: number) {
       // ANPR front + rear, RFID, UVSS, evidence
       const lowConf = v.scenario === "S-LOWCONF";
       const conf = lowConf ? 0.58 : Number(between(0.86, 0.995).toFixed(3));
-      const plate = lowConf && rnd() < 0.5 ? normalizePlate(misreadPlate(vehicle.plate, rnd)) : vehicle.plateNormalized;
+      const plate = v.scenario === "S-MISMATCH" ? d.vehicles.find((x) => x.id !== vehicle.id && !x.internal && x.status === "ACTIVE")!.plateNormalized : lowConf && rnd() < 0.5 ? normalizePlate(misreadPlate(vehicle.plate, rnd)) : vehicle.plateNormalized;
       const pr: T.PlateRead = { id: nextId(d, "PR"), cameraId: "CAM-A-FRONT", visitId: v.id, plateRaw: plate, plateNormalized: plate, confidence: conf, bbox: [0.42, 0.62, 0.16, 0.06], modelVersion: "anpr-ir-2.4.1", capturedAt: nowIso(), review: "AUTO" };
       const prRear: T.PlateRead = { ...pr, id: nextId(d, "PR"), cameraId: "CAM-A-REAR", confidence: Number(between(0.8, 0.97).toFixed(3)) };
       d.plateReads.push(pr, prRear);
       v.identity.anpr = { plate, confidence: conf, readId: pr.id };
       v.identity.anprRear = { plate, confidence: prRear.confidence, readId: prRear.id };
       if (!lowConf && vehicle.rfidEpc) {
-        let epc = vehicle.rfidEpc;
-        if (v.scenario === "S-MISMATCH") epc = d.vehicles.find((x) => x.id !== vehicle.id && x.rfidEpc && !x.internal)!.rfidEpc!;
+        const epc = vehicle.rfidEpc;
         const rf: T.RfidRead = { id: nextId(d, "RF"), readerId: "RFID-A", epc, rssi: Number(between(-68, -42).toFixed(1)), antenna: 1, readAt: nowIso(), vehicleId: d.vehicles.find((x) => x.rfidEpc === epc)?.id };
         d.rfidReads.push(rf);
         v.identity.rfid = { epc, rssi: rf.rssi, readId: rf.id };
@@ -250,7 +251,7 @@ export function processGateIn(d: DB, now: number) {
     case "READING": {
       fuseIdentity(d, v);
       const res = applyGateDecision(d, v, "A");
-      if (v.identity.match === "MISMATCH") raiseAlert(d, "R05", { visitId: v.id, laneCode: "A", detail: `ANPR ${v.identity.anpr?.plate} ≠ RFID ${v.identity.rfid?.epc}` });
+      if (v.identity.match === "MISMATCH") raiseAlert(d, "R05", { visitId: v.id, laneCode: "A", detail: `پلاک‌خوان (در دست توسعه): ${v.identity.anpr?.plate} ≠ RFID ${v.identity.rfid?.epc}` });
       if (v.identity.anpr && v.identity.anpr.confidence < 0.85) raiseAlert(d, "R06", { visitId: v.id, laneCode: "A", observed: `${(v.identity.anpr.confidence * 100).toFixed(0)}%`, threshold: "85%" });
       if (res.code === "UNKNOWN_VEHICLE") raiseAlert(d, "R07", { visitId: v.id, laneCode: "A", detail: v.identity.anpr?.plate });
       if (res.code === "ANTI_PASSBACK") raiseAlert(d, "R08", { visitId: v.id, laneCode: "A" });
