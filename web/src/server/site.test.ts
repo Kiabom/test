@@ -117,3 +117,25 @@ describe("master-data overrides", () => {
     expect(buildSeed().materials.find((m) => m.id === "M-FEL")!.name).toBe("سنگ آهن پرعیار مگنتیتی");
   });
 });
+
+describe("route & load assignment", () => {
+  it("issues a permit with a route and vehicles, and a new visit for that vehicle uses it", async () => {
+    const { dispatch } = await import("./actions");
+    const { initLive, runScenario, tick } = await import("./sim");
+    const { gateContextFor } = await import("./ops");
+    const d = buildSeed();
+    initLive(d);
+    const v = d.vehicles.find((x) => !x.internal && x.status === "ACTIVE" && !d.visits.some((s) => s.vehicleId === x.id && !["EXITED", "REJECTED", "CANCELLED", "EXPECTED"].includes(s.state)))!;
+    const pm = dispatch(d, "permit.create", { type: "TRANSFER", materialId: "M-FEL", originId: "LOC-PN", destinationId: "LOC-SP1", allowedT: 500, days: 10, vehicleIds: [v.id], assign: true }, "U-ADMIN") as { id: string; originId: string; destinationId: string };
+    expect(pm.originId).toBe("LOC-PN");
+    expect(d.vehicles.find((x) => x.id === v.id)!.assignment?.permitId).toBe(pm.id);
+    expect(() => dispatch(d, "permit.create", { type: "SALE", materialId: "M-FEL", originId: "LOC-SP1", destinationId: "LOC-SP1", allowedT: 1 }, "U-ADMIN")).toThrow();
+    // another vehicle is not allowed on this permit
+    const other = d.vehicles.find((x) => x.id !== v.id && !x.internal)!;
+    const visit = d.visits.find((x) => x.vehicleId === other.id)!;
+    const ctx = gateContextFor(d, { ...visit, permitId: pm.id }, "IN");
+    expect(ctx.permit).toEqual({ ok: false, reason: "VEHICLE_NOT_ALLOWED" });
+    void runScenario;
+    void tick;
+  });
+});

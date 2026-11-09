@@ -138,12 +138,15 @@ export function spawnArrival(d: DB, scenario?: string, silent = false): T.Visit 
     const base = d.permits.find((p) => p.type === "SALE" && p.status === "ACTIVE")!;
     permit = { ...base, id: nextId(d, "PM"), permitNo: `SO-1403-T${String(d.counters.PM).slice(-3)}`, allowedKg: 6000, consumedKg: 0, reservedKg: 0, tripsUsed: 0, validFrom: new Date(clockNow() - 864e5).toISOString() };
     d.permits.push(permit);
+  } else if (vehicle.assignment && (!vehicle.assignment.until || new Date(vehicle.assignment.until) > now) && d.permits.some((p) => p.id === vehicle!.assignment!.permitId && p.status === "ACTIVE")) {
+    // the vehicle's assigned haul order decides route and material
+    permit = d.permits.find((p) => p.id === vehicle!.assignment!.permitId);
   } else {
     const pool = d.permits.filter((p) => p.status === "ACTIVE" && new Date(p.validTo) > now && (inbound ? p.type === "PURCHASE" : p.type === "SALE" || p.type === "HAUL") && p.allowedKg - p.consumedKg > 60000);
     permit = pool[Math.floor(rnd() * pool.length)];
   }
   // haul permits move ore to the plant/another site — a transfer, not a sale
-  const operation: T.Operation = inbound ? "RECEIVE" : permit?.type === "HAUL" ? "TRANSFER" : "DISPATCH";
+  const operation: T.Operation = permit?.type === "PURCHASE" || (inbound && !permit) ? "RECEIVE" : permit?.type === "HAUL" ? "TRANSFER" : permit?.type === "TRANSFER" ? "INTERNAL" : "DISPATCH";
   d.counters.queueNo = ((d.counters.queueNo ?? 0) % 99) + 1;
   const tare = vehicle.storedTareKg ? vehicle.storedTareKg + Math.round((rnd() - 0.5) * 300 / 20) * 20 : 15800;
   let net = Math.round(between(vehicle.ratedPayloadKg * 0.75, vehicle.ratedPayloadKg * 0.98) / 20) * 20;

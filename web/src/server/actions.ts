@@ -1,5 +1,5 @@
 import { clockNow } from "@/domain/clock";
-import { verifyChain } from "@/domain/audit";
+import { sha256, verifyChain } from "@/domain/audit";
 import { can, type Permission } from "@/domain/rbac";
 import type * as T from "@/domain/types";
 import { ackAlert, captureWeigh, finalizeTx, findTx, findVisit, gateDecide, guestEntry, issueExitPermit, issueManualExitPermit, lane, OpError, printTx, registerGuest, requestBarrierOpen, confirmBarrierOpen, scanAny, setDeduction, voidTx } from "./ops";
@@ -34,6 +34,9 @@ const PERMS: Record<string, Permission | null> = {
   "queue.callNext": "weigh.capture",
   "permit.status": "permit.manage",
   "permit.create": "permit.manage",
+  "vehicle.assign": "permit.manage",
+  "vehicle.unassign": "permit.manage",
+  "visit.setPermit": "gate.decide",
   "master.update": "master.edit",
   "master.create": "master.edit",
   "vehicle.drivers.set": "driver.assign",
@@ -56,6 +59,18 @@ const PERMS: Record<string, Permission | null> = {
   "driver.book": null,
   "kiosk.print": null,
 };
+
+const OP_OF: Record<T.PermitType, T.Operation> = { SALE: "DISPATCH", PURCHASE: "RECEIVE", HAUL: "TRANSFER", TRANSFER: "INTERNAL" };
+
+function assignVehicles(d: DB, ids: string[], pm: T.Permit, actorId: string, until?: string, note?: string) {
+  for (const id of ids) {
+    const v = d.vehicles.find((x) => x.id === id);
+    if (!v) continue;
+    v.assignment = { permitId: pm.id, until, note, by: actorId, at: nowIso() };
+    recordOverride({ kind: "update", col: "vehicles", id: v.id, data: { assignment: v.assignment } });
+    audit(d, "vehicle.assigned", "Vehicle", v.id, { actorId, data: { permitNo: pm.permitNo, until, note } });
+  }
+}
 
 function assertUniqueTags(d: DB, epc?: string, tag?: string, selfId?: string) {
   for (const t of [epc, tag].filter((x): x is string => !!x && !!x.trim())) {
@@ -197,12 +212,72 @@ export function dispatch(d: DB, type: string, p: Payload, actorId: string): unkn
       return pm;
     }
     case "permit.create": {
-      const base = d.permits.find((x) => x.type === (str(p, "type") || "SALE")) ?? d.permits[0];
-      const pm: T.Permit = { ...base, id: nextId(d, "PM"), permitNo: `${str(p, "type") === "PURCHASE" ? "PO" : "SO"}-1403-${String(5000 + (d.counters.PM ?? 0))}`, type: (str(p, "type") || "SALE") as T.PermitType, customerId: str(p, "customerId") || base.customerId, materialId: str(p, "materialId") || base.materialId, allowedKg: num(p, "allowedT") * 1000 || 500_000, consumedKg: 0, reservedKg: 0, tripsUsed: 0, validFrom: nowIso(), validTo: new Date(clockNow() + (num(p, "days") || 30) * 864e5).toISOString(), status: "ACTIVE", allowedVehicleIds: [] };
+      const type = (str(p, "type") || "SALE") as T.PermitType;
+      const originId = str(p, "originId");
+      const destinationId = str(p, "destinationId");
+      const materialId = str(p, "materialId");
+      if (!originId || !destinationId || !materialId) throw new OpError("NOT_FOUND", "مبدأ، مقصد و ماده لازم است");
+      if (originId === destinationId) throw new OpError("ROUTE_INVALID");
+      const vehicleIds = Array.isArray(p.vehicleIds) ? (p.vehicleIds as unknown[]).filter((x): x is string => typeof x === "string") : [];
+      const prefix = { SALE: "SO", PURCHASE: "PO", HAUL: "HV", TRANSFER: "TR" }[type];
+      const id = nextId(d, "PM");
+      const pm: T.Permit = {
+        id,
+        permitNo: `${prefix}-1403-${String(5000 + (d.counters.PM ?? 0))}`,
+        type,
+        customerId: type === "SALE" || type === "PURCHASE" ? str(p, "customerId") : "",
+        materialId,
+        originId,
+        destinationId,
+        allowedKg: Math.max(1, num(p, "allowedT")) * 1000,
+        reservedKg: 0,
+        consumedKg: 0,
+        maxTrips: num(p, "maxTrips") || undefined,
+        tripsUsed: 0,
+        allowedVehicleIds: vehicleIds,
+        carrierId: str(p, "carrierId") || undefined,
+        validFrom: nowIso(),
+        validTo: new Date(clockNow() + (num(p, "days") || 30) * 864e5).toISOString(),
+        status: "ACTIVE",
+        issuer: type === "PURCHASE" ? "واحد خرید" : type === "TRANSFER" ? "واحد تولید معدن" : type === "HAUL" ? "واحد برنامه‌ریزی تولید" : "واحد فروش",
+        documentHash: sha256(`${id}-${originId}-${destinationId}-${materialId}`),
+      };
       d.permits.push(pm);
-      audit(d, "permit.created", "Permit", pm.id, { actorId, data: { permitNo: pm.permitNo, allowedKg: pm.allowedKg } });
+      recordOverride({ kind: "create", col: "permits", id: pm.id, data: pm as unknown as Record<string, unknown> });
+      audit(d, "permit.created", "Permit", pm.id, { actorId, data: { permitNo: pm.permitNo, type, originId, destinationId, materialId, allowedKg: pm.allowedKg, vehicles: vehicleIds.length } });
+      if (p.assign && vehicleIds.length) assignVehicles(d, vehicleIds, pm, actorId);
       bump(d);
       return pm;
+    }
+    case "vehicle.assign": {
+      const pm = d.permits.find((x) => x.id === str(p, "permitId"));
+      if (!pm || pm.status !== "ACTIVE") throw new OpError("PERMIT_NOT_ACTIVE");
+      const ids = Array.isArray(p.vehicleIds) ? (p.vehicleIds as unknown[]).filter((x): x is string => typeof x === "string") : [];
+      if (pm.allowedVehicleIds.length && ids.some((v) => !pm.allowedVehicleIds.includes(v))) throw new OpError("VEHICLE_NOT_ALLOWED");
+      assignVehicles(d, ids, pm, actorId, str(p, "until") || undefined, str(p, "note") || undefined);
+      bump(d);
+      return { ok: true, count: ids.length };
+    }
+    case "vehicle.unassign": {
+      const v = d.vehicles.find((x) => x.id === str(p, "vehicleId"));
+      if (!v) throw new OpError("NOT_FOUND");
+      v.assignment = undefined;
+      recordOverride({ kind: "update", col: "vehicles", id: v.id, data: { assignment: null } });
+      audit(d, "vehicle.unassigned", "Vehicle", v.id, { actorId });
+      bump(d);
+      return v;
+    }
+    case "visit.setPermit": {
+      const visit = d.visits.find((x) => x.id === str(p, "visitId"));
+      const pm = d.permits.find((x) => x.id === str(p, "permitId"));
+      if (!visit || !pm) throw new OpError("NOT_FOUND");
+      if (!str(p, "reason")) throw new OpError("REASON_REQUIRED");
+      const before = visit.permitId;
+      visit.permitId = pm.id;
+      visit.operation = OP_OF[pm.type];
+      audit(d, "visit.permit_changed", "Visit", visit.id, { actorId, reason: str(p, "reason"), data: { before, after: pm.id } });
+      bump(d);
+      return visit;
     }
     case "master.create": {
       const col = str(p, "collection") as "vehicles" | "drivers" | "carriers" | "customers" | "materials" | "locations";

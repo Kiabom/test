@@ -105,6 +105,8 @@ export interface Vehicle {
   status: "ACTIVE" | "BLOCKED" | "GUEST";
   internal: boolean;
   color: string;
+  /** Current haul assignment: the permit (route + material) used automatically when the tag is read at the gate */
+  assignment?: { permitId: ID; until?: ISO; note?: string; by: ID; at: ISO };
   /** Drivers allowed to drive this vehicle (gate checks the driver card against this list) */
   authorizedDriverIds: ID[];
 }

@@ -14,7 +14,8 @@ import type { Visit } from "@/domain/types";
 import { remainingKg } from "@/domain/permits";
 import { DECISION_CODE, ERRORS, lbl, PERMIT_STATUS, VISIT_STATE } from "@/i18n/labels";
 import { fmtDate, fmtDuration, fmtKg, fmtTime } from "@/lib/format";
-import { act, ActionError, useData, useLive, useView } from "@/lib/live";
+import { act, ActionError, useData, useLive, useMasters, useView } from "@/lib/live";
+import { routeText } from "@/components/permits/PermitTools";
 import { useL, useLocale } from "@/lib/prefs";
 import { USERS_LIST } from "@/lib/users";
 import type { VisitDetail } from "@/server/views";
@@ -26,6 +27,8 @@ export default function GatePage() {
   const [tab, setTab] = useState<"in" | "out">("in");
   const [selected, setSelected] = useState<string | undefined>();
   const [dlg, setDlg] = useState<null | "approve" | "reject" | "guest" | "barrier">(null);
+  const [permitDlg, setPermitDlg] = useState(false);
+  const masters = useMasters();
   const [search, setSearch] = useState("");
 
   const laneA = live?.lanes.find((l) => l.code === "A");
@@ -153,12 +156,17 @@ export default function GatePage() {
                             <span className="font-mono text-sm ltr">{d.permit.permitNo}</span>
                             <Badge tone={d.permit.status === "ACTIVE" ? "success" : "danger"}>{lbl(PERMIT_STATUS, d.permit.status, locale)}</Badge>
                           </div>
+                          <Kv k={L("مسیر", "Route")} v={routeText(masters, d.permit, locale)} />
+                          <Kv k={L("بار", "Load")} v={(locale === "fa" ? masters?.materials.find((m) => m.id === d.permit!.materialId)?.name : masters?.materials.find((m) => m.id === d.permit!.materialId)?.nameEn) ?? "—"} />
                           <Kv k={L("مانده", "Remaining")} v={fmtKg(remainingKg(d.permit), locale, "t")} />
                           <Kv k={L("اعتبار تا", "Valid to")} v={fmtDate(d.permit.validTo, locale)} />
                         </>
                       ) : (
                         <div className="text-sm text-muted">{L("بدون حواله", "No permit")}</div>
                       )}
+                      <Button size="sm" variant="ghost" className="mt-2 w-full" onClick={() => setPermitDlg(true)}>
+                        {L("تغییر حواله / مسیر", "Change permit / route")}
+                      </Button>
                     </div>
                     <div className="rounded-lg border border-border p-3">
                       <div className="mb-1 text-xs font-semibold text-muted">{L("مدارک", "Documents")}</div>
@@ -261,6 +269,7 @@ export default function GatePage() {
 
       <ConfirmDialog open={dlg === "approve"} onClose={() => setDlg(null)} title={L("تأیید ورود خودرو", "Approve entry")} description={d?.visit.identity.match === "MISMATCH" ? L("مغایرت پلاک و RFID — دلیل تطبیق دستی را ثبت کنید.", "Plate/RFID mismatch — record why you are overriding.") : undefined} needReason={d?.visit.identity.match === "MISMATCH" || d?.visit.identity.match === "UNKNOWN"} onConfirm={({ reason }) => run("gate.decide", { visitId: d!.visit.id, approve: true, reason }, L("ورود تأیید شد — راهبند باز شد", "Entry approved — barrier opened"))} />
       <ConfirmDialog open={dlg === "reject"} onClose={() => setDlg(null)} danger title={L("رد ورود", "Reject entry")} onConfirm={({ reason }) => run("gate.decide", { visitId: d!.visit.id, approve: false, reason }, L("ورود رد شد", "Entry rejected"))} />
+      {permitDlg && d && <ChangePermitDialog visitId={d.visit.id} vehicleId={d.vehicle.id} current={d.permit?.id} onClose={() => setPermitDlg(false)} />}
       {dlg === "guest" && <GuestDialog onClose={() => setDlg(null)} laneVisitId={d && d.visit.identity.match === "UNKNOWN" ? d.visit.id : undefined} />}
       <ConfirmDialog open={dlg === "barrier"} onClose={() => setDlg(null)} title={L("باز کردن دستی راهبند", "Manual barrier open")} description={L("درخواست به PLC ارسال می‌شود؛ interlock ایمنی همچنان تصمیم نهایی را می‌گیرد.", "A request is sent to the PLC; the safety interlock still has the final say.")} needSigner users={USERS_LIST.map((u) => ({ id: u.id, name: locale === "fa" ? u.name : u.nameEn }))} onConfirm={({ reason }) => run("barrier.open", { lane: tab === "in" ? "A" : "E", reason }, L("درخواست باز شدن ارسال شد", "Open request sent"))} />
     </div>
@@ -340,5 +349,59 @@ function GuestLog() {
         {!items.length && <li className="px-3 py-4 text-center text-muted">{L("امروز ورود مهمانی ثبت نشده", "No guest entries yet")}</li>}
       </ul>
     </Card>
+  );
+}
+
+function ChangePermitDialog({ visitId, vehicleId, current, onClose }: { visitId: string; vehicleId: string; current?: string; onClose: () => void }) {
+  const L = useL();
+  const locale = useLocale();
+  const masters = useMasters();
+  const options = (masters?.permits ?? []).filter((p) => p.status === "ACTIVE" && (!p.allowedVehicleIds.length || p.allowedVehicleIds.includes(vehicleId)));
+  const [permitId, setPermitId] = useState(current ?? "");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={L("تغییر حواله / مسیر این تردد", "Change permit / route for this visit")}
+      footer={
+        <Button
+          variant="primary"
+          loading={busy}
+          disabled={!permitId || !reason.trim()}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              await act("visit.setPermit", { visitId, permitId, reason });
+              toast.success(L("حواله تردد تغییر کرد", "Visit permit changed"));
+              onClose();
+            } catch (e) {
+              toast.error(e instanceof ActionError ? lbl(ERRORS, e.code, locale) : String(e));
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          {L("ثبت", "Save")}
+        </Button>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        <Field label={L("حواله", "Permit")}>
+          <select value={permitId} onChange={(e) => setPermitId(e.target.value)} className="h-10 w-full rounded-lg border border-border bg-surface px-2 text-sm">
+            <option value="">—</option>
+            {options.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.permitNo} — {routeText(masters, p, locale)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label={L("دلیل تغییر", "Reason")}>
+          <Input value={reason} onChange={(e) => setReason(e.target.value)} />
+        </Field>
+      </div>
+    </Dialog>
   );
 }

@@ -185,6 +185,9 @@ export const STAGE: Dict = {
 export const ERRORS: Dict = {
   FORBIDDEN: ["نقش فعلی مجوز این کار را ندارد", "Your role is not allowed to do this"],
   NOT_FOUND: ["مورد پیدا نشد", "Not found"],
+  ROUTE_INVALID: ["مبدأ و مقصد نمی‌تواند یکی باشد", "Origin and destination must differ"],
+  PERMIT_NOT_ACTIVE: ["حواله فعال نیست", "Permit is not active"],
+  VEHICLE_NOT_ALLOWED: ["این خودرو در فهرست خودروهای مجاز حواله نیست", "Vehicle is not on the permit"],
   DUPLICATE: ["این تگ قبلاً به راننده یا خودروی دیگری داده شده است", "This tag is already assigned to another driver or vehicle"],
   REASON_REQUIRED: ["ثبت دلیل الزامی است", "A reason is required"],
   SECOND_SIGNATURE_REQUIRED: ["امضای دوم (کاربر دیگر) الزامی است", "A second signer (another user) is required"],
