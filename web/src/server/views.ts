@@ -626,6 +626,13 @@ export interface PerfRow {
   lastAt?: string;
   vehiclesUsed?: number;
   unauthorized?: number;
+  /** 0–100 performance score and its four parts (load 35, productivity 25, time 20, discipline 20) */
+  score: number;
+  parts: { load: number; productivity: number; time: number; discipline: number };
+  rank: number;
+  grade: "A" | "B" | "C" | "D";
+  /** main reason this row needs attention, if any */
+  issue?: string;
 }
 export interface PerfTrip {
   at: string;
@@ -709,6 +716,10 @@ export function fleetPerf(d: DB, from: string, to: string, detail?: { vehicleId?
     const cr = d.carriers.find((c) => c.id === carrierId);
     const short = (e?: string) => (e ? e.split("-").slice(-2).join("-") : undefined);
     return {
+      score: 0,
+      parts: { load: 0, productivity: 0, time: 0, discipline: 0 },
+      rank: 0,
+      grade: "C" as const,
       id,
       label: veh ? veh.id : drv?.name ?? id,
       labelEn: veh ? veh.id : drv?.nameEn ?? id,
@@ -746,8 +757,30 @@ export function fleetPerf(d: DB, from: string, to: string, detail?: { vehicleId?
   };
   const byVeh = group("vehicleId");
   const byDrv = group("driverId");
-  const vehicleRows = [...byVeh.entries()].map(([id, l]) => rowOf(id, l, "vehicle")).sort((a, b) => b.tons - a.tons);
-  const driverRows = [...byDrv.entries()].filter(([id]) => id).map(([id, l]) => rowOf(id, l, "driver")).sort((a, b) => b.tons - a.tons);
+  const scoreRows = (rows: PerfRow[]) => {
+    if (!rows.length) return rows;
+    const clamp = (x: number) => Math.max(0, Math.min(1, x));
+    const fleetNet = avg(rows.map((r) => r.avgNet)) || 1;
+    const perDay = (r: PerfRow) => (r.tripsPerDay ? (r.tons / r.trips) * r.tripsPerDay : 0);
+    const bestDay = Math.max(...rows.map(perDay), 1);
+    const sites = rows.map((r) => r.avgSiteMin).filter((x): x is number => x != null).sort((a, b) => a - b);
+    const median = sites.length ? sites[Math.floor(sites.length / 2)] : 0;
+    for (const r of rows) {
+      const load = clamp(r.loadFactor != null ? r.loadFactor / 0.95 : r.avgNet / fleetNet / 1.05);
+      const productivity = clamp(perDay(r) / bestDay);
+      const time = r.avgSiteMin == null || !median ? 0.7 : clamp(1 - (r.avgSiteMin - median * 0.8) / (median * 1.2));
+      const per = (n: number) => n / Math.max(1, r.trips);
+      const discipline = clamp(1 - per(r.overloads) * 4 - per(r.holds) * 0.6 - per(r.manual) * 0.8 - (r.unauthorized ?? 0) * 0.15 - (Math.abs(r.tareDev ?? 0) > 300 ? 0.25 : 0));
+      r.parts = { load: Math.round(load * 35), productivity: Math.round(productivity * 25), time: Math.round(time * 20), discipline: Math.round(discipline * 20) };
+      r.score = r.parts.load + r.parts.productivity + r.parts.time + r.parts.discipline;
+      r.grade = r.score >= 80 ? "A" : r.score >= 65 ? "B" : r.score >= 50 ? "C" : "D";
+      r.issue = r.overloads > 0 ? `${r.overloads} اضافه‌بار` : Math.abs(r.tareDev ?? 0) > 300 ? `انحراف تارا ${r.tareDev} kg` : r.loadFactor != null && r.loadFactor < 0.75 ? `ضریب بارگیری ${Math.round(r.loadFactor * 100)}٪` : (r.unauthorized ?? 0) > 0 ? `${r.unauthorized} ورود با کارت غیرمجاز` : per(r.holds) > 0.3 ? `${r.holds} توقف/استثنا` : r.parts.productivity < 10 ? "بهره‌وری پایین (تناژ روزانه کم)" : r.parts.time < 8 ? "زمان طولانی در سایت" : undefined;
+    }
+    [...rows].sort((a, b) => b.score - a.score || b.tons - a.tons).forEach((r, i) => (r.rank = i + 1));
+    return rows;
+  };
+  const vehicleRows = scoreRows([...byVeh.entries()].map(([id, l]) => rowOf(id, l, "vehicle"))).sort((a, b) => b.tons - a.tons);
+  const driverRows = scoreRows([...byDrv.entries()].filter(([id]) => id).map(([id, l]) => rowOf(id, l, "driver"))).sort((a, b) => b.tons - a.tons);
   const dayMap = new Map<string, PerfTrip[]>();
   for (const t of trips) dayMap.set(dayKey(t.at), [...(dayMap.get(dayKey(t.at)) ?? []), t]);
   const daily = [...dayMap.entries()]
@@ -771,3 +804,99 @@ export function fleetPerf(d: DB, from: string, to: string, detail?: { vehicleId?
   return { summary, daily, vehicles: vehicleRows, drivers: driverRows, trips: detailTrips?.sort((a, b) => a.at.localeCompare(b.at)) };
 }
 export type FleetPerfData = ReturnType<typeof fleetPerf>;
+
+// ---------------- Production & shifts over a period ----------------
+/**
+ * Weighed production (approved tickets, purchases excluded) per shift, per day and per hour, with the
+ * splits by operation, material and route, plus the internal fleet's cycle breakdown for the period.
+ * A shift's day is the site day on which the ticket was approved.
+ */
+export function productionView(d: DB, from: string, to: string, filter: { fleet?: string; carrierId?: string } = {}) {
+  const now = new Date(sceneNow(d)).toISOString();
+  const end = to < now ? to : now;
+  const vehOf = new Map(d.vehicles.map((v) => [v.id, v]));
+  const visitOf = new Map(d.visits.map((v) => [v.id, v]));
+  const manual = new Set(d.weighEvents.filter((w) => w.captureMethod === "MANUAL").map((w) => w.transactionId));
+  const txs = d.transactions.filter((t) => {
+    if (t.state !== "APPROVED" || !t.netKg || t.operation === "RECEIVE") return false;
+    const at = t.approvedAt ?? t.createdAt;
+    if (at < from || at >= end) return false;
+    const v = vehOf.get(t.vehicleId);
+    if (filter.fleet === "internal" && !v?.internal) return false;
+    if (filter.fleet === "external" && v?.internal) return false;
+    if (filter.carrierId && t.carrierId !== filter.carrierId) return false;
+    return true;
+  });
+  const SITE = 210 * 60_000;
+  const dayKey = (iso: string) => new Date(new Date(iso).getTime() + SITE).toISOString().slice(0, 10);
+  const hourOf = (iso: string) => new Date(new Date(iso).getTime() + SITE).getUTCHours();
+  const days: string[] = [];
+  for (let t = new Date(from).getTime(); t < new Date(end).getTime(); t += 864e5) days.push(dayKey(new Date(t).toISOString()));
+  const nDays = Math.max(1, days.length);
+  const at = (t: T.Transaction) => t.approvedAt ?? t.createdAt;
+  const tons = (list: T.Transaction[]) => +(list.reduce((a, t) => a + (t.netKg ?? 0), 0) / 1000).toFixed(1);
+  const siteMin = (list: T.Transaction[]) => {
+    const xs = list.map((t) => visitOf.get(t.visitId)).map((v) => (v?.exitedAt ? (new Date(v.exitedAt).getTime() - new Date(v.arrivedAt).getTime()) / 60_000 : undefined)).filter((x): x is number => x != null && x > 0);
+    return xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : undefined;
+  };
+  const shifts = d.shifts.map((sh) => {
+    const list = txs.filter((t) => t.shiftCode === sh.code);
+    const target = sh.targetTons * nDays;
+    const t = tons(list);
+    return {
+      code: sh.code,
+      name: sh.name,
+      nameEn: sh.nameEn,
+      startHour: sh.startHour,
+      endHour: sh.endHour,
+      trips: list.length,
+      tons: t,
+      target,
+      attainment: target ? +(t / target).toFixed(3) : 0,
+      avgNetT: list.length ? +(t / list.length).toFixed(1) : 0,
+      avgSiteMin: siteMin(list),
+      overloads: list.filter((x) => (x.grossKg ?? 0) > (vehOf.get(x.vehicleId)?.maxGvwKg ?? Infinity)).length,
+      holds: list.filter((x) => x.holdReasons.length > 0).length,
+      manual: list.filter((x) => manual.has(x.id)).length,
+      vehicles: new Set(list.map((x) => x.vehicleId)).size,
+      drivers: new Set(list.map((x) => x.driverId)).size,
+    };
+  });
+  const matrix = days.map((day) => {
+    const ofDay = txs.filter((t) => dayKey(at(t)) === day);
+    const cells = d.shifts.map((sh) => {
+      const list = ofDay.filter((t) => t.shiftCode === sh.code);
+      const t = tons(list);
+      return { code: sh.code, tons: t, trips: list.length, attainment: sh.targetTons ? +(t / sh.targetTons).toFixed(3) : 0 };
+    });
+    return { day, cells, tons: tons(ofDay), trips: ofDay.length };
+  });
+  const dailyTarget = d.shifts.reduce((a, s) => a + s.targetTons, 0);
+  const split = (key: (t: T.Transaction) => string) => {
+    const m = new Map<string, T.Transaction[]>();
+    for (const t of txs) m.set(key(t), [...(m.get(key(t)) ?? []), t]);
+    return [...m.entries()].map(([k, l]) => ({ key: k, tons: tons(l), trips: l.length })).sort((a, b) => b.tons - a.tons);
+  };
+  const hourly = Array.from({ length: 24 }, (_, h) => {
+    const list = txs.filter((t) => hourOf(at(t)) === h);
+    return { hour: h, tons: +(tons(list) / nDays).toFixed(1), trips: +(list.length / nDays).toFixed(1) };
+  });
+  const cyc = d.fleetCycles.filter((c) => c.start >= from && c.start < end && (!filter.carrierId || vehOf.get(c.vehicleId)?.carrierId === filter.carrierId) && filter.fleet !== "external");
+  const cavg = (k: "queueMin" | "loadMin" | "haulMin" | "dumpMin" | "returnMin") => (cyc.length ? +(cyc.reduce((a, c) => a + c[k], 0) / cyc.length).toFixed(1) : 0);
+  const total = tons(txs);
+  return {
+    days: nDays,
+    total,
+    trips: txs.length,
+    target: dailyTarget * nDays,
+    dailyTarget,
+    shifts,
+    matrix,
+    byOperation: split((t) => t.operation),
+    byMaterial: split((t) => t.materialId),
+    byRoute: split((t) => `${t.originId}>${t.destinationId}`).slice(0, 8),
+    hourly,
+    cycles: { count: cyc.length, tons: +(cyc.reduce((a, c) => a + c.payloadKg, 0) / 1000).toFixed(1), queueMin: cavg("queueMin"), loadMin: cavg("loadMin"), haulMin: cavg("haulMin"), dumpMin: cavg("dumpMin"), returnMin: cavg("returnMin") },
+  };
+}
+export type ProductionData = ReturnType<typeof productionView>;

@@ -177,3 +177,29 @@ describe("fleet performance filters", () => {
     expect(all.vehicles[0].tag).toBeTruthy();
   });
 });
+
+describe("performance score and production view", () => {
+  const from = "2024-06-30T20:30:00.000Z";
+  const to = "2024-07-07T20:30:00.000Z";
+  it("scores stay within 0–100 and ranks follow the score", async () => {
+    const { fleetPerf } = await import("./views");
+    const d = buildSeed();
+    for (const rows of [fleetPerf(d, from, to).vehicles, fleetPerf(d, from, to).drivers]) {
+      expect(rows.every((r) => r.score >= 0 && r.score <= 100 && r.score === r.parts.load + r.parts.productivity + r.parts.time + r.parts.discipline)).toBe(true);
+      const byRank = [...rows].sort((a, b) => a.rank - b.rank);
+      expect(byRank.every((r, i) => i === 0 || byRank[i - 1].score >= r.score)).toBe(true);
+      expect(new Set(rows.map((r) => r.rank)).size).toBe(rows.length);
+    }
+  });
+  it("shift totals equal the grand total and the day × shift matrix", async () => {
+    const { productionView } = await import("./views");
+    const d = buildSeed();
+    const p = productionView(d, from, to);
+    const sum = (xs: number[]) => Math.round(xs.reduce((a, b) => a + b, 0));
+    expect(Math.abs(sum(p.shifts.map((s) => s.tons)) - Math.round(p.total))).toBeLessThanOrEqual(1);
+    expect(Math.abs(sum(p.matrix.flatMap((m) => m.cells.map((c) => c.tons))) - Math.round(p.total))).toBeLessThanOrEqual(2);
+    expect(p.target).toBe(p.dailyTarget * p.days);
+    expect(p.shifts.reduce((a, s) => a + s.trips, 0)).toBe(p.trips);
+    expect(p.cycles.count).toBeGreaterThan(100);
+  });
+});

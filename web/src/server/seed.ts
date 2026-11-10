@@ -120,9 +120,9 @@ function masters(r: Rand, now: number) {
     { id: "LOC-EXT", name: "خارج از سایت", nameEn: "Off-site", type: "EXTERNAL" },
   ];
   const shifts: T.Shift[] = [
-    { id: "SH-A", siteId: "S1", code: "A", name: "شیفت صبح", nameEn: "Morning", startHour: 6, endHour: 14, targetTons: 1100 },
-    { id: "SH-B", siteId: "S1", code: "B", name: "شیفت عصر", nameEn: "Evening", startHour: 14, endHour: 22, targetTons: 1000 },
-    { id: "SH-C", siteId: "S1", code: "C", name: "شیفت شب", nameEn: "Night", startHour: 22, endHour: 6, targetTons: 900 },
+    { id: "SH-A", siteId: "S1", code: "A", name: "شیفت صبح", nameEn: "Morning", startHour: 6, endHour: 14, targetTons: 1000 },
+    { id: "SH-B", siteId: "S1", code: "B", name: "شیفت عصر", nameEn: "Evening", startHour: 14, endHour: 22, targetTons: 850 },
+    { id: "SH-C", siteId: "S1", code: "C", name: "شیفت شب", nameEn: "Night", startHour: 22, endHour: 6, targetTons: 250 },
   ];
   const equipment: T.Equipment[] = [
     { id: "EQ-L1", code: "L-01", type: "LOADER", name: "لودر L-01", nameEn: "Loader L-01", status: "WORKING", ratedBucketKg: 7000 },
@@ -603,8 +603,8 @@ export function buildSeed(): DB {
   );
 
   // fleet cycles for internal tippers (today's shifts)
-  // a service (loader queue → load → haul → dump → empty return) takes about an hour; cycles run from 00:00 site time
-  const shiftStart = now - ((now + 210 * MIN) % DAY);
+  // a service (loader queue → load → haul → dump → empty return) takes about an hour
+  const shiftStart = start; // whole history window, so period views have cycle data
   for (const v of internalV) {
     let t = shiftStart + int(r, 0, 20) * MIN;
     while (t < now - 70 * MIN) {

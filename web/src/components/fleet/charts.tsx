@@ -16,7 +16,18 @@ export interface CompareRow {
   loadFactor?: number;
   overloads: number;
   trips: number;
+  rank?: number;
+  score?: number;
+  grade?: "A" | "B" | "C" | "D";
+  /** shown instead of the score pill (e.g. in trip lists) */
+  plain?: boolean;
 }
+export const GRADE: Record<string, { fa: string; en: string; cls: string }> = {
+  A: { fa: "عالی", en: "Excellent", cls: "bg-success/10 text-success" },
+  B: { fa: "خوب", en: "Good", cls: "bg-primary/10 text-primary" },
+  C: { fa: "متوسط", en: "Fair", cls: "bg-warning/15 text-warning" },
+  D: { fa: "ضعیف", en: "Weak", cls: "bg-danger/10 text-danger" },
+};
 
 /**
  * One row per vehicle / driver: a stacked bar whose grey part is the empty weight (tare) and blue part the
@@ -48,7 +59,8 @@ export function WeightCompare({ rows, onPick, maxKg }: { rows: CompareRow[]; onP
           const nw = ((r.grossKg - r.tareKg) / max) * 100;
           const lf = r.loadFactor;
           return (
-            <button key={r.id} type="button" onClick={() => onPick?.(r.id)} className="grid grid-cols-[minmax(0,10.5rem)_minmax(0,1fr)_4.5rem] items-center gap-3 px-1 py-2 text-start hover:bg-surface-2/60">
+            <button key={r.id} type="button" onClick={() => onPick?.(r.id)} className="grid grid-cols-[1.6rem_minmax(0,10rem)_minmax(0,1fr)_6.5rem] items-center gap-2 px-1 py-2 text-start hover:bg-surface-2/60">
+              <span className={cx("num grid size-6 place-items-center rounded-full text-[11px] font-bold", r.rank && r.rank <= 3 ? "bg-amber-400/25 text-amber-700 dark:text-amber-300" : "text-muted")}>{r.rank ? fmtNum(r.rank, locale) : ""}</span>
               <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold">{r.label}</span>
                 <span className="block truncate font-mono text-[10px] text-muted ltr">{r.sub ?? ""}</span>
@@ -68,7 +80,11 @@ export function WeightCompare({ rows, onPick, maxKg }: { rows: CompareRow[]; onP
               </span>
               <span className="flex items-center justify-end gap-1">
                 {r.overloads > 0 && <span className="size-2 rounded-full bg-danger" title={L("اضافه‌بار", "Overload")} />}
-                {lf != null ? (
+                {r.score != null && !r.plain ? (
+                  <span className={cx("num rounded-full px-2 py-0.5 text-[11px] font-bold", GRADE[r.grade ?? "C"].cls)} title={L("امتیاز عملکرد از ۱۰۰", "Performance score / 100")}>
+                    {fmtNum(r.score, locale)} · {L(GRADE[r.grade ?? "C"].fa, GRADE[r.grade ?? "C"].en)}
+                  </span>
+                ) : lf != null ? (
                   <span className={cx("num rounded-full px-2 py-0.5 text-[11px] font-bold", lf < 0.75 ? "bg-warning/15 text-warning" : lf > 1 ? "bg-danger/10 text-danger" : "bg-success/10 text-success")}>{fmtNum(Math.round(lf * 100), locale)}٪</span>
                 ) : (
                   <span className="num text-[11px] text-muted">

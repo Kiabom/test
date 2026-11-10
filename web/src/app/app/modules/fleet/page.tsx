@@ -3,7 +3,7 @@ import { Activity, ChevronDown, ChevronUp, FileSpreadsheet, Printer, RotateCcw, 
 import { useMemo, useState } from "react";
 import { Lines } from "@/components/charts";
 import { VehicleTag } from "@/components/domain/VehicleTag";
-import { C_GROSS, C_TARE, DailyWeights, WeightCompare, type CompareRow } from "@/components/fleet/charts";
+import { C_GROSS, C_TARE, DailyWeights, GRADE, WeightCompare, type CompareRow } from "@/components/fleet/charts";
 import { ProductionTab } from "@/components/fleet/ProductionTab";
 import { Badge, Button, Card, CardHeader, cx, Drawer, Input, Kv, PageHeader, Segmented, Select, Skeleton, Tabs } from "@/components/ui";
 import { DateRange, describeRange, type DateRangeValue } from "@/components/ui/DateRange";
@@ -16,8 +16,23 @@ import { useL, useLocale } from "@/lib/prefs";
 import type { FleetPerfData, PerfRow } from "@/server/views";
 
 type Tab = "vehicles" | "drivers" | "production";
-type SortKey = "tons" | "trips" | "avgTare" | "avgGross" | "avgNet" | "loadFactor" | "overloads" | "tareDev" | "avgSiteMin" | "avgWaitMin" | "tripsPerDay" | "holds" | "manual" | "lastAt";
+type SortKey = "score" | "tons" | "trips" | "avgTare" | "avgGross" | "avgNet" | "loadFactor" | "overloads" | "tareDev" | "avgSiteMin" | "avgWaitMin" | "tripsPerDay" | "holds" | "manual" | "lastAt";
 type ColView = "weight" | "time";
+const SORTS: { id: string; k: SortKey; desc: boolean; fa: string; en: string }[] = [
+  { id: "best", k: "score", desc: true, fa: "بهترین عملکرد (امتیاز)", en: "Best performance (score)" },
+  { id: "worst", k: "score", desc: false, fa: "ضعیف‌ترین عملکرد", en: "Weakest performance" },
+  { id: "tons+", k: "tons", desc: true, fa: "بیشترین تناژ", en: "Most tons" },
+  { id: "tons-", k: "tons", desc: false, fa: "کمترین تناژ", en: "Fewest tons" },
+  { id: "trips+", k: "trips", desc: true, fa: "بیشترین سفر", en: "Most trips" },
+  { id: "lf+", k: "loadFactor", desc: true, fa: "بهترین ضریب بارگیری", en: "Best load factor" },
+  { id: "lf-", k: "loadFactor", desc: false, fa: "کمترین ضریب بارگیری", en: "Lowest load factor" },
+  { id: "gross+", k: "avgGross", desc: true, fa: "سنگین‌ترین وزن پر", en: "Heaviest loaded weight" },
+  { id: "over+", k: "overloads", desc: true, fa: "بیشترین اضافه‌بار", en: "Most overloads" },
+  { id: "drift+", k: "tareDev", desc: true, fa: "بیشترین انحراف تارا", en: "Largest tare drift" },
+  { id: "site+", k: "avgSiteMin", desc: true, fa: "طولانی‌ترین زمان در سایت", en: "Longest time on site" },
+  { id: "site-", k: "avgSiteMin", desc: false, fa: "کوتاه‌ترین زمان در سایت", en: "Shortest time on site" },
+  { id: "holds+", k: "holds", desc: true, fa: "بیشترین توقف / استثنا", en: "Most holds" },
+];
 
 export default function FleetPerformancePage() {
   const L = useL();
@@ -28,9 +43,10 @@ export default function FleetPerformancePage() {
   const [fleet, setFleet] = useState<"" | "internal" | "external">("");
   const [carrierId, setCarrierId] = useState("");
   const [q, setQ] = useState("");
-  const [sort, setSort] = useState<Record<"vehicles" | "drivers", { k: SortKey; desc: boolean }>>({ vehicles: { k: "tons", desc: true }, drivers: { k: "tons", desc: true } });
+  const [sort, setSort] = useState<Record<"vehicles" | "drivers", { k: SortKey; desc: boolean }>>({ vehicles: { k: "score", desc: true }, drivers: { k: "score", desc: true } });
   const [size, setSize] = useState<"10" | "25" | "all">("10");
   const [cols, setCols] = useState<ColView>("weight");
+  const [onlyIssues, setOnlyIssues] = useState(false);
   const [open, setOpen] = useState<{ kind: "vehicle" | "driver"; id: string } | null>(null);
   const { data } = useView<FleetPerfData>("fleetPerf", { from: range.from, to: range.to, fleet: fleet || undefined, carrierId: carrierId || undefined }, 30_000);
   const who = tab === "drivers" ? "drivers" : "vehicles";
@@ -40,8 +56,8 @@ export default function FleetPerformancePage() {
   const rows = useMemo(() => {
     if (!data) return [];
     const s = q.trim().toUpperCase();
-    const list = (who === "drivers" ? data.drivers : data.vehicles).filter((r) => !s || r.label.includes(q.trim()) || r.labelEn.toUpperCase().includes(s) || (r.tag ?? "").includes(s) || r.id.includes(s));
-    const val = (r: PerfRow) => (srt.k === "lastAt" ? (r.lastAt ? Date.parse(r.lastAt) : undefined) : (r[srt.k] as number | undefined));
+    const list = (who === "drivers" ? data.drivers : data.vehicles).filter((r) => !s || r.label.includes(q.trim()) || r.labelEn.toUpperCase().includes(s) || (r.tag ?? "").includes(s) || r.id.includes(s)).filter((r) => !onlyIssues || !!r.issue || r.score < 50);
+    const val = (r: PerfRow) => (srt.k === "lastAt" ? (r.lastAt ? Date.parse(r.lastAt) : undefined) : srt.k === "tareDev" ? (r.tareDev == null ? undefined : Math.abs(r.tareDev)) : (r[srt.k] as number | undefined));
     return [...list].sort((a, b) => {
       const x = val(a);
       const y = val(b);
@@ -50,7 +66,7 @@ export default function FleetPerformancePage() {
       if (y == null) return -1;
       return srt.desc ? y - x : x - y;
     });
-  }, [data, who, q, srt]);
+  }, [data, who, q, srt, onlyIssues]);
   const shown = size === "all" ? rows : rows.slice(0, Number(size));
 
   if (!data || !masters) return <Skeleton className="h-[70vh]" />;
@@ -58,9 +74,14 @@ export default function FleetPerformancePage() {
   const t = (kg?: number) => (kg == null ? "—" : fmtNum(+(kg / 1000).toFixed(1), locale));
   const pct = (x?: number) => (x == null ? "—" : `${fmtNum(Math.round(x * 100), locale)}٪`);
   const min = (x?: number) => (x == null ? "—" : `${fmtNum(x, locale)} ${L("دقیقه", "min")}`);
-  const narrowed = [fleet === "internal" ? L("ناوگان داخلی", "internal fleet") : fleet === "external" ? L("پیمانکاران", "contractors") : "", carrierId ? masters.carriers.find((c) => c.id === carrierId)?.name ?? "" : "", q.trim() ? `«${q.trim()}»` : ""].filter(Boolean);
-  const reset = () => (setFleet(""), setCarrierId(""), setQ(""), setSize("10"));
-  const compare: CompareRow[] = shown.map((r) => ({ id: r.id, label: nm(r), sub: [r.tag, r.carrier].filter(Boolean).join(" · "), tareKg: r.avgTare, grossKg: r.avgGross, loadFactor: r.loadFactor, overloads: r.overloads, trips: r.trips }));
+  const narrowed = [fleet === "internal" ? L("ناوگان داخلی", "internal fleet") : fleet === "external" ? L("پیمانکاران", "contractors") : "", carrierId ? masters.carriers.find((c) => c.id === carrierId)?.name ?? "" : "", q.trim() ? `«${q.trim()}»` : "", onlyIssues ? L("فقط موارد مشکل‌دار", "issues only") : ""].filter(Boolean);
+  const reset = () => (setFleet(""), setCarrierId(""), setQ(""), setSize("10"), setOnlyIssues(false));
+  const all = who === "drivers" ? data.drivers : data.vehicles;
+  const ranked = [...all].sort((a, b) => a.rank - b.rank);
+  const top3 = ranked.slice(0, 3);
+  const bottom3 = ranked.length > 3 ? ranked.slice(-3).reverse() : [];
+  const sortId = SORTS.find((x) => x.k === srt.k && x.desc === srt.desc)?.id ?? "";
+  const compare: CompareRow[] = shown.map((r) => ({ id: r.id, label: nm(r), sub: [r.tag, r.carrier].filter(Boolean).join(" · "), tareKg: r.avgTare, grossKg: r.avgGross, loadFactor: r.loadFactor, overloads: r.overloads, trips: r.trips, rank: r.rank, score: r.score, grade: r.grade }));
 
   const Th = ({ k, fa, en }: { k: SortKey; fa: string; en: string }) => {
     const on = srt.k === k;
@@ -74,8 +95,8 @@ export default function FleetPerformancePage() {
     );
   };
   const exportXls = () => {
-    const head = [who === "drivers" ? L("راننده", "Driver") : L("خودرو", "Vehicle"), L("تگ", "Tag"), L("شرکت حمل", "Carrier"), L("سفر", "Trips"), L("تناژ (تن)", "Tons"), L("وزن خالی kg", "Empty kg"), L("وزن پر kg", "Loaded kg"), L("بار خالص kg", "Net kg"), L("ضریب بارگیری ٪", "Load factor %"), L("اضافه‌بار", "Overloads"), L("کم‌بار", "Underloads"), L("انحراف تارا kg", "Tare drift kg"), L("زمان در سایت (دقیقه)", "On site min"), L("انتظار تا توزین اول", "Wait min"), L("سفر در روز", "Trips/day"), L("توقف", "Holds"), L("دستی", "Manual"), L("آخرین سفر", "Last trip")];
-    downloadCsv(`fleet-${who}.csv`, head, rows.map((r) => [nm(r), r.tag ?? "", r.carrier ?? "", r.trips, r.tons, r.avgTare, r.avgGross, r.avgNet, r.loadFactor != null ? Math.round(r.loadFactor * 100) : "", r.overloads, r.underloads, r.tareDev ?? "", r.avgSiteMin ?? "", r.avgWaitMin ?? "", r.tripsPerDay, r.holds, r.manual, r.lastAt ?? ""]));
+    const head = [who === "drivers" ? L("راننده", "Driver") : L("خودرو", "Vehicle"), L("تگ", "Tag"), L("شرکت حمل", "Carrier"), L("رتبه", "Rank"), L("امتیاز", "Score"), L("سفر", "Trips"), L("تناژ (تن)", "Tons"), L("وزن خالی kg", "Empty kg"), L("وزن پر kg", "Loaded kg"), L("بار خالص kg", "Net kg"), L("ضریب بارگیری ٪", "Load factor %"), L("اضافه‌بار", "Overloads"), L("کم‌بار", "Underloads"), L("انحراف تارا kg", "Tare drift kg"), L("زمان در سایت (دقیقه)", "On site min"), L("انتظار تا توزین اول", "Wait min"), L("سفر در روز", "Trips/day"), L("توقف", "Holds"), L("دستی", "Manual"), L("آخرین سفر", "Last trip")];
+    downloadCsv(`fleet-${who}.csv`, head, rows.map((r) => [nm(r), r.tag ?? "", r.carrier ?? "", r.rank, r.score, r.trips, r.tons, r.avgTare, r.avgGross, r.avgNet, r.loadFactor != null ? Math.round(r.loadFactor * 100) : "", r.overloads, r.underloads, r.tareDev ?? "", r.avgSiteMin ?? "", r.avgWaitMin ?? "", r.tripsPerDay, r.holds, r.manual, r.lastAt ?? ""]));
   };
 
   return (
@@ -105,11 +126,27 @@ export default function FleetPerformancePage() {
         tabs={[
           { id: "vehicles", label: L("عملکرد خودروها", "Vehicles"), icon: <Truck className="size-4" /> },
           { id: "drivers", label: L("عملکرد رانندگان", "Drivers"), icon: <UserRound className="size-4" /> },
-          { id: "production", label: L("تولید و شیفت‌ها (امروز)", "Production & shifts (today)"), icon: <Activity className="size-4" /> },
+          { id: "production", label: L("تولید و شیفت‌ها", "Production & shifts"), icon: <Activity className="size-4" /> },
         ]}
       />
       {tab === "production" ? (
-        <ProductionTab />
+        <>
+          <Card className="mb-4 p-4 print:hidden">
+            <DateRange value={range} onChange={setRange} />
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+              <Segmented size="sm" options={[{ id: "", label: L("همه خودروها", "All vehicles") }, { id: "internal", label: L("ناوگان داخلی", "Internal") }, { id: "external", label: L("پیمانکاران", "Contractors") }]} value={fleet} onChange={setFleet} />
+              <Select value={carrierId} onChange={(e) => setCarrierId(e.target.value)} className="h-9 text-xs">
+                <option value="">{L("همه شرکت‌های حمل", "All carriers")}</option>
+                {masters.carriers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {locale === "fa" ? c.name : c.nameEn}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </Card>
+          <ProductionTab range={range} fleet={fleet} carrierId={carrierId} />
+        </>
       ) : (
         <>
           {/* filters */}
@@ -135,6 +172,9 @@ export default function FleetPerformancePage() {
                 ))}
               </Select>
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={who === "drivers" ? L("نام یا تگ کارت راننده…", "Driver name or card tag…") : L("کد یا تگ خودرو…", "Vehicle code or tag…")} className="h-9 w-52" />
+              <label className={cx("flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 text-xs", onlyIssues ? "border-danger bg-danger/5 font-semibold text-danger" : "border-border")}>
+                <input type="checkbox" checked={onlyIssues} onChange={(e) => setOnlyIssues(e.target.checked)} /> {L("فقط موارد مشکل‌دار", "Issues only")}
+              </label>
               {narrowed.length > 0 && (
                 <Button size="sm" variant="ghost" onClick={reset}>
                   <RotateCcw className="size-3.5" /> {L("پاک کردن فیلترها", "Clear filters")}
@@ -169,6 +209,33 @@ export default function FleetPerformancePage() {
             ))}
           </div>
 
+          {/* best / needs attention */}
+          <div className="mb-4 grid gap-4 lg:grid-cols-2">
+            {(
+              [
+                ["best", L("بهترین عملکرد", "Best performers"), top3, "border-success/40"],
+                ["low", L("نیاز به توجه", "Needs attention"), bottom3, "border-danger/40"],
+              ] as const
+            ).map(([key, title, list, border]) => (
+              <Card key={key} className={cx("border-s-4 p-4", border)}>
+                <div className="mb-2 text-sm font-bold">{title}</div>
+                <div className="flex flex-col gap-1.5">
+                  {list.map((r) => (
+                    <button key={r.id} type="button" onClick={() => setOpen({ kind: who === "drivers" ? "driver" : "vehicle", id: r.id })} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-start text-sm hover:bg-surface-2">
+                      <span className="num w-6 text-center text-xs font-bold text-muted">{fmtNum(r.rank, locale)}</span>
+                      <span className="min-w-0 flex-1 truncate font-semibold">
+                        {nm(r)} <span className="font-mono text-[10px] font-normal text-muted ltr">{r.tag}</span>
+                      </span>
+                      <span className="truncate text-xs text-muted">{key === "low" ? r.issue ?? L("امتیاز پایین", "low score") : `${fmtT(r.tons, locale)} ${L("تن", "t")}`}</span>
+                      <span className={cx("num rounded-full px-2 py-0.5 text-[11px] font-bold", GRADE[r.grade].cls)}>{fmtNum(r.score, locale)}</span>
+                    </button>
+                  ))}
+                  {!list.length && <div className="text-xs text-muted">—</div>}
+                </div>
+              </Card>
+            ))}
+          </div>
+
           {/* charts */}
           <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
             <Card className="break-inside-avoid">
@@ -180,8 +247,20 @@ export default function FleetPerformancePage() {
             <Card className="break-inside-avoid">
               <CardHeader
                 title={who === "drivers" ? L("مقایسه رانندگان — وزن خالی، بار خالص و وزن پر", "Drivers — empty, net and loaded") : L("مقایسه خودروها — وزن خالی، بار خالص و وزن پر", "Vehicles — empty, net and loaded")}
-                subtitle={L(`میانگین هر سفر (تن) · مرتب بر اساس ستون انتخاب‌شده در جدول · ${fmtNum(shown.length, "fa")} از ${fmtNum(rows.length, "fa")}`, `Average per trip (t) · sorted by the table's column · ${shown.length} of ${rows.length}`)}
-                actions={<Segmented size="sm" options={[{ id: "10", label: "۱۰" }, { id: "25", label: "۲۵" }, { id: "all", label: L("همه", "All") }]} value={size} onChange={setSize} />}
+                subtitle={L(`میانگین هر سفر (تن) · ${fmtNum(shown.length, "fa")} از ${fmtNum(rows.length, "fa")}`, `Average per trip (t) · sorted by the table's column · ${shown.length} of ${rows.length}`)}
+                actions={
+                  <div className="flex flex-wrap items-center gap-2 print:hidden">
+                    <Select value={sortId} onChange={(e) => { const o = SORTS.find((x) => x.id === e.target.value); if (o) setSort({ ...sort, [who]: { k: o.k, desc: o.desc } }); }} className="h-9 text-xs" aria-label={L("مرتب‌سازی", "Sort")}>
+                      {!sortId && <option value="">{L("مرتب‌سازی سفارشی", "Custom sort")}</option>}
+                      {SORTS.filter((o) => who === "vehicles" || !["lf+", "lf-", "drift+"].includes(o.id)).map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {L(o.fa, o.en)}
+                        </option>
+                      ))}
+                    </Select>
+                    <Segmented size="sm" options={[{ id: "10", label: "۱۰" }, { id: "25", label: "۲۵" }, { id: "all", label: L("همه", "All") }]} value={size} onChange={setSize} />
+                  </div>
+                }
               />
               <div className="max-h-[30rem] overflow-y-auto px-4 pb-3 print:max-h-none">
                 <WeightCompare rows={compare} onPick={(id) => setOpen({ kind: who === "drivers" ? "driver" : "vehicle", id })} />
@@ -203,6 +282,7 @@ export default function FleetPerformancePage() {
                 <thead className="bg-surface-2 text-xs text-muted">
                   <tr>
                     <th className="px-3 py-2.5 text-start font-medium">{who === "drivers" ? L("راننده", "Driver") : L("خودرو", "Vehicle")}</th>
+                    <Th k="score" fa="امتیاز / رتبه" en="Score / rank" />
                     <Th k="trips" fa="سفر" en="Trips" />
                     <Th k="tons" fa="تناژ (تن)" en="Tons" />
                     {cols === "weight" ? (
@@ -235,6 +315,12 @@ export default function FleetPerformancePage() {
                           {r.internal && <Badge tone="info">{L("داخلی", "Int.")}</Badge>}
                         </div>
                         <div className="text-[10px] text-muted">{who === "drivers" ? <span className="font-mono ltr">{r.tag}</span> : null} {r.carrier}</div>
+                      </td>
+                      <td>
+                        <span className={cx("num rounded-full px-2 py-0.5 text-[11px] font-bold", GRADE[r.grade].cls)} title={`${L("بار", "load")} ${r.parts.load}/35 · ${L("بهره‌وری", "productivity")} ${r.parts.productivity}/25 · ${L("زمان", "time")} ${r.parts.time}/20 · ${L("انضباط", "discipline")} ${r.parts.discipline}/20`}>
+                          {fmtNum(r.score, locale)} · {L(GRADE[r.grade].fa, GRADE[r.grade].en)}
+                        </span>
+                        <span className="num ms-1.5 text-[11px] text-muted">#{fmtNum(r.rank, locale)}</span>
                       </td>
                       <td className="num">{fmtNum(r.trips, locale)}</td>
                       <td className="num font-semibold">{fmtT(r.tons, locale)}</td>
@@ -365,6 +451,40 @@ function Detail({ kind, id, range, onClose }: { kind: "vehicle" | "driver"; id: 
               <Kv k={L("ورود با کارت غیرمجاز", "Unauthorized card holds")} v={fmtNum(row?.unauthorized ?? 0, locale)} />
             </div>
           )}
+          {row && (
+            <div className="rounded-xl border border-border p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm font-semibold">{L("امتیاز عملکرد", "Performance score")}</span>
+                <span>
+                  <span className={cx("num rounded-full px-2.5 py-1 text-sm font-black", GRADE[row.grade].cls)}>
+                    {fmtNum(row.score, locale)} · {L(GRADE[row.grade].fa, GRADE[row.grade].en)}
+                  </span>
+                  <span className="num ms-2 text-xs text-muted">
+                    {L("رتبه", "rank")} {fmtNum(row.rank, locale)} {L("از", "of")} {fmtNum((kind === "vehicle" ? data.vehicles : data.drivers).length, locale)}
+                  </span>
+                </span>
+              </div>
+              {(
+                [
+                  [L("بار (ضریب بارگیری)", "Load"), row.parts.load, 35],
+                  [L("بهره‌وری (تناژ روزانه)", "Productivity"), row.parts.productivity, 25],
+                  [L("زمان در سایت", "Time on site"), row.parts.time, 20],
+                  [L("انضباط (اضافه‌بار، توقف، دستی)", "Discipline"), row.parts.discipline, 20],
+                ] as const
+              ).map(([k, v, max]) => (
+                <div key={k} className="mt-1.5 flex items-center gap-2 text-xs">
+                  <span className="w-44 shrink-0">{k}</span>
+                  <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
+                    <span className={cx("block h-full rounded-full", v / max >= 0.8 ? "bg-success" : v / max >= 0.5 ? "bg-warning" : "bg-danger")} style={{ width: `${(v / max) * 100}%` }} />
+                  </span>
+                  <span className="num w-12 text-end">
+                    {fmtNum(v, locale)}/{fmtNum(max, locale)}
+                  </span>
+                </div>
+              ))}
+              {row.issue && <div className="mt-2 rounded-lg bg-danger/8 px-2 py-1.5 text-xs text-danger">{row.issue}</div>}
+            </div>
+          )}
           {row ? (
             <div className="grid grid-cols-2 gap-2 text-sm">
               {[
@@ -416,7 +536,7 @@ function Detail({ kind, id, range, onClose }: { kind: "vehicle" | "driver"; id: 
                 </div>
                 <WeightCompare
                   maxKg={v ? Math.max(v.maxGvwKg, ...last.map((x) => x.gross)) : undefined}
-                  rows={last.map((x) => ({ id: x.txId, label: fmtDateTime(x.at, locale), sub: `${kind === "vehicle" ? nm(masters?.drivers.find((y) => y.id === x.driverId)) : x.vehicleId} · ${loc(x.originId)} ← ${loc(x.destinationId)}`, tareKg: x.tare, grossKg: x.gross, overloads: x.overload ? 1 : 0, trips: 1, loadFactor: v ? x.net / v.ratedPayloadKg : undefined }))}
+                  rows={last.map((x) => ({ id: x.txId, label: fmtDateTime(x.at, locale), sub: `${kind === "vehicle" ? nm(masters?.drivers.find((y) => y.id === x.driverId)) : x.vehicleId} · ${loc(x.originId)} ← ${loc(x.destinationId)}`, tareKg: x.tare, grossKg: x.gross, overloads: x.overload ? 1 : 0, trips: 1, loadFactor: v ? x.net / v.ratedPayloadKg : undefined, plain: true }))}
                 />
               </div>
             </>

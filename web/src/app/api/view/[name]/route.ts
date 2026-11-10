@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/runtime";
-import { dashboard, driverView, fleetPerf, mapView, processView, stockpilesView, verifyView, visitDetail } from "@/server/views";
+import { dashboard, driverView, fleetPerf, productionView, mapView, processView, stockpilesView, verifyView, visitDetail } from "@/server/views";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +15,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ name: string }>
       return NextResponse.json(processView(d));
     case "fleetPerf":
       return NextResponse.json(fleetPerf(d, url.searchParams.get("from") ?? "", url.searchParams.get("to") ?? "9999", { vehicleId: url.searchParams.get("vehicleId") ?? undefined, driverId: url.searchParams.get("driverId") ?? undefined }, { fleet: url.searchParams.get("fleet") ?? undefined, carrierId: url.searchParams.get("carrierId") ?? undefined }));
+    case "production":
+      return NextResponse.json(productionView(d, url.searchParams.get("from") ?? "", url.searchParams.get("to") ?? "9999", { fleet: url.searchParams.get("fleet") ?? undefined, carrierId: url.searchParams.get("carrierId") ?? undefined }));
     case "stockpiles":
       return NextResponse.json(stockpilesView(d, url.searchParams.get("from") ?? undefined, url.searchParams.get("to") ?? undefined));
     case "map":
