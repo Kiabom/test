@@ -139,3 +139,23 @@ describe("route & load assignment", () => {
     void tick;
   });
 });
+
+describe("fleet performance", () => {
+  it("matches the raw tickets for one vehicle", async () => {
+    const { fleetPerf } = await import("./views");
+    const { initLive } = await import("./sim");
+    const d = buildSeed();
+    initLive(d);
+    const from = "2024-06-30T20:30:00.000Z";
+    const to = "2024-07-07T20:30:00.000Z";
+    const out = fleetPerf(d, from, to);
+    const r = out.vehicles[0];
+    const mine = d.transactions.filter((t) => t.vehicleId === r.id && t.state === "APPROVED" && t.tareKg && t.grossKg && (t.approvedAt ?? t.createdAt) >= from && (t.approvedAt ?? t.createdAt) < to);
+    expect(r.trips).toBe(mine.length);
+    expect(r.avgTare).toBe(Math.round(mine.reduce((a, t) => a + t.tareKg!, 0) / mine.length));
+    expect(r.avgGross).toBe(Math.round(mine.reduce((a, t) => a + t.grossKg!, 0) / mine.length));
+    const v = d.vehicles.find((x) => x.id === r.id)!;
+    expect(r.overloads).toBe(mine.filter((t) => t.grossKg! > v.maxGvwKg).length);
+    expect(out.drivers.length).toBeGreaterThan(0);
+  });
+});

@@ -596,3 +596,150 @@ export function stockpilesView(d: DB, from?: string, to?: string) {
   return { stockpiles: views, moves: inRange.slice(0, 2000) };
 }
 export type StockpilesData = ReturnType<typeof stockpilesView>;
+
+// ---------------- Fleet performance (per vehicle / per driver) ----------------
+export interface PerfRow {
+  id: string;
+  trips: number;
+  tons: number;
+  avgTare: number;
+  avgGross: number;
+  avgNet: number;
+  tareStd: number;
+  tareDev?: number;
+  loadFactor?: number;
+  overloads: number;
+  underloads: number;
+  holds: number;
+  manual: number;
+  avgSiteMin?: number;
+  avgWaitMin?: number;
+  tripsPerDay: number;
+  lastAt?: string;
+  vehiclesUsed?: number;
+  unauthorized?: number;
+}
+export interface PerfTrip {
+  at: string;
+  txId: string;
+  ticketNo: string;
+  vehicleId: string;
+  driverId: string;
+  tare: number;
+  gross: number;
+  net: number;
+  originId: string;
+  destinationId: string;
+  siteMin?: number;
+  overload: boolean;
+  hold: boolean;
+}
+
+/**
+ * Per-vehicle and per-driver KPIs from approved tickets in a period: tare (empty) and gross (loaded)
+ * averages, load factor, overloads, tare drift vs stored tare, time on site and exceptions.
+ */
+export function fleetPerf(d: DB, from: string, to: string, detail?: { vehicleId?: string; driverId?: string }) {
+  const now = new Date(sceneNow(d)).toISOString();
+  const end = to < now ? to : now;
+  const txs = d.transactions.filter((t) => t.state === "APPROVED" && t.tareKg && t.grossKg && (t.approvedAt ?? t.createdAt) >= from && (t.approvedAt ?? t.createdAt) < end);
+  const visitOf = new Map(d.visits.map((v) => [v.id, v]));
+  const manual = new Set(d.weighEvents.filter((w) => w.captureMethod === "MANUAL").map((w) => w.transactionId));
+  const firstWeighAt = new Map(d.weighEvents.map((w) => [w.id, w.capturedAt]));
+  const vehicles = new Map(d.vehicles.map((v) => [v.id, v]));
+  const mins = (a?: string, b?: string) => (a && b ? (new Date(b).getTime() - new Date(a).getTime()) / 60_000 : undefined);
+  const trips: PerfTrip[] = txs.map((t) => {
+    const v = visitOf.get(t.visitId);
+    const veh = vehicles.get(t.vehicleId);
+    return {
+      at: t.approvedAt ?? t.createdAt,
+      txId: t.id,
+      ticketNo: t.ticketNo,
+      vehicleId: t.vehicleId,
+      driverId: t.driverId,
+      tare: t.tareKg!,
+      gross: t.grossKg!,
+      net: t.netKg ?? t.grossKg! - t.tareKg!,
+      originId: t.originId,
+      destinationId: t.destinationId,
+      siteMin: mins(v?.arrivedAt, v?.exitedAt),
+      overload: !!veh && t.grossKg! > veh.maxGvwKg,
+      hold: t.holdReasons.length > 0 || t.revisions.some((r) => !!r.reason),
+    };
+  });
+  const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+  const std = (xs: number[]) => {
+    const m = avg(xs);
+    return xs.length > 1 ? Math.sqrt(avg(xs.map((x) => (x - m) ** 2))) : 0;
+  };
+  const dayKey = (iso: string) => new Date(new Date(iso).getTime() + 210 * 60_000).toISOString().slice(0, 10);
+  const rowOf = (id: string, list: PerfTrip[], kind: "vehicle" | "driver"): PerfRow => {
+    const veh = kind === "vehicle" ? vehicles.get(id) : undefined;
+    const tares = list.map((x) => x.tare);
+    const site = list.map((x) => x.siteMin).filter((x): x is number => x != null && x > 0);
+    const waits = list
+      .map((x) => {
+        const t = txs.find((y) => y.id === x.txId)!;
+        const v = visitOf.get(t.visitId);
+        return mins(v?.arrivedAt, t.firstWeighId ? firstWeighAt.get(t.firstWeighId) : undefined);
+      })
+      .filter((x): x is number => x != null && x >= 0);
+    const days = new Set(list.map((x) => dayKey(x.at))).size || 1;
+    const avgNet = avg(list.map((x) => x.net));
+    return {
+      id,
+      trips: list.length,
+      tons: +(list.reduce((a, x) => a + x.net, 0) / 1000).toFixed(2),
+      avgTare: Math.round(avg(tares)),
+      avgGross: Math.round(avg(list.map((x) => x.gross))),
+      avgNet: Math.round(avgNet),
+      tareStd: Math.round(std(tares)),
+      tareDev: veh?.storedTareKg ? Math.round(avg(tares) - veh.storedTareKg) : undefined,
+      loadFactor: veh?.ratedPayloadKg ? +(avgNet / veh.ratedPayloadKg).toFixed(3) : undefined,
+      overloads: list.filter((x) => x.overload).length,
+      underloads: veh?.ratedPayloadKg ? list.filter((x) => x.net < veh.ratedPayloadKg * 0.75).length : 0,
+      holds: list.filter((x) => x.hold).length,
+      manual: list.filter((x) => manual.has(x.txId)).length,
+      avgSiteMin: site.length ? Math.round(avg(site)) : undefined,
+      avgWaitMin: waits.length ? Math.round(avg(waits)) : undefined,
+      tripsPerDay: +(list.length / days).toFixed(1),
+      lastAt: list.map((x) => x.at).sort().at(-1),
+      vehiclesUsed: kind === "driver" ? new Set(list.map((x) => x.vehicleId)).size : undefined,
+      unauthorized:
+        kind === "driver"
+          ? d.alerts.filter((a) => a.ruleCode === "R41" && a.openedAt >= from && a.openedAt < end && visitOf.get(a.visitId ?? "")?.driverId === id).length
+          : undefined,
+    };
+  };
+  const group = (key: "vehicleId" | "driverId") => {
+    const m = new Map<string, PerfTrip[]>();
+    for (const t of trips) m.set(t[key], [...(m.get(t[key]) ?? []), t]);
+    return m;
+  };
+  const byVeh = group("vehicleId");
+  const byDrv = group("driverId");
+  const vehicleRows = [...byVeh.entries()].map(([id, l]) => rowOf(id, l, "vehicle")).sort((a, b) => b.tons - a.tons);
+  const driverRows = [...byDrv.entries()].filter(([id]) => id).map(([id, l]) => rowOf(id, l, "driver")).sort((a, b) => b.tons - a.tons);
+  const dayMap = new Map<string, PerfTrip[]>();
+  for (const t of trips) dayMap.set(dayKey(t.at), [...(dayMap.get(dayKey(t.at)) ?? []), t]);
+  const daily = [...dayMap.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([day, l]) => ({ day, trips: l.length, avgTare: Math.round(avg(l.map((x) => x.tare))), avgGross: Math.round(avg(l.map((x) => x.gross))), avgNet: Math.round(avg(l.map((x) => x.net))) }));
+  const lf = vehicleRows.filter((r) => r.loadFactor != null);
+  const site = trips.map((x) => x.siteMin).filter((x): x is number => x != null && x > 0);
+  const summary = {
+    trips: trips.length,
+    tons: +(trips.reduce((a, x) => a + x.net, 0) / 1000).toFixed(1),
+    avgTare: Math.round(avg(trips.map((x) => x.tare))),
+    avgGross: Math.round(avg(trips.map((x) => x.gross))),
+    avgNet: Math.round(avg(trips.map((x) => x.net))),
+    loadFactor: lf.length ? +(lf.reduce((a, r) => a + (r.loadFactor ?? 0) * r.trips, 0) / lf.reduce((a, r) => a + r.trips, 0)).toFixed(3) : 0,
+    overloads: trips.filter((x) => x.overload).length,
+    avgSiteMin: site.length ? Math.round(avg(site)) : 0,
+    vehicles: vehicleRows.length,
+    drivers: driverRows.length,
+  };
+  const detailTrips = detail?.vehicleId ? byVeh.get(detail.vehicleId) : detail?.driverId ? byDrv.get(detail.driverId) : undefined;
+  return { summary, daily, vehicles: vehicleRows, drivers: driverRows, trips: detailTrips?.sort((a, b) => a.at.localeCompare(b.at)) };
+}
+export type FleetPerfData = ReturnType<typeof fleetPerf>;
