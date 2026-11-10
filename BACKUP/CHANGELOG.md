@@ -1,0 +1,25 @@
+- d4dafc6 2026-11-10 fix: fleet KPI — labelled comparison and daily charts, working filters for vehicles and drivers
+- ac2afab 2026-11-10 feat: fleet KPI per vehicle and per driver — empty/loaded weights, load factor, scorecards
+- cf7215a 2026-11-09 feat: route & load assignment — permits with origin/destination/vehicles, vehicle assignment, gate permit change
+- 6a27c2e 2026-11-08 feat: queue page shows driver name with the vehicle tag below
+- eff0345 2026-11-08 feat: realistic ore types and stockpiles, persistent master-data edits, driver name on monitors
+- 7b95792 2026-11-08 feat: RFID-first gate identity, guest entry log, master data create/edit, stockpiles page, in-mine hauls
+- 3765e38 2026-11-08 feat: gate identity box by vehicle/driver RFID tags; manual exit permits
+- 4b39be4 2026-11-08 fix: realistic ~1 h haul service on fleet KPI; cycles from 00:00; night shift target 900 t
+- 2be5d02 2026-11-08 feat: RFID tag as vehicle identity, in-development labels, fleet KPI redesign
+- 07dadb3 2026-11-07 feat: report builder with date range and attribute filters, dedicated print/PDF document
+- efd5fc7 2026-11-07 fix: printable PDF output for reports, billing, transactions and other pages
+- b625e61 2026-11-07 fix: freeze display time while held; redesign live site map; driver display ticker runs left to right
+- e0d9ced 2026-11-07 feat: site data, driver-vehicle RFID assignment, role page access, fixed Tir 1403 clock
+- a5235f6 2026-11-05 feat: production wording, login screen, hidden presenter controls, Jalalabad site data
+- 66fe9c4 2026-11-04 chore: rename the product to «فناپ توزین» (Fanap Tozin) and add install steps
+- b02f174 2026-11-04 docs: presentation deck, refreshed screenshots, demo script and prompt phase 11
+- 92906a1 2026-11-04 feat(web): showcase gallery and in-app slide presentation with PPTX/PDF export
+- 1eb42f9 2026-11-04 feat(web): driver journey + GPS navigation, fleet & events map, owner process view
+- e96947d 2026-11-04 feat(web): frozen presentation scene by default, and fix live-mode slowdown
+- e9fca1b 2026-10-27 test(web): e2e smoke + manual trip flow, screenshots, README and demo script
+- 46d2f00 2026-10-27 fix(web): don't hold a truck at exit for a reuse alert on its own consumed QR
+- 64c95e9 2026-10-27 feat(web): back-office, health, modules, reports and admin pages
+- fb15447 2026-10-27 feat(web): app shell, dashboard, control room, gate, weighing, scan center, documents, driver screens, marketing site
+- 8187361 2026-10-27 feat(web): domain model, seeded store, rules, simulator and API
+- be507a6 2026-10-27 docs: research synthesis, product spec and Claude Code build prompt pack
