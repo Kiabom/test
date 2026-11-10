@@ -14,7 +14,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ name: string }>
     case "process":
       return NextResponse.json(processView(d));
     case "fleetPerf":
-      return NextResponse.json(fleetPerf(d, url.searchParams.get("from") ?? "", url.searchParams.get("to") ?? "9999", { vehicleId: url.searchParams.get("vehicleId") ?? undefined, driverId: url.searchParams.get("driverId") ?? undefined }));
+      return NextResponse.json(fleetPerf(d, url.searchParams.get("from") ?? "", url.searchParams.get("to") ?? "9999", { vehicleId: url.searchParams.get("vehicleId") ?? undefined, driverId: url.searchParams.get("driverId") ?? undefined }, { fleet: url.searchParams.get("fleet") ?? undefined, carrierId: url.searchParams.get("carrierId") ?? undefined }));
     case "stockpiles":
       return NextResponse.json(stockpilesView(d, url.searchParams.get("from") ?? undefined, url.searchParams.get("to") ?? undefined));
     case "map":

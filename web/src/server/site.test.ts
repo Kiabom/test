@@ -159,3 +159,21 @@ describe("fleet performance", () => {
     expect(out.drivers.length).toBeGreaterThan(0);
   });
 });
+
+describe("fleet performance filters", () => {
+  it("narrows every figure to the fleet / carrier filter and carries display names", async () => {
+    const { fleetPerf } = await import("./views");
+    const d = buildSeed();
+    const from = "2024-06-30T20:30:00.000Z";
+    const to = "2024-07-07T20:30:00.000Z";
+    const all = fleetPerf(d, from, to);
+    const internal = fleetPerf(d, from, to, undefined, { fleet: "internal" });
+    expect(internal.vehicles.every((r) => r.internal)).toBe(true);
+    expect(internal.summary.trips).toBeLessThan(all.summary.trips);
+    expect(internal.summary.trips).toBe(internal.vehicles.reduce((a, r) => a + r.trips, 0));
+    const cr = fleetPerf(d, from, to, undefined, { carrierId: "CR-1" });
+    expect(cr.vehicles.every((r) => d.vehicles.find((v) => v.id === r.id)!.carrierId === "CR-1")).toBe(true);
+    expect(all.drivers[0].label).toBe(d.drivers.find((x) => x.id === all.drivers[0].id)!.name);
+    expect(all.vehicles[0].tag).toBeTruthy();
+  });
+});

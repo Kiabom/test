@@ -600,6 +600,14 @@ export type StockpilesData = ReturnType<typeof stockpilesView>;
 // ---------------- Fleet performance (per vehicle / per driver) ----------------
 export interface PerfRow {
   id: string;
+  /** display: vehicle code or driver name */
+  label: string;
+  labelEn: string;
+  /** vehicle short tag or driver card tag */
+  tag?: string;
+  carrier?: string;
+  internal?: boolean;
+  ratedT?: number;
   trips: number;
   tons: number;
   avgTare: number;
@@ -639,10 +647,20 @@ export interface PerfTrip {
  * Per-vehicle and per-driver KPIs from approved tickets in a period: tare (empty) and gross (loaded)
  * averages, load factor, overloads, tare drift vs stored tare, time on site and exceptions.
  */
-export function fleetPerf(d: DB, from: string, to: string, detail?: { vehicleId?: string; driverId?: string }) {
+export function fleetPerf(d: DB, from: string, to: string, detail?: { vehicleId?: string; driverId?: string }, filter: { fleet?: string; carrierId?: string } = {}) {
   const now = new Date(sceneNow(d)).toISOString();
   const end = to < now ? to : now;
-  const txs = d.transactions.filter((t) => t.state === "APPROVED" && t.tareKg && t.grossKg && (t.approvedAt ?? t.createdAt) >= from && (t.approvedAt ?? t.createdAt) < end);
+  const vehOf = new Map(d.vehicles.map((v) => [v.id, v]));
+  const txs = d.transactions.filter((t) => {
+    if (t.state !== "APPROVED" || !t.tareKg || !t.grossKg) return false;
+    const at = t.approvedAt ?? t.createdAt;
+    if (at < from || at >= end) return false;
+    const v = vehOf.get(t.vehicleId);
+    if (filter.fleet === "internal" && !v?.internal) return false;
+    if (filter.fleet === "external" && v?.internal) return false;
+    if (filter.carrierId && t.carrierId !== filter.carrierId) return false;
+    return true;
+  });
   const visitOf = new Map(d.visits.map((v) => [v.id, v]));
   const manual = new Set(d.weighEvents.filter((w) => w.captureMethod === "MANUAL").map((w) => w.transactionId));
   const firstWeighAt = new Map(d.weighEvents.map((w) => [w.id, w.capturedAt]));
@@ -686,8 +704,18 @@ export function fleetPerf(d: DB, from: string, to: string, detail?: { vehicleId?
       .filter((x): x is number => x != null && x >= 0);
     const days = new Set(list.map((x) => dayKey(x.at))).size || 1;
     const avgNet = avg(list.map((x) => x.net));
+    const drv = kind === "driver" ? d.drivers.find((x) => x.id === id) : undefined;
+    const carrierId = veh?.carrierId ?? drv?.carrierId;
+    const cr = d.carriers.find((c) => c.id === carrierId);
+    const short = (e?: string) => (e ? e.split("-").slice(-2).join("-") : undefined);
     return {
       id,
+      label: veh ? veh.id : drv?.name ?? id,
+      labelEn: veh ? veh.id : drv?.nameEn ?? id,
+      tag: veh ? short(veh.rfidEpc) : short(drv?.rfidTag),
+      carrier: cr?.name,
+      internal: veh?.internal,
+      ratedT: veh ? veh.ratedPayloadKg / 1000 : undefined,
       trips: list.length,
       tons: +(list.reduce((a, x) => a + x.net, 0) / 1000).toFixed(2),
       avgTare: Math.round(avg(tares)),
